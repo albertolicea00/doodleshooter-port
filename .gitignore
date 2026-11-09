@@ -1,0 +1,10 @@
+.DS_Store
+native/.godot/
+native/.smoke-progress.cfg
+native/export_credentials.cfg
+builds/**
+!builds/.gitkeep
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
