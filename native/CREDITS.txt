@@ -1,0 +1,15 @@
+# Credits and provenance
+
+**doodleshooter-port** is an unofficial native port in development of **Doodle District**, available at https://doodleshooter.vercel.app/.
+
+The original concept, game design, maps, characters, weapons, mechanics, and ballpoint-on-paper aesthetic are credited to the creators of Doodle District. The port's name identifies this adaptation; it does not claim authorship of the original game or an official affiliation.
+
+The public code reference used is https://github.com/iifor/doodleshooter, revision `8d8fad9ebeff2564881f427f4365336db98941b7`, retrieved on November 9, 2026. That repository includes a Chinese localization and locally bundled dependencies. It is identified as the **reference source**, without asserting that its owner is the sole original author.
+
+The received snapshot remains unchanged in `reference/upstream/`. Per-file SHA-256 hashes are recorded in `reference/manifest.json`. The converter at `tools/extract-reference.mjs` translates procedural maps and models into Godot geometry data. The native application runs GDScript; neither the website nor JavaScript is part of its mobile runtime. Port UI, extracted display names, and project documentation are in English.
+
+No game-code license file was found in the reference revision. This project does not infer or assign an MIT license or any other license to that code. Attribution and provenance notices are preserved independently.
+
+Original web dependencies: **Three.js** and **PeerJS**. Their embedded copyright and license notices remain in `reference/upstream/vendor/`. Those dependencies are not included in the native executable.
+
+Native engine: **Godot Engine**, https://godotengine.org/, under the MIT license. Engine license and component notices: https://godotengine.org/license/ and https://godotengine.org/license/thirdparty/. Attribution is available in the game's Credits menu, and this document is bundled as `CREDITS.txt`.
