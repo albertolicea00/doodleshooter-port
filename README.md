@@ -8,19 +8,21 @@ All port UI and project documentation are in English. The original game's attrib
 
 ## Run
 
-Install standard Godot 4.6.3. Open `native/project.godot` and press Run, or use:
+Install standard Godot 4.6.3. Open `native/project.godot` and press Run, or use the Makefile from the repository root.
 
 ```sh
-godot --path native
+make run
 ```
 
 To display touch controls on desktop:
 
 ```sh
-godot --path native -- --touch
+make touch
 ```
 
 Touch controls appear automatically on mobile. Menus accept touch through mouse emulation; gameplay uses separate multitouch input. Touch buttons include quick slash and the scoreboard. Online mode requires the separate lobby server described below; offline and LAN modes do not.
+
+Run `make help` for all targets. Set `GODOT_BIN`, `PYTHON`, `ADB`, `NODE`, or `NPM` on the command line to use a specific executable.
 
 ## Android
 
@@ -29,11 +31,10 @@ The current development APK is stored at `builds/android/doodleshooter-port-debu
 To rebuild, install the Godot 4.6.3 export templates and configure Java 17, the Android SDK, and a debug keystore in the editor settings:
 
 ```sh
-mkdir -p builds/android
-godot --headless --path native --export-debug Android
+make android
 ```
 
-Private signing keys are not stored in the project. AAB exports and store releases require a Gradle build and release signing configuration.
+`make build` also exports the debug APK. Use `make install-android` to install that APK on an ADB-connected device. `make android-release` exports a separate release APK after release signing is configured. AAB exports require a Gradle build.
 
 ## Offline play
 
@@ -64,9 +65,8 @@ Headless tests exercise two actual Godot game processes through arena loading, r
 Run the native lobby server with Python 3.11 or later:
 
 ```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r server/requirements.txt
-.venv/bin/python server/lobby.py
+make server-deps
+make server
 ```
 
 The server binds to `127.0.0.1:8911` by default. To expose this separate online server to other devices, set `DOODLE_BIND=0.0.0.0` when starting it. The built-in LAN menu does not need this server. In **Play online**, enter a WebSocket URL reachable from the client: `ws://127.0.0.1:8911` on the same desktop, `ws://10.0.2.2:8911` from the Android emulator, or the server computer's LAN address from a phone. There is no hosted matchmaking service or web-lobby interoperability.
@@ -80,8 +80,7 @@ The implementation includes public/private lobbies, codes, quick play, ten-playe
 When resuming iOS work, install Xcode and the Godot export templates on macOS. Set your Apple Team ID in `native/export_presets.cfg` or Project → Export → iOS:
 
 ```sh
-mkdir -p builds/ios
-godot --headless --path native --export-debug iOS
+make ios
 ```
 
 The initial export attempt stopped because `App Store Team ID` was missing. No iOS build has been produced or tested.
@@ -89,18 +88,18 @@ The initial export attempt stopped because `App Store Team ID` was missing. No i
 ## Verification
 
 ```sh
-python3 tools/check.py
-.venv/bin/python -m unittest discover -s tests -v
+make check
+make test-server
 ```
 
-The Godot check verifies reference hashes, imports the project, rejects engine/script errors, and runs headless gameplay, bot-match, menu-routing, native LAN protocol, and two-process LAN game checks. Coverage includes weapons, parries, grappling, multitouch, enemy hitboxes, boss projectile emission, bot-versus-bot fire, player melee damage, respawns, and the bot match kill limit. Python tests exercise the lobby protocol over real local WebSocket connections.
+The Godot check verifies reference hashes, imports the project, rejects engine/script errors, and runs headless gameplay, bot-match, menu-routing, native LAN protocol, and two-process LAN game checks. Coverage includes weapons, parries, grappling, multitouch, enemy hitboxes, boss projectile emission, bot-versus-bot fire, player melee damage, respawns, and the bot match kill limit. Run `make server-deps` before `make test-server` to install the dependencies for the WebSocket lobby tests.
 
 Desktop menu rendering has been captured and inspected. Device/emulator play, physical touch, and gameplay visual parity remain unverified. See [docs/VALIDATION.md](docs/VALIDATION.md).
 
 To capture the four menu screens with a graphical desktop session:
 
 ```sh
-godot --path native --script "$PWD/tools/capture-menus.gd"
+make capture-menus
 ```
 
 Screenshots are written to `builds/validation/`; set `DOODLE_CAPTURE_DIR` to choose another location.
@@ -118,7 +117,7 @@ Screenshots are written to `builds/validation/`; set `DOODLE_CAPTURE_DIR` to cho
 To regenerate native data without downloading dependencies:
 
 ```sh
-node --experimental-vm-modules tools/extract-reference.mjs
+make assets-reference
 ```
 
 The converter executes the reference's procedural generators with its local Three.js dependency, reverses triangle winding for Godot, and preserves coordinates. Bot matches, LAN matches, and online matches load the converted arena variants. Extracted display names are normalized to English.
@@ -126,8 +125,8 @@ The converter executes the reference's procedural generators with its local Thre
 To render the original audio again, install Node.js, ffmpeg, and the build-only dependencies:
 
 ```sh
-npm ci --prefix tools
-npm run audio --prefix tools
+make audio-deps
+make assets-audio
 ```
 
 The renderer reuses existing music files; remove the relevant generated OGG files before regenerating a changed composition. The reference snapshot remains unchanged.
