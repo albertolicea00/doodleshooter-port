@@ -17,3 +17,5 @@ Native engine: **Godot Engine**, https://godotengine.org/, under the MIT license
 The original procedural soundtrack and sound effects are rendered from the unchanged reference audio generator for native playback. Both map compositions, their arrangements, and effect designs remain credited to the original game creators. The build-only audio renderer uses node-web-audio-api (IRCAM, BSD-3-Clause); it is not part of the mobile runtime.
 
 UI font: **Patrick Hand**, copyright the Patrick Hand authors, distributed under the SIL Open Font License 1.1. The font and its original license are bundled in `native/assets/fonts/`.
+
+The in-game Credits section displays this notice, the bundled font license, and Godot's engine license, with links to the original game and reference source.

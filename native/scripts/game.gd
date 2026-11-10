@@ -202,6 +202,7 @@ func _setup_ui() -> void:
 	ui.move_child(scope, 1)
 
 func _clear_menu(title: String, subtitle: String) -> void:
+	Input.emulate_mouse_from_touch = true
 	for child in menu_items.get_children():
 		child.free()
 	var heading = Label.new()
@@ -211,6 +212,8 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	menu_items.add_child(heading)
 	var sub = Label.new()
 	sub.text = subtitle
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.custom_minimum_size.x = 480
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_font_size_override("font_size", 16)
 	menu_items.add_child(sub)
@@ -226,7 +229,8 @@ func _button(text: String, callback: Callable) -> Button:
 	var button = Button.new()
 	button.text = text
 	button.custom_minimum_size.y = 46
-	button.pressed.connect(callback)
+	# Menu callbacks rebuild controls after the button finishes its input event.
+	button.pressed.connect(callback, CONNECT_DEFERRED)
 	menu_items.add_child(button)
 	return button
 
@@ -287,9 +291,40 @@ func show_settings() -> void:
 	_button("BACK", pause_menu if paused else show_main_menu)
 
 func show_credits() -> void:
-	_clear_menu("Credits", "Doodle District · original game\nhttps://doodleshooter.vercel.app/\n\nCode and geometry reference:\niifor/doodleshooter (GitHub)\n\nThis is an unofficial native port.\nThe original design, maps and mechanics\nare credited to their original creators.\n\nNative engine: Godot Engine\nWeb reference: Three.js and PeerJS\nSee CREDITS.txt for provenance and notices.")
+	_clear_menu("Credits", "doodleshooter-port · unofficial native adaptation")
+	_credit_section("Original game · Doodle District", "The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation.")
+	_credit_section("Reference source", "iifor/doodleshooter on GitHub. This is the source reference, without claiming that the repository owner is the sole original author.")
+	_credit_section("Native adaptation", "Shared Android and iOS project built with Godot Engine. Original maps and models are converted for native playback; the original procedural music and effects are rendered from the reference audio generator.")
+	_credit_section("Engine and font", "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1")
+	_credit_section("Reference dependencies", "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause.")
 	_button("OPEN ORIGINAL GAME", func(): OS.shell_open("https://doodleshooter.vercel.app/"))
+	_button("OPEN REFERENCE SOURCE", func(): OS.shell_open("https://github.com/iifor/doodleshooter"))
+	_button("FULL CREDITS & NOTICES", show_credit_notices)
+	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()))
 	_button("BACK", show_main_menu)
+
+func _credit_section(title: String, body: String) -> void:
+	var heading = Label.new()
+	heading.text = title
+	heading.add_theme_font_size_override("font_size", 24)
+	menu_items.add_child(heading)
+	var text = RichTextLabel.new()
+	text.text = body
+	text.fit_content = true
+	text.scroll_active = false
+	text.selection_enabled = true
+	text.custom_minimum_size.x = 480
+	text.add_theme_color_override("default_color", ReferenceAssets.COLORS[0])
+	text.add_theme_font_size_override("normal_font_size", 18)
+	menu_items.add_child(text)
+
+func show_credit_notices() -> void:
+	show_license("Full credits & notices", FileAccess.get_file_as_string("res://CREDITS.txt") + "\n\n" + FileAccess.get_file_as_string("res://assets/fonts/PatrickHand-OFL.txt"))
+
+func show_license(title: String, text: String) -> void:
+	_clear_menu(title, "Attribution and license notices")
+	_credit_section("", text)
+	_button("BACK TO CREDITS", show_credits)
 
 func start_game(first_wave: int) -> void:
 	if starting:
@@ -358,6 +393,7 @@ func _clear_world() -> void:
 		region.free()
 
 func resume_game() -> void:
+	Input.emulate_mouse_from_touch = false
 	paused = false
 	playing = true
 	menu.visible = false
@@ -692,7 +728,16 @@ func _exit_tree() -> void:
 	ReferenceAssets.dispose()
 
 func run_smoke() -> void:
+	assert(Input.emulate_mouse_from_touch, "Menus need touch-to-mouse conversion")
+	await smoke_click_button("CREDITS")
+	assert(menu_items.get_child(0).text == "Credits", "A menu click must open the credits screen")
+	await smoke_click_button("FULL CREDITS & NOTICES")
+	assert(menu_items.get_child(0).text == "Full credits & notices")
+	await smoke_click_button("BACK TO CREDITS")
+	await smoke_click_button("BACK")
+	assert(menu_items.get_child(0).text == "doodleshooter-port", "Menu navigation must return to the main menu")
 	await start_game(1)
+	assert(not Input.emulate_mouse_from_touch, "Gameplay touch must not also press mouse-bound fire")
 	assert(level.data.boxes.size() == 517)
 	assert(player.magazines[0] == 35)
 	await get_tree().physics_frame
@@ -841,6 +886,29 @@ func run_smoke() -> void:
 	# Let the audio thread release stopped playback before engine shutdown.
 	await get_tree().create_timer(0.1).timeout
 	get_tree().quit()
+
+func smoke_click_button(label: String) -> void:
+	var target: Button
+	for child in menu_items.get_children():
+		if child is Button and child.text == label:
+			target = child
+	assert(target != null, "Missing menu button: " + label)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	menu.get_child(0).ensure_control_visible(target)
+	await get_tree().process_frame
+	var point = target.get_global_rect().get_center()
+	for down in [true, false]:
+		var event = InputEventMouseButton.new()
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.button_mask = MOUSE_BUTTON_MASK_LEFT if down else 0
+		event.position = point
+		event.global_position = point
+		event.pressed = down
+		get_viewport().push_input(event, true)
+		await get_tree().process_frame
+	await get_tree().process_frame
+
 
 func save_settings() -> void:
 	for setting in ["music_enabled", "music_volume", "effects_volume", "enabled"]:
