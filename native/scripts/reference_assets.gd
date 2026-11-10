@@ -64,3 +64,4 @@ static func dispose() -> void:
 	for node in models.values():
 		node.free()
 	models.clear()
+	materials.clear()

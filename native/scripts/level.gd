@@ -42,9 +42,20 @@ func load_map(key: String, arena: bool = false) -> void:
 		if int(box.breakable) >= 0:
 			breakables[int(box.breakable)].body = body
 	for i in data.movers:
-		movers.append(geometry.get_child(int(i)))
+		var mover = geometry.get_child(int(i))
+		movers.append(mover)
+		var body = AnimatableBody3D.new()
+		body.collision_layer = 16
+		body.collision_mask = 0
+		body.sync_to_physics = false
+		var shape = CollisionShape3D.new()
+		var box = BoxShape3D.new()
+		box.size = Vector3(3.0, 0.2, 3.0)
+		shape.shape = box
+		body.add_child(shape)
+		mover.add_child(body)
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not get_parent().get_parent().playing:
 		return
 	elapsed += delta
@@ -57,15 +68,19 @@ func _process(delta: float) -> void:
 		movers[i].position = pos
 		movers[i].look_at(next, Vector3.UP, true)
 
-func hit_prop(body: Object, amount: float) -> void:
+func hit_prop(body: Object, amount: float, broadcast: bool = true) -> void:
 	var id = int(body.get_meta("breakable", -1))
 	if id < 0 or not breakables.has(id):
 		return
 	var prop: Dictionary = breakables[id]
 	prop.hp -= amount
 	if prop.hp <= 0:
+		get_parent().get_parent().burst(prop.position, 3, 22)
+		get_parent().get_parent().sound.play_effect("smash", prop.position)
 		prop.visual.visible = false
 		prop.body.queue_free()
 		if prop.kind == "pinata":
 			get_parent().get_parent().spawn_pickup("health", prop.position)
+		if broadcast and get_parent().get_parent().network.in_match:
+			get_parent().get_parent().network.send_packet({"type": "broken", "id": id})
 		breakables.erase(id)

@@ -28,7 +28,7 @@ def run(extra, tag):
         print((error.stdout or b'').decode() if isinstance(error.stdout, bytes) else error.stdout)
         raise SystemExit(f'FAIL: {tag} timed out')
     output = result.stdout
-    if result.returncode or any(error in output for error in ['SCRIPT ERROR', 'Parse Error', 'Assertion failed', 'SHADER ERROR']):
+    if result.returncode or any(error in output for error in ['ERROR:', 'Parse Error', 'Assertion failed']):
         print(output)
         raise SystemExit(f'FAIL: {tag}; log: {logfile}')
     if tag == 'smoke' and output.count('SMOKE PASS:') != 2:
