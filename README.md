@@ -2,7 +2,7 @@
 
 An unofficial native port of [Doodle District](https://doodleshooter.vercel.app/) for Android and iOS, built with Godot 4.6.3 and GDScript. The name combines **port** and **portable**. Reproduce the original game first; create new maps afterward.
 
-The project provides native survival gameplay and an experimental client/server free-for-all mode. **It is not yet a complete clone**: reference comparison, end-to-end multiplayer validation, and device and visual verification remain unfinished. See [docs/PARITY.md](docs/PARITY.md) for the full status.
+The project provides offline survival, offline free-for-all with bots, built-in LAN hosting, and an experimental online lobby mode. **It is not yet a complete clone**: reference comparison, complete multiplayer validation, and device verification remain unfinished. See [docs/PARITY.md](docs/PARITY.md) for the full status.
 
 All port UI and project documentation are in English. The original game's attribution appears in the game and in [CREDITS.md](CREDITS.md). The historical upstream source snapshot is preserved unchanged for provenance and contains its own localized strings; it is not shipped in the native application.
 
@@ -20,7 +20,7 @@ To display touch controls on desktop:
 godot --path native -- --touch
 ```
 
-Touch controls appear automatically on mobile. Survival gameplay runs locally without an Internet connection. Online mode requires the separate lobby server described below.
+Touch controls appear automatically on mobile. Menus accept touch through mouse emulation; gameplay uses separate multitouch input. Touch buttons include quick slash and the scoreboard. Online mode requires the separate lobby server described below; offline and LAN modes do not.
 
 ## Android
 
@@ -35,6 +35,30 @@ godot --headless --path native --export-debug Android
 
 Private signing keys are not stored in the project. AAB exports and store releases require a Gradle build and release signing configuration.
 
+## Offline play
+
+Choose **Play offline** from the main menu:
+
+- **Survival**: fight growing enemy waves and bosses, with saved checkpoints.
+- **Free for all with bots**: select 1–9 bots and Easy, Normal, or Hard difficulty, then start an arena match. Bots fight you and each other. First to 20 kills wins; otherwise the highest score wins after 10 minutes. Reappearing players and bots receive two seconds of protection. Respawns are automatic, and pausing stops the offline match.
+
+Both modes work without Internet access or a server. The bot mode is a port feature, not a claim that the original game provides the same AI mode.
+
+## Local network (LAN)
+
+1. Connect the devices to the same Wi-Fi network or hotspot.
+2. On one device, choose **Local network · LAN → Host LAN game**. Its lobby displays available local IPv4 addresses.
+3. On the others, enter the host's IP in **Join LAN game**. The default port is TCP 8912; an explicit `address:port` is also accepted.
+4. The host chooses the map and starts the match. Up to ten people can join, including late joiners. LAN uses the same 20-kill/10-minute rules as online matches.
+
+The server runs inside the hosting game. No Internet, account, or Python installation is needed. Keep the host device in the game; closing its room ends the connection for guests. Guest Wi-Fi isolation or local firewalls can prevent connections. Current LAN rooms contain human players; bots are available in offline matches. LAN room discovery and LAN host migration are not implemented.
+
+Headless tests exercise two actual Godot game processes through arena loading, remote avatars, damage, scoring, and respawning. Connections between physical devices still need verification.
+
+## Credits
+
+**Credits** on the main menu contains original-game attribution, source provenance, music/effect credits, engine/font credits, full bundled notices, the font license, and Godot's license. It includes links to the original game and reference repository.
+
 ## Experimental online play
 
 Run the native lobby server with Python 3.11 or later:
@@ -45,7 +69,7 @@ python3 -m venv .venv
 .venv/bin/python server/lobby.py
 ```
 
-The server binds to `127.0.0.1:8911` by default. For LAN testing, set `DOODLE_BIND=0.0.0.0` when starting it. In **Play online**, enter a WebSocket URL reachable from the client: `ws://127.0.0.1:8911` on the same desktop, `ws://10.0.2.2:8911` from the Android emulator, or the server computer's LAN address from a phone. There is no hosted matchmaking service or web-lobby interoperability.
+The server binds to `127.0.0.1:8911` by default. To expose this separate online server to other devices, set `DOODLE_BIND=0.0.0.0` when starting it. The built-in LAN menu does not need this server. In **Play online**, enter a WebSocket URL reachable from the client: `ws://127.0.0.1:8911` on the same desktop, `ws://10.0.2.2:8911` from the Android emulator, or the server computer's LAN address from a phone. There is no hosted matchmaking service or web-lobby interoperability.
 
 The implementation includes public/private lobbies, codes, quick play, ten-player rooms, late joining, a 20-kill/10-minute limit, respawning, and host migration. Server protocol tests pass; a complete match between Godot clients has not been verified. The server caps reported damage but trusts client hit reports and movement.
 
@@ -69,9 +93,17 @@ python3 tools/check.py
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-The Godot check verifies reference hashes, imports the project, rejects engine/script errors, and runs headless gameplay integration checks. Coverage includes collision, weapons, shell reload interruption, directional parries, grappling, multitouch, enemy hitboxes, boss projectile emission, and checkpoint scheduling. Python tests exercise the lobby protocol over real local WebSocket connections.
+The Godot check verifies reference hashes, imports the project, rejects engine/script errors, and runs headless gameplay, bot-match, menu-routing, native LAN protocol, and two-process LAN game checks. Coverage includes weapons, parries, grappling, multitouch, enemy hitboxes, boss projectile emission, bot-versus-bot fire, player melee damage, respawns, and the bot match kill limit. Python tests exercise the lobby protocol over real local WebSocket connections.
 
-The development environment blocked ADB access and macOS graphical services. Device/emulator execution and visual rendering have not been verified. See [docs/VALIDATION.md](docs/VALIDATION.md).
+Desktop menu rendering has been captured and inspected. Device/emulator play, physical touch, and gameplay visual parity remain unverified. See [docs/VALIDATION.md](docs/VALIDATION.md).
+
+To capture the four menu screens with a graphical desktop session:
+
+```sh
+godot --path native --script "$PWD/tools/capture-menus.gd"
+```
+
+Screenshots are written to `builds/validation/`; set `DOODLE_CAPTURE_DIR` to choose another location.
 
 ## Reference and layout
 
@@ -89,7 +121,7 @@ To regenerate native data without downloading dependencies:
 node --experimental-vm-modules tools/extract-reference.mjs
 ```
 
-The converter executes the reference's procedural generators with its local Three.js dependency, reverses triangle winding for Godot, and preserves coordinates. Online matches load the converted arena variants. Extracted display names are normalized to English.
+The converter executes the reference's procedural generators with its local Three.js dependency, reverses triangle winding for Godot, and preserves coordinates. Bot matches, LAN matches, and online matches load the converted arena variants. Extracted display names are normalized to English.
 
 To render the original audio again, install Node.js, ffmpeg, and the build-only dependencies:
 
