@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import time
 
 ROOT = Path(__file__).resolve().parent.parent
 GODOT = os.environ.get('GODOT_BIN') or shutil.which('godot')
@@ -34,7 +35,9 @@ def run(extra, tag):
     if tag == 'smoke' and output.count('SMOKE PASS:') != 2:
         print(output)
         raise SystemExit('FAIL: smoke did not reach both completion markers')
-    print('\n'.join(line for line in output.splitlines() if line.startswith('SMOKE PASS:')) or f'PASS: {tag}')
+    if tag == 'lan' and 'LAN PASS:' not in output:
+        raise SystemExit('FAIL: native LAN test did not reach its completion marker')
+    print('\n'.join(line for line in output.splitlines() if line.startswith(('SMOKE PASS:', 'LAN PASS:'))) or f'PASS: {tag}')
     print(f'Log: {logfile}')
 
 run(['--editor', '--import'], 'import')
@@ -42,3 +45,42 @@ try:
     run(['--', '--smoke'], 'smoke')
 finally:
     (ROOT / 'native/.smoke-progress.cfg').unlink(missing_ok=True)
+run(['--script', str(ROOT / 'tests/native_lan.gd')], 'lan')
+
+def run_lan_game():
+    """Exercise the actual game scene in two separate engine processes."""
+    paths = [Path(tempfile.gettempdir()) / f'doodleshooter-check-lan-{role}.log' for role in ('host', 'guest')]
+    processes = []
+    try:
+        with paths[0].open('w') as host_log, paths[1].open('w') as guest_log:
+            command = [GODOT, '--headless', '--path', str(ROOT / 'native'), '--script', str(ROOT / 'tests/lan_game_peer.gd')]
+            host = subprocess.Popen([*command, '--', '--host'], stdout=host_log, stderr=subprocess.STDOUT)
+            processes.append(host)
+            deadline = time.monotonic() + 12
+            while 'LAN HOST READY' not in paths[0].read_text():
+                if host.poll() is not None or time.monotonic() > deadline:
+                    raise RuntimeError('LAN game host did not become ready')
+                time.sleep(0.05)
+            guest = subprocess.Popen(command, stdout=guest_log, stderr=subprocess.STDOUT)
+            processes.append(guest)
+            for process in processes:
+                process.wait(timeout=40)
+        for process, path in zip(processes, paths):
+            output = path.read_text()
+            if process.returncode or 'ERROR:' in output or 'LAN GAME PASS:' not in output:
+                raise RuntimeError(f'LAN game peer failed; log: {path}')
+            print(next(line for line in output.splitlines() if line.startswith('LAN GAME PASS:')))
+            print(f'Log: {path}')
+    except (RuntimeError, subprocess.TimeoutExpired) as error:
+        for path in paths:
+            print(path.read_text() if path.exists() else '')
+        raise SystemExit(f'FAIL: {error}')
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+        for role in ('host', 'guest'):
+            (ROOT / f'native/.lan-test-{role}.cfg').unlink(missing_ok=True)
+
+run_lan_game()

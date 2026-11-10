@@ -264,7 +264,10 @@ func _physics_process(delta: float) -> void:
 	if position.y < -12.0:
 		position = game.level.start + Vector3.UP * 0.1
 		velocity = Vector3.ZERO
-		take_damage(20)
+		if game.match_mode == "bots":
+			game.bot_match.damage("player", 20, "player")
+		else:
+			take_damage(20)
 	if reload_time > 0:
 		reload_time -= delta
 		if reload_time <= 0:
@@ -327,7 +330,7 @@ func reload() -> void:
 
 func fire() -> void:
 	if weapon_index == 3:
-		if aiming and katana_charge >= 1 and not game.network.in_match:
+		if aiming and katana_charge >= 1 and not game.network.in_match and game.match_mode == "survival":
 			var hit = ray(45)
 			if not hit.is_empty() and hit.collider.has_method("take_damage"):
 				position = hit.position + camera.global_basis.z * 2.0
@@ -394,7 +397,8 @@ func slash() -> void:
 	last_attack = "katana"
 	recoil = 0.1
 	game.sound.play_effect("katanaSwing")
-	var targets: Array = game.enemies.duplicate()
+	var targets: Array = []
+	targets.append_array(game.enemies)
 	targets.append_array(game.remote_players.values())
 	for enemy in targets:
 		if not is_instance_valid(enemy) or not enemy.alive:

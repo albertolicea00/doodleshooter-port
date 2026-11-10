@@ -24,6 +24,8 @@ func layout() -> void:
 		"aim": [Vector2(s.x - 224, s.y - 230), 32.0, "AIM"],
 		"reload": [Vector2(s.x - 345, s.y - 180), 28.0, "R"],
 		"grenade": [Vector2(s.x - 333, s.y - 278), 29.0, "G"],
+		"slash": [Vector2(s.x - 440, s.y - 180), 30.0, "SLASH"],
+		"scoreboard": [Vector2(s.x - 155, 40), 28.0, "SCORE"],
 		"next_weapon": [Vector2(s.x - 96, s.y - 67), 30.0, "1–4"],
 		"pause": [Vector2(s.x - 46, 40), 24.0, "II"] }
 

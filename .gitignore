@@ -1,6 +1,7 @@
 .DS_Store
 native/.godot/
 native/.smoke-progress.cfg
+native/.lan-test-*.cfg
 native/export_credentials.cfg
 builds/**
 !builds/.gitkeep

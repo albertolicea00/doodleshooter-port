@@ -61,6 +61,13 @@ var code_input: LineEdit
 var status_message = ""
 var pending_broken: Array = []
 var last_room_code = ""
+var match_mode = "survival"
+var bot_count = 5
+var bot_difficulty = 1
+var bot_match: DoodleBotMatch
+var lan_server: DoodleLanServer
+var lan_address = ""
+var lan_host_note = ""
 
 func _ready() -> void:
 	if "--smoke" in OS.get_cmdline_user_args():
@@ -77,6 +84,9 @@ func _ready() -> void:
 		sound.set(setting, preferences.get_value("audio", setting, sound.get(setting)))
 	particles = DoodleParticles.new()
 	add_child(particles)
+	bot_match = DoodleBotMatch.new()
+	bot_match.game = self
+	add_child(bot_match)
 	network = DoodleNetwork.new()
 	add_child(network)
 	network.received.connect(_network_packet)
@@ -235,8 +245,15 @@ func _button(text: String, callback: Callable) -> Button:
 	return button
 
 func show_main_menu() -> void:
-	if network != null and network.connected:
+	if network != null:
 		network.close()
+	if is_instance_valid(lan_server):
+		lan_server.stop()
+		lan_server.queue_free()
+		lan_server = null
+	lan_host_note = ""
+	bot_match.stop()
+	match_mode = "survival"
 	_clear_remote_players()
 	playing = false
 	paused = false
@@ -248,10 +265,11 @@ func show_main_menu() -> void:
 	maps.item_selected.connect(func(index): map_key = "district" if index == 0 else "mexico")
 	maps.custom_minimum_size.y = 44
 	menu_items.add_child(maps)
-	_button("PLAY · SURVIVAL", func(): start_game(1))
+	_button("PLAY OFFLINE", show_offline_menu)
 	if checkpoint >= 5:
 		_button("CONTINUE · WAVE " + str(checkpoint), func(): start_game(checkpoint))
 	_button("PLAY ONLINE", show_online_menu)
+	_button("LOCAL NETWORK · LAN", show_lan_menu)
 	_button("CONTROLS & SETTINGS", show_settings)
 	_button("CREDITS", show_credits)
 	var foot = Label.new()
@@ -349,7 +367,7 @@ func start_game(first_wave: int) -> void:
 	add_child(region)
 	level = DoodleLevel.new()
 	region.add_child(level)
-	level.load_map(map_key, network.in_match)
+	level.load_map(map_key, network.in_match or match_mode == "bots")
 	sound.set_map(map_key)
 	region.bake_navigation_mesh(false)
 	player = DoodlePlayer.new()
@@ -367,11 +385,15 @@ func start_game(first_wave: int) -> void:
 			if level.breakables.has(int(id)):
 				level.hit_prop(level.breakables[int(id)].body, 9999, false)
 		pending_broken.clear()
+	elif match_mode == "bots":
+		bot_match.begin(bot_count, bot_difficulty)
 	else:
 		start_wave(first_wave)
 
 func _clear_world() -> void:
 	playing = false
+	bot_match.stop()
+	scoreboard.visible = false
 	_clear_remote_players()
 	for enemy in enemies:
 		if is_instance_valid(enemy):
@@ -406,7 +428,12 @@ func pause_menu() -> void:
 		return
 	paused = true
 	playing = false
-	_clear_menu("Paused", "Wave %d · %d points" % [wave, score])
+	var summary = "Wave %d · %d points" % [wave, score]
+	if match_mode == "bots":
+		summary = "Offline free for all · %d / 20 kills" % bot_match.scores.player.kills
+	elif network.in_match:
+		summary = "Free for all · the match continues while this menu is open"
+	_clear_menu("Paused", summary)
 	_button("RESUME", resume_game)
 	_button("CONTROLS & SETTINGS", show_settings)
 	_button("MAIN MENU", show_main_menu)
@@ -459,6 +486,9 @@ func _process(delta: float) -> void:
 		return
 	if network.in_match:
 		update_online(delta)
+		return
+	if match_mode == "bots":
+		bot_match.update(delta)
 		return
 	combo_timer -= delta
 	if combo_timer <= 0:
@@ -543,6 +573,8 @@ func save_progress() -> void:
 	preferences.save(save_path)
 
 func game_over() -> void:
+	if match_mode == "bots":
+		return
 	if network.in_match:
 		death_timer = 2.5
 		return
@@ -626,7 +658,7 @@ func explode(at: Vector3, radius: float, damage: float, friendly: bool = true) -
 	shake += 0.7
 	if network.in_match and friendly:
 		network.send_packet({"type": "blast", "position": [at.x, at.y, at.z]})
-	if not network.in_match and player.position.distance_to(at) < radius:
+	if not network.in_match and match_mode != "bots" and player.position.distance_to(at) < radius:
 		var distance = (player.position + Vector3.UP).distance_to(at)
 		player.take_damage(10 + 34 * (1 - distance / (radius * 0.95)) if friendly else damage)
 		player.velocity += ((player.position + Vector3.UP) - at).normalized() * 9
@@ -635,6 +667,8 @@ func explode(at: Vector3, radius: float, damage: float, friendly: bool = true) -
 			var distance = enemy.position.distance_to(at)
 			if distance < radius:
 				enemy.take_damage(damage * clampf(1 - distance / radius, 0.2, 1))
+	if friendly and match_mode == "bots":
+		bot_match.blast(at)
 	if friendly:
 		for prop in level.breakables.values().duplicate():
 			if prop.position.distance_to(at) < radius:
@@ -880,7 +914,70 @@ func run_smoke() -> void:
 	assert(inkblot.shots == 1, "The Inkblot must emit its spray sequence")
 	for i in 180:
 		await get_tree().physics_frame
-	print("SMOKE PASS: mexico collision, destructibles, checkpoint, boss queue, all enemy models")
+	match_mode = "bots"
+	map_key = "district"
+	bot_count = 3
+	bot_difficulty = 2
+	await start_game(0)
+	assert(level.data.boxes.size() == 429 and bot_match.bots.size() == 3, "Offline bots must use the arena without a server")
+	var first = bot_match.bots[0]
+	var second = bot_match.bots[1]
+	player.position = Vector3(30, 80, 0)
+	first.position = Vector3(0, 80, 0)
+	second.position = Vector3(0, 80, -4)
+	bot_match.bots[2].position = Vector3(40, 80, 0)
+	assert(bot_match.choose_target(first) == second, "Bots must also select other bots as opponents")
+	player.set_physics_process(false)
+	for bot in bot_match.bots:
+		bot.set_physics_process(false)
+	for i in 2:
+		await get_tree().physics_frame
+	first.target_actor = second
+	first.think_time = 1
+	first.fire_time = 0
+	second.invulnerable = 0
+	first._physics_process(1.0 / 60)
+	assert(second.hp == 101, "An AI bot must shoot and damage another bot through native collision")
+	first.invulnerable = 0
+	player.position = first.position + Vector3(0, 0, 2)
+	player.camera.rotation = Vector3.ZERO
+	player.fire_cd = 0
+	for i in 2:
+		await get_tree().physics_frame
+	player.slash()
+	assert(first.hp == 65, "The player's quick slash must hit an offline bot")
+	first.hp = 120
+	first.invulnerable = 2
+	player.set_physics_process(true)
+	for bot in bot_match.bots:
+		bot.set_physics_process(true)
+	bot_match.damage(first.peer_id, 999, "player")
+	assert(first.hp == 120, "Offline spawn protection must reject damage")
+	first.invulnerable = 0
+	bot_match.damage(first.peer_id, 999, "player")
+	assert(not first.alive and bot_match.scores.player.kills == 1)
+	bot_match.respawn_bot(first)
+	assert(first.alive and first.hp == 120 and first.invulnerable == 2)
+	bot_match.player_shield = 0
+	bot_match.damage("player", 999, second.peer_id)
+	assert(not player.alive and bot_match.scores[second.peer_id].kills == 1)
+	bot_match.player_respawn = 0
+	bot_match.update(0.01)
+	assert(player.alive and player.hp == 120 and bot_match.player_shield == 2)
+	pause_menu()
+	var clock_before = bot_match.remaining
+	for i in 2:
+		await get_tree().process_frame
+	assert(bot_match.remaining == clock_before, "Pausing offline must stop the match clock")
+	resume_game()
+	for i in 180:
+		await get_tree().physics_frame
+	bot_match.scores.player.kills = 19
+	bot_match.respawn_bot(first)
+	first.invulnerable = 0
+	bot_match.damage(first.peer_id, 999, "player")
+	assert(not bot_match.active and not playing, "Twenty offline kills must end the match")
+	print("SMOKE PASS: mexico collision, destructibles, checkpoint, boss queue, enemy hitboxes, offline bot combat, respawn, pause, match limit")
 	_clear_world()
 	sound.stop_all()
 	# Let the audio thread release stopped playback before engine shutdown.
@@ -908,7 +1005,6 @@ func smoke_click_button(label: String) -> void:
 		get_viewport().push_input(event, true)
 		await get_tree().process_frame
 	await get_tree().process_frame
-
 
 func save_settings() -> void:
 	for setting in ["music_enabled", "music_volume", "effects_volume", "enabled"]:
@@ -1012,7 +1108,7 @@ func show_lobby() -> void:
 	var names = ""
 	for entry in network.roster:
 		names += entry.name + (" · host" if entry.id == network.host_id else "") + "\n"
-	_clear_menu("Lobby " + network.code, names + "\nFree for all · first to 20 · 10 minute limit")
+	_clear_menu("Lobby " + network.code, names + "\nFree for all · first to 20 · 10 minute limit" + lan_host_note)
 	if network.peer_id == network.host_id:
 		var maps = OptionButton.new()
 		maps.add_item("Doodle District")
@@ -1020,7 +1116,7 @@ func show_lobby() -> void:
 		maps.selected = 0 if map_key == "district" else 1
 		maps.item_selected.connect(func(index): network.send_packet({"type": "map", "map": "district" if index == 0 else "mexico"}))
 		menu_items.add_child(maps)
-	_button("START MATCH", func(): network.send_packet({"type": "start"}))
+		_button("START MATCH", func(): network.send_packet({"type": "start"}))
 	_button("LEAVE LOBBY", show_main_menu)
 
 func _network_packet(packet: Dictionary) -> void:
@@ -1036,6 +1132,7 @@ func _network_packet(packet: Dictionary) -> void:
 			_button("BACK", show_online_menu)
 		"start":
 			network.in_match = true
+			match_mode = "survival"
 			map_key = packet.map
 			online_spawn = int(packet.spawn)
 			pending_broken = packet.broken
@@ -1061,21 +1158,7 @@ func _network_packet(packet: Dictionary) -> void:
 				player.hp = float(packet.hp) + float(packet.amount)
 				player.take_damage(float(packet.amount))
 		"respawn":
-			apply_online_spawn(int(packet.spawn))
-			player.hp = 120
-			player.alive = true
-			player.grenades = 3
-			player.magazines = [35, 6, 5, 0]
-			player.reserves = [175, 36, 25, 0]
-			player.reload_time = 0
-			player.cycle_time = 0
-			player.fire_cd = 0
-			player.charging = false
-			player.throw_charge = 0
-			player.slide_time = 0
-			player.stamina = 1
-			player.katana_charge = 0
-			trajectory.clear()
+			reset_arena_player(int(packet.spawn))
 			resume_game()
 		"shot":
 			if remote_players.has(packet.id):
@@ -1149,3 +1232,104 @@ func update_online(delta: float) -> void:
 	for dot in trajectory_nodes:
 		dot.visible = player.charging
 	_update_effects(delta)
+
+func reset_arena_player(index: int) -> void:
+	apply_online_spawn(index)
+	player.hp = 120
+	player.alive = true
+	player.grenades = 3
+	player.magazines = [35, 6, 5, 0]
+	player.reserves = [175, 36, 25, 0]
+	player.reload_time = 0
+	player.cycle_time = 0
+	player.fire_cd = 0
+	player.charging = false
+	player.throw_charge = 0
+	player.slide_time = 0
+	player.stamina = 1
+	player.katana_charge = 0
+	player.last_hurt = 0
+	trajectory.clear()
+
+func show_offline_menu() -> void:
+	_clear_menu("Play offline", "No Internet connection or server needed")
+	_button("SURVIVAL · ENEMY WAVES", func(): match_mode = "survival"; start_game(1))
+	_credit_section("Free for all with bots", "Fight other doodlers in the arena. Bots fight you and each other. First to 20 kills, or the highest score after 10 minutes. Respawns are automatic.")
+	var count = OptionButton.new()
+	for i in range(1, 10):
+		count.add_item("1 bot" if i == 1 else "%d bots" % i)
+	count.selected = bot_count - 1
+	count.custom_minimum_size.y = 46
+	count.item_selected.connect(func(index): bot_count = index + 1)
+	menu_items.add_child(count)
+	var skill = OptionButton.new()
+	for label in ["Easy bots", "Normal bots", "Hard bots"]:
+		skill.add_item(label)
+	skill.selected = bot_difficulty
+	skill.custom_minimum_size.y = 46
+	skill.item_selected.connect(func(index): bot_difficulty = index)
+	menu_items.add_child(skill)
+	_button("START BOT MATCH", func(): match_mode = "bots"; start_game(0))
+	_button("BACK", show_main_menu)
+
+func show_lan_menu() -> void:
+	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed. The hosting device must keep the game open.")
+	name_input = LineEdit.new()
+	name_input.placeholder_text = "Your name"
+	name_input.text = player_name
+	name_input.custom_minimum_size.y = 46
+	menu_items.add_child(name_input)
+	_button("HOST LAN GAME", host_lan_game)
+	server_input = LineEdit.new()
+	server_input.placeholder_text = "Host IP address, for example 192.168.1.10"
+	server_input.text = lan_address
+	server_input.custom_minimum_size.y = 46
+	menu_items.add_child(server_input)
+	_button("JOIN LAN GAME", join_lan_game)
+	_credit_section("Joining a room", "Ask the host for the IP address shown in their lobby. Enter it above, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other.")
+	_button("BACK", show_main_menu)
+
+func save_player_name() -> void:
+	player_name = name_input.text.strip_edges().left(24)
+	if player_name.is_empty():
+		player_name = "Doodler"
+	preferences.set_value("online", "name", player_name)
+	preferences.save(save_path)
+
+func host_lan_game() -> void:
+	save_player_name()
+	if is_instance_valid(lan_server):
+		lan_server.stop()
+		lan_server.queue_free()
+	lan_server = DoodleLanServer.new()
+	add_child(lan_server)
+	var error = lan_server.start()
+	if error != OK:
+		lan_server.queue_free()
+		lan_server = null
+		_clear_menu("LAN hosting unavailable", "Could not open the local game port. Close another hosted room and try again.")
+		_button("BACK", show_lan_menu)
+		return
+	var addresses: Array[String] = []
+	for address in IP.get_local_addresses():
+		if address.is_valid_ip_address() and not ":" in address and not address.begins_with("127.") and not address.begins_with("169.254."):
+			addresses.append(address)
+	lan_host_note = "\n\nHost IP: " + (", ".join(addresses) if not addresses.is_empty() else "Check this device's Wi-Fi settings") + "\nKeep this device in the game to host the room."
+	network.connect_lobby("ws://127.0.0.1:%d" % DoodleLanServer.PORT, {"type": "host", "map": map_key})
+	_clear_menu("Creating LAN room…", "Starting a game on this device")
+	_button("CANCEL", show_main_menu)
+
+func join_lan_game() -> void:
+	save_player_name()
+	lan_address = server_input.text.strip_edges()
+	if lan_address.is_empty():
+		server_input.placeholder_text = "Enter the host's IP address first"
+		return
+	var url = lan_address
+	if not url.begins_with("ws://"):
+		if not ":" in url:
+			url += ":%d" % DoodleLanServer.PORT
+		url = "ws://" + url
+	network.connect_lobby(url, {"type": "join", "code": "LAN"})
+	_clear_menu("Joining LAN room…", "Connecting to the host on your local network")
+	_button("CANCEL", show_main_menu)
