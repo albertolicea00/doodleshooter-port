@@ -8,3 +8,7 @@ builds/**
 *.jks
 *.p12
 *.mobileprovision
+
+node_modules/
+__pycache__/
+.venv/

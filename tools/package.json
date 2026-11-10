@@ -1,0 +1,7 @@
+{
+  "name": "doodleshooter-port-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {"audio": "node --experimental-vm-modules extract-audio.mjs"},
+  "devDependencies": {"node-web-audio-api": "2.0.0"}
+}

@@ -45,7 +45,7 @@ for (const key of ['district', 'mexico']) for (const arena of [false, true]) {
   const world = { addBox(min, max, data) { const b = { min, max, data }; boxes.push(b); return b; }, finalize() {} };
   const level = levelModule.namespace.buildLevel(scene, world, key, { arena });
   for (const a of level.animated) a.update(0);
-  const result = { key, arena, player_start: level.playerStart.toArray(), spawns: level.spawns.map(v => v.toArray()), snipers: level.snipers.map(v => v.toArray()), pickups: level.pickups.map(v => v.toArray()), arena_spawns: level.arenaSpawns.map(v => v.toArray()),
+  const result = { key, arena, player_start: level.playerStart.toArray(), spawns: level.spawns.map(v => v.toArray()), snipers: level.snipers.map(v => v.toArray()), pickups: level.pickups.map(v => v.toArray()), arena_spawns: level.arenaSpawns.map(v => v.toArray()), rings: level.rings.map(v => v.toArray()),
     boxes: boxes.map(b => ({ min: Object.values(b.min), max: Object.values(b.max), no_grapple: !!b.data.noGrapple, no_shoot: !!b.data.noShoot, breakable: b.data.breakable?.id ?? -1 })),
     children: scene.children.map(nodeData), breakables: level.breakables.map(b => ({ id: b.id, kind: b.kind, hp: b.hp, node: scene.children.indexOf(b.group), position: b.pos.toArray() })),
     movers: level.grappleMovers.map(m => scene.children.indexOf(m.mesh)) };
@@ -59,7 +59,9 @@ for (const [key, type] of Object.entries(enemyModule.namespace.TYPES)) {
   const builder = type.model === 'flyer' ? enemyModule.namespace.buildFlyer : type.model ? enemyModule.namespace.buildBomber : enemyModule.namespace.buildHumanoid;
   const model = builder(render.makeInkMaterial({ ink: type.ink ?? 1 }), render.makeInkMaterial({ ink: type.ink ?? 1, fill: true }), type, type.model === 'blob');
   for (const [joint, node] of Object.entries(model.J)) if (node) node.name = joint;
-  models[key] = nodeData(model.root);
+  // Some models alias head and torso; name only the parts used for hits.
+  for (const [part] of model.hit) model.parts[part].name = "hit_" + part;
+  models[key] = { ...nodeData(model.root), hit_spheres: model.hit };
 }
 await fs.writeFile(path.join(output, 'enemies.json'), JSON.stringify(models));
 const englishNames = { grunt: 'Grunt', rusher: 'Rusher', bomber: 'Bomber', sniper: 'Sniper', flyer: 'Flyer', heavy: 'Heavy', shield: 'Shield Bearer', boss: 'The Doodler', eraser: 'The Eraser', inkblot: 'The Inkblot' };

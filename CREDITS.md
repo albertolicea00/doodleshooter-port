@@ -13,3 +13,7 @@ No game-code license file was found in the reference revision. This project does
 Original web dependencies: **Three.js** and **PeerJS**. Their embedded copyright and license notices remain in `reference/upstream/vendor/`. Those dependencies are not included in the native executable.
 
 Native engine: **Godot Engine**, https://godotengine.org/, under the MIT license. Engine license and component notices: https://godotengine.org/license/ and https://godotengine.org/license/thirdparty/. Attribution is available in the game's Credits menu, and this document is bundled as `CREDITS.txt`.
+
+The original procedural soundtrack and sound effects are rendered from the unchanged reference audio generator for native playback. Both map compositions, their arrangements, and effect designs remain credited to the original game creators. The build-only audio renderer uses node-web-audio-api (IRCAM, BSD-3-Clause); it is not part of the mobile runtime.
+
+UI font: **Patrick Hand**, copyright the Patrick Hand authors, distributed under the SIL Open Font License 1.1. The font and its original license are bundled in `native/assets/fonts/`.
