@@ -27,6 +27,7 @@ var center_text: Label
 var scoreboard: Label
 var crosshair: Label
 var menu: PanelContainer
+var menu_scroll: ScrollContainer
 var menu_items: VBoxContainer
 var hit_marker = 0.0
 var hurt_flash = 0.0
@@ -195,12 +196,13 @@ func _setup_ui() -> void:
 	ui.add_child(menu)
 	menu_items = VBoxContainer.new()
 	menu_items.add_theme_constant_override("separation", 12)
-	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 520)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	menu.add_child(scroll)
+	menu_scroll = ScrollContainer.new()
+	menu_scroll.custom_minimum_size = Vector2(0, 520)
+	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	menu_scroll.scroll_deadzone = 12
+	menu.add_child(menu_scroll)
 	menu_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(menu_items)
+	menu_scroll.add_child(menu_items)
 	scope = ColorRect.new()
 	scope.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scope.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -213,6 +215,7 @@ func _setup_ui() -> void:
 
 func _clear_menu(title: String, subtitle: String) -> void:
 	Input.emulate_mouse_from_touch = true
+	menu_scroll.scroll_vertical = 0
 	for child in menu_items.get_children():
 		child.free()
 	var heading = Label.new()
@@ -239,6 +242,8 @@ func _button(text: String, callback: Callable) -> Button:
 	var button = Button.new()
 	button.text = text
 	button.custom_minimum_size.y = 46
+	# Let the scroll container cancel the press when a tap becomes a swipe.
+	button.mouse_filter = Control.MOUSE_FILTER_PASS
 	# Menu callbacks rebuild controls after the button finishes its input event.
 	button.pressed.connect(callback, CONNECT_DEFERRED)
 	menu_items.add_child(button)
@@ -763,13 +768,28 @@ func _exit_tree() -> void:
 
 func run_smoke() -> void:
 	assert(Input.emulate_mouse_from_touch, "Menus need touch-to-mouse conversion")
-	await smoke_click_button("CREDITS")
-	assert(menu_items.get_child(0).text == "Credits", "A menu click must open the credits screen")
-	await smoke_click_button("FULL CREDITS & NOTICES")
+	# Make Godot enable touchscreen scrolling in the headless display server.
+	Input.emulate_touch_from_mouse = true
+	await smoke_tap_button("CREDITS")
+	assert(menu_items.get_child(0).text == "Credits", "A menu tap must open the credits screen")
+	var notices = await smoke_menu_button("FULL CREDITS & NOTICES")
+	var swipe_start = notices.get_global_rect().get_center()
+	var previous_scroll = menu_scroll.scroll_vertical
+	smoke_touch(swipe_start, true)
+	smoke_touch_drag(swipe_start, Vector2(0, 100))
+	smoke_touch(swipe_start + Vector2(0, 100), false)
+	await get_tree().process_frame
+	assert(menu_items.get_child(0).text == "Credits", "Swiping over a button must not activate it")
+	assert(menu_scroll.scroll_vertical < previous_scroll, "A swipe starting on a button must scroll the menu")
+	await smoke_tap_button("FULL CREDITS & NOTICES", Vector2(0, 4))
 	assert(menu_items.get_child(0).text == "Full credits & notices")
-	await smoke_click_button("BACK TO CREDITS")
-	await smoke_click_button("BACK")
+	assert(menu_scroll.scroll_vertical == 0, "Each menu screen must open at the top")
+	await smoke_tap_button("BACK TO CREDITS")
+	await smoke_tap_button("BACK")
 	assert(menu_items.get_child(0).text == "doodleshooter-port", "Menu navigation must return to the main menu")
+	await smoke_tap_button("PLAY OFFLINE")
+	assert(menu_items.get_child(0).text == "Play offline", "A menu tap must open offline play")
+	Input.emulate_touch_from_mouse = false
 	await start_game(1)
 	assert(not Input.emulate_mouse_from_touch, "Gameplay touch must not also press mouse-bound fire")
 	assert(level.data.boxes.size() == 517)
@@ -846,9 +866,15 @@ func run_smoke() -> void:
 	assert(score >= old_score + 100 and kills == 1)
 	player.take_damage(20)
 	assert(player.hp <= 100)
-	pause_menu()
+	touch.visible = true
+	touch.layout()
+	var pause_point: Vector2 = touch.buttons.pause[0]
+	smoke_touch(pause_point, true)
+	for i in 2:
+		await get_tree().physics_frame
 	assert(not playing and paused)
-	resume_game()
+	smoke_touch(pause_point, false)
+	await smoke_tap_button("RESUME")
 	assert(playing and not paused)
 	throw_grenade(player.camera.global_position, Vector3.UP)
 	assert(grenades.size() == 1)
@@ -984,7 +1010,7 @@ func run_smoke() -> void:
 	await get_tree().create_timer(0.1).timeout
 	get_tree().quit()
 
-func smoke_click_button(label: String) -> void:
+func smoke_menu_button(label: String) -> Button:
 	var target: Button
 	for child in menu_items.get_children():
 		if child is Button and child.text == label:
@@ -992,19 +1018,35 @@ func smoke_click_button(label: String) -> void:
 	assert(target != null, "Missing menu button: " + label)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	menu.get_child(0).ensure_control_visible(target)
+	menu_scroll.ensure_control_visible(target)
 	await get_tree().process_frame
+	return target
+
+func smoke_tap_button(label: String, drift: Vector2 = Vector2.ZERO) -> void:
+	var target = await smoke_menu_button(label)
 	var point = target.get_global_rect().get_center()
-	for down in [true, false]:
-		var event = InputEventMouseButton.new()
-		event.button_index = MOUSE_BUTTON_LEFT
-		event.button_mask = MOUSE_BUTTON_MASK_LEFT if down else 0
-		event.position = point
-		event.global_position = point
-		event.pressed = down
-		get_viewport().push_input(event, true)
-		await get_tree().process_frame
+	smoke_touch(point, true)
+	if drift != Vector2.ZERO:
+		smoke_touch_drag(point, drift)
+	smoke_touch(point + drift, false)
 	await get_tree().process_frame
+	await get_tree().process_frame
+
+func smoke_touch(point: Vector2, down: bool) -> void:
+	var event = InputEventScreenTouch.new()
+	event.position = get_viewport().get_screen_transform() * point
+	event.pressed = down
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+func smoke_touch_drag(point: Vector2, offset: Vector2) -> void:
+	var transform_to_screen = get_viewport().get_screen_transform()
+	var event = InputEventScreenDrag.new()
+	event.position = transform_to_screen * (point + offset)
+	event.relative = transform_to_screen.basis_xform(offset)
+	event.screen_relative = event.relative
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
 
 func save_settings() -> void:
 	for setting in ["music_enabled", "music_volume", "effects_volume", "enabled"]:

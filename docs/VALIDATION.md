@@ -1,6 +1,6 @@
 # Validation record
 
-Date: November 10, 2026. Engine: Godot 4.6.3 stable. This records automated checks and desktop menu screenshots, not full original-game parity.
+Date: November 11, 2026. Engine: Godot 4.6.3 stable. This records automated checks and desktop menu screenshots, not full original-game parity.
 
 ## Automated coverage
 
@@ -10,13 +10,13 @@ Run the native checks:
 python3 tools/check.py
 ```
 
-The November 10 run passes. The checker verifies the original source SHA-256 hashes, imports the native project, rejects engine/script errors, and requires both smoke completion markers, the native LAN protocol marker, and completion markers from two separate Godot game processes. Logs are written to the system temporary directory as `doodleshooter-check-import.log` and `doodleshooter-check-smoke.log`.
+The November 11 run passes. The checker verifies the original source SHA-256 hashes, imports the native project, rejects engine/script errors, and requires both smoke completion markers, the native LAN protocol marker, and completion markers from two separate Godot game processes. Logs are written to the system temporary directory as `doodleshooter-check-import.log` and `doodleshooter-check-smoke.log`.
 
 Headless gameplay coverage includes:
 
 - District's 517 colliders, raycasts, rifle ammunition, reserve transfer during reload, movement, jump/double jump, grapple acquisition, persistent swing, and second-press release.
 - Simultaneous touch movement/fire, scoring, player damage, pause/resume, and grenade creation.
-- Menu clicks navigate Credits → full notices → Credits → main menu. Menu touch-to-mouse emulation is enabled; it is disabled during gameplay to avoid turning movement touches into mouse-bound fire. These checks inject viewport mouse events, not physical touchscreen input.
+- Synthetic screen-touch events pass through Godot's Input parser to navigate Credits → full notices → Credits → main menu → offline setup. Tests cover swipes starting on buttons, cancellation of button activation during a swipe, taps with four pixels of finger drift, scroll reset on screen changes, and touch pause/resume. Menu buttons pass pointer events to the scroll container, which uses a 12-pixel drag deadzone. Touch-to-mouse emulation is enabled in menus and disabled during gameplay. Physical touchscreen behavior remains unverified.
 - Shell-by-shell shotgun reload and firing interruption; frontal perfect parry, cooldown, and rejection of rear projectiles.
 - Mexico's 321 colliders, destructible removal, wave-five boss scheduling, and all ten enemy/boss models with damage hitboxes.
 - A physical raycast against the animated grunt head hitbox and damage forwarding to its actor.
@@ -38,7 +38,7 @@ Six tests pass over real local WebSocket connections. They cover private lobby v
 
 ## Android build status
 
-The November 10 current-source debug APK export succeeds. Independent `apksigner verify --verbose` passes with v2 and v3 signatures. Package inspection confirms application ID `com.doodleshooter.port`, version `0.1.0`, minimum SDK 24, and target SDK 36. Archive inspection confirms ARM64 and x86_64 native libraries, bundled credits, the font license, audio manifest, and enemy data.
+The November 11 current-source debug APK export succeeds. Independent `apksigner verify --verbose` passes with v2 and v3 signatures. Package inspection confirms application ID `com.doodleshooter.port`, version `0.1.0`, minimum SDK 24, and target SDK 36. Archive inspection confirms ARM64 and x86_64 native libraries, bundled credits, the font license, audio manifest, and enemy data.
 
 The initial attempt failed with `A valid Java SDK path is required in Editor Settings`. Configuring Godot's local `export/android/java_sdk_path` to the installed Temurin 17 JDK resolved the failure; setting `JAVA_HOME` alone did not. No signing credentials were added to the repository. The artifact is `builds/android/doodleshooter-port-debug.apk`.
 
