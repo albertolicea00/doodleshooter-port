@@ -28,15 +28,45 @@ var selected = ""
 var dragging = false
 var grab = Vector2.ZERO
 var toolbar: Control
+# Player preferences, edited under Settings and stored with the layout.
+var options = {"look": 1.0, "aim_look": 0.6, "invert_y": false, "gyro": 0, "gyro_speed": 1.0, "auto_fire": false, "left_fire": false, "reload_button": false, "aim_hold": false, "fixed_stick": false, "stick_sprint": true, "run_lock": true}
+var auto_firing = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-func _process(_delta: float) -> void:
-	if visible:
-		modulate.a = opacity
-		queue_redraw()
+func _process(delta: float) -> void:
+	if not visible:
+		return
+	modulate.a = opacity
+	queue_redraw()
+	if editing or not is_instance_valid(player) or not player.alive or not player.game.playing:
+		return
+	# Gyroscope aiming: rotation rate around the screen's vertical axis turns,
+	# around its horizontal axis pitches.
+	if options.gyro == 2 or (options.gyro == 1 and player.aiming):
+		var rate = Input.get_gyroscope()
+		turn(Vector2(-rate.y, -rate.x) * delta * options.gyro_speed)
+	# Auto fire: shoot while something that can be hurt is under the crosshair.
+	var reach = 3.2 if player.weapon_index == 3 else 18.0 if player.weapon_index == 1 else 120.0
+	var target = options.auto_fire and player.ray(reach).get("collider") != null and player.ray(reach).collider.has_method("take_damage")
+	if target and player.weapon_index in [1, 2] and auto_firing:
+		# Single-shot weapons need a fresh press for every shot.
+		target = false
+	if target != auto_firing:
+		auto_firing = target
+		if target:
+			Input.action_press("fire")
+		elif not held.values().has("fire"):
+			Input.action_release("fire")
+
+func turn(amount: Vector2) -> void:
+	if not is_instance_valid(player):
+		return
+	if options.invert_y:
+		amount.y = -amount.y
+	player.look(amount * (options.aim_look if player.aiming else 1.0))
 
 func _tweak(control: String) -> Array:
 	return custom.get(control, [0.0, 0.0, 1.0])
@@ -65,6 +95,10 @@ func layout() -> void:
 		"pause": [Vector2(r - 44, inset[1] + 44), 26.0, ""] }
 	if show_score or editing:
 		buttons["scoreboard"] = [Vector2(r - 112, inset[1] + 44), 26.0, "SCORE"]
+	if options.reload_button:
+		buttons["reload"] = [Vector2(r - 360, b - 70), 30.0, "RELOAD"]
+	if options.left_fire:
+		buttons["fire_left"] = [Vector2(inset[0] + 60, b - 360), 40.0, "FIRE"]
 	for action in buttons:
 		var button: Array = buttons[action]
 		button[1] *= _tweak(action)[2]
@@ -84,6 +118,8 @@ func layout() -> void:
 		if player.weapon_index == 3:
 			buttons.fire[2] = "SLASH"
 			buttons.aim[2] = "BLOCK"
+			if buttons.has("fire_left"):
+				buttons.fire_left[2] = "SLASH"
 
 func _input(event: InputEvent) -> void:
 	if not visible:
@@ -109,11 +145,11 @@ func _input(event: InputEvent) -> void:
 			var raw: Vector2 = (event.position - origin) / stick_radius
 			move_vector = raw.limit_length()
 			thumb = origin + move_vector * stick_radius
-			sprinting = raw.y < -0.9 and absf(raw.x) < absf(raw.y)
-			run_locked = raw.y < -1.9 and absf(raw.x) < 0.8
-		elif is_instance_valid(player):
+			sprinting = options.stick_sprint and raw.y < -0.9 and absf(raw.x) < absf(raw.y)
+			run_locked = options.stick_sprint and options.run_lock and raw.y < -1.9 and absf(raw.x) < 0.8
+		else:
 			# Any other finger turns the camera, including one holding FIRE.
-			player.look(event.relative * 0.003)
+			turn(event.relative * 0.003 * options.look)
 
 func _press(event: InputEventScreenTouch) -> void:
 	for i in slots.size():
@@ -129,7 +165,7 @@ func _press(event: InputEventScreenTouch) -> void:
 	for action in buttons:
 		var b: Array = buttons[action]
 		if event.position.distance_to(b[0]) < b[1] + 8:
-			if action == "aim" and not (is_instance_valid(player) and player.weapon_index == 3):
+			if action == "aim" and not options.aim_hold and not (is_instance_valid(player) and player.weapon_index == 3):
 				# Aim latches so the same thumb stays free to look and fire;
 				# the katana block stays a hold because its timing matters.
 				aim_locked = not aim_locked
@@ -141,6 +177,8 @@ func _press(event: InputEventScreenTouch) -> void:
 			else:
 				if action == "aim":
 					aim_locked = false
+				if action == "fire_left":
+					action = "fire"
 				held[event.index] = action
 				Input.action_press(action)
 			get_viewport().set_input_as_handled()
@@ -152,6 +190,8 @@ func _press(event: InputEventScreenTouch) -> void:
 		sprinting = false
 		move_vector = Vector2.ZERO
 		origin = Vector2(maxf(event.position.x, inset[0] + stick_radius + 8), minf(event.position.y, size.y - inset[3] - stick_radius - 8))
+		if options.fixed_stick:
+			origin = stick_rest
 		thumb = origin
 
 func reset() -> void:
@@ -167,6 +207,9 @@ func reset() -> void:
 	sprinting = false
 	run_locked = false
 	dragging = false
+	if auto_firing:
+		Input.action_release("fire")
+	auto_firing = false
 
 # Layout editor: drag any control; the toolbar resizes the selected one.
 func _control_at(point: Vector2) -> String:
@@ -236,7 +279,7 @@ func _draw() -> void:
 	var mark = Color(DoodlePen.RED, 0.9)
 	for action in buttons:
 		var b: Array = buttons[action]
-		var down = held.values().has(action) or (action == "aim" and aim_locked)
+		var down = held.values().has("fire" if action == "fire_left" else action) or (action == "aim" and aim_locked)
 		var tone = mark if editing and action == selected else ink
 		draw_circle(b[0], b[1], Color(DoodlePen.INK, 0.28) if down else Color(DoodlePen.PAPER, 0.55))
 		DoodlePen.sketch_circle(self, b[0], b[1], tone, 3.0 if action == "fire" else 2.5)
@@ -263,7 +306,7 @@ func _draw() -> void:
 	DoodlePen.sketch_circle(self, center, stick_radius, stick_tone, 2.5, true)
 	draw_circle(knob, stick_radius * 0.38, Color(stick_tone, 0.25))
 	DoodlePen.sketch_circle(self, knob, stick_radius * 0.38, stick_tone, 2.0)
-	if move_finger >= 0 or run_locked or editing:
+	if options.stick_sprint and options.run_lock and (move_finger >= 0 or run_locked or editing):
 		var lock = center + Vector2(0, -stick_radius * 1.9)
 		draw_circle(lock, 22, Color(DoodlePen.RED, 0.3) if run_locked else Color(DoodlePen.PAPER, 0.55))
 		DoodlePen.sketch_circle(self, lock, 22, mark if run_locked else ink, 2.0)

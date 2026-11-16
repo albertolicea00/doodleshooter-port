@@ -171,6 +171,7 @@ func _setup_ui() -> void:
 	touch.visible = false
 	touch.custom = preferences.get_value("touch", "layout", {})
 	touch.opacity = preferences.get_value("touch", "opacity", 1.0)
+	touch.options.merge(preferences.get_value("touch", "options", {}), true)
 	hurt_overlay = ColorRect.new()
 	hurt_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -341,24 +342,56 @@ func show_main_menu() -> void:
 	menu_items.add_child(foot)
 
 func show_settings() -> void:
-	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause\nTouch: left thumb moves, push fully forward to sprint, drag up to RUN to keep running\nDrag anywhere else to look, even while holding FIRE · AIM latches\nSLIDE on the ground becomes DASH in the air · tap a weapon chip to switch, tap the active one to reload")
-	_toggle("Touch controls", use_touch, func(value): use_touch = value)
+	_clear_menu("Settings", "Choose how you want to play")
+	_button("TOUCH & AIMING", show_touch_settings)
 	_button("CUSTOMIZE TOUCH LAYOUT", show_layout_editor)
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
-	for item in [["Music volume", "music_volume"], ["Effects volume", "effects_volume"]]:
-		var label = Label.new()
-		label.text = item[0]
-		menu_items.add_child(label)
-		var slider = HSlider.new()
-		slider.min_value = 0
-		slider.max_value = 1
-		slider.step = 0.05
-		slider.value = sound.get(item[1])
-		slider.custom_minimum_size.y = 36
-		slider.value_changed.connect(func(value): sound.set(item[1], value); save_settings())
-		menu_items.add_child(slider)
+	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
+	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
+	_button("CONTROLS REFERENCE", show_controls, "AltButton")
 	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
+
+func show_controls() -> void:
+	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause")
+	_credit_section("Touch", "The left thumb moves. Push fully forward to sprint and drag on up to RUN to keep running. Drag anywhere else to look, even while holding FIRE. SLIDE on the ground becomes DASH in the air. Tap a weapon chip to switch and tap the active one to reload. Every one of these can be changed under Touch & aiming.")
+	_button("BACK", show_settings, "AltButton")
+
+# Every merged or assisted behaviour is optional, as in large mobile shooters.
+func show_touch_settings() -> void:
+	_clear_menu("Touch & aiming", "Changes apply immediately and are saved on this device")
+	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
+	_toggle("Touch controls", use_touch, func(value): use_touch = value)
+	_credit_section("Looking", "")
+	_slider("Look sensitivity", touch.options.look, 0.3, 2.5, option.call("look"))
+	_slider("Sensitivity while aiming", touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
+	_toggle("Invert vertical look", touch.options.invert_y, option.call("invert_y"))
+	_credit_section("Gyroscope", "Turn the device to aim. Needs a motion sensor.")
+	_choices(["Off", "While aiming", "Always"], touch.options.gyro, option.call("gyro"))
+	_slider("Gyroscope sensitivity", touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
+	_credit_section("Shooting", "")
+	_toggle("Auto fire on target", touch.options.auto_fire, option.call("auto_fire"))
+	_toggle("Hold to aim", touch.options.aim_hold, option.call("aim_hold"))
+	_toggle("Second fire button on the left", touch.options.left_fire, option.call("left_fire"))
+	_toggle("Reload button", touch.options.reload_button, option.call("reload_button"))
+	_credit_section("Moving", "")
+	_toggle("Fixed joystick", touch.options.fixed_stick, option.call("fixed_stick"))
+	_toggle("Sprint with a full forward push", touch.options.stick_sprint, option.call("stick_sprint"))
+	_toggle("Run lock marker", touch.options.run_lock, option.call("run_lock"))
+	_button("BACK", show_settings, "AltButton")
+
+func _slider(text: String, value: float, low: float, high: float, callback: Callable) -> void:
+	var label = Label.new()
+	label.text = "%s: %d%%" % [text, roundi(value * 100)]
+	menu_items.add_child(label)
+	var slider = HSlider.new()
+	slider.min_value = low
+	slider.max_value = high
+	slider.step = 0.05
+	slider.value = value
+	slider.custom_minimum_size.y = 36
+	slider.value_changed.connect(func(changed): label.text = "%s: %d%%" % [text, roundi(changed * 100)]; callback.call(changed))
+	menu_items.add_child(slider)
 
 # The controls stay on screen, over the paused game when there is one, and
 # can be dragged and resized; the result is stored with the other settings.
@@ -930,6 +963,14 @@ func run_smoke() -> void:
 	drag.position = finger.position + Vector2(0, -touch.STICK_RADIUS)
 	touch._input(drag)
 	assert(touch.sprinting, "Pushing the joystick fully forward must sprint")
+	touch.options.stick_sprint = false
+	touch._input(drag)
+	assert(not touch.sprinting, "Stick sprint must be optional")
+	touch.options.stick_sprint = true
+	touch.options.left_fire = true
+	touch.layout()
+	assert(touch.buttons.has("fire_left"), "The second fire button must appear when enabled")
+	touch.options.left_fire = false
 	touch.custom = {"fire": [-40.0, -30.0, 1.2]}
 	touch.layout()
 	var moved: Array = touch.buttons.fire
@@ -948,6 +989,29 @@ func run_smoke() -> void:
 	assert(not Input.is_action_pressed("fire"), "Releasing fire must stop the action")
 	touch.reset()
 	touch.visible = use_touch
+	var dummy = spawn_enemy("grunt")
+	dummy.set_physics_process(false)
+	dummy.hp = 99999
+	dummy.global_position = player.camera.global_position - player.camera.global_basis.z * 6.0 - Vector3.UP
+	dummy.model.scale = Vector3.ONE * dummy.model_scale
+	for i in 2:
+		await get_tree().physics_frame
+	var dummy_head = dummy.model.find_child("hit_head", true, false).get_child(0)
+	player.camera.rotation.x = asin((dummy_head.global_position - player.camera.global_position).normalized().y)
+	player.switch_weapon(0)
+	var rounds: int = player.magazines[0]
+	touch.visible = true
+	touch.options.auto_fire = true
+	for i in 8:
+		await get_tree().physics_frame
+	player.camera.rotation.x = 0
+	assert(player.magazines[0] < rounds, "Auto fire must shoot a target under the crosshair")
+	touch.options.auto_fire = false
+	touch.reset()
+	touch.visible = use_touch
+	enemies.erase(dummy)
+	dummy.laser.free()
+	dummy.free()
 	var enemy = spawn_enemy("grunt")
 	var old_score = score
 	enemy.take_damage(999)
@@ -1139,6 +1203,7 @@ func smoke_touch_drag(point: Vector2, offset: Vector2) -> void:
 func save_settings() -> void:
 	for setting in ["music_enabled", "music_volume", "effects_volume", "enabled"]:
 		preferences.set_value("audio", setting, sound.get(setting))
+	preferences.set_value("touch", "options", touch.options)
 	preferences.save(save_path)
 
 func burst(at: Vector3, ink: int, count: int) -> void:
