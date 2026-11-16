@@ -9,6 +9,7 @@ import time
 from websockets.asyncio.server import serve
 
 ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # pragma: allowlist secret (lobby code alphabet)
+MAPS = ('district', 'mexico', 'castle', 'harbor', 'pyramid', 'station')
 DAMAGE = {'rifle': (19, 1.8), 'shotgun': (16, 1.6), 'sniper': (150, 1.5), 'katana': (55, 1), 'revolver': (48, 1.6), 'smg': (12, 1.6), 'grenade': (62, 1), 'deflect': (90, 1)}
 INTERVAL = {'rifle': 1 / 11, 'shotgun': 0.78, 'sniper': 0.85, 'katana': 0.33, 'revolver': 0.3, 'smg': 1 / 15, 'grenade': 0.7, 'deflect': 0.19}
 
@@ -107,7 +108,7 @@ class Lobby:
             code = ''.join(secrets.choice(ALPHABET) for _ in range(5))
             while code in self.rooms:
                 code = ''.join(secrets.choice(ALPHABET) for _ in range(5))
-            room = Room(code, player.id, bool(message.get('public', kind == 'quick')), 'mexico' if message.get('map') == 'mexico' else 'district')
+            room = Room(code, player.id, bool(message.get('public', kind == 'quick')), message.get('map') if message.get('map') in MAPS else 'district')
             self.rooms[code] = room
             return await self.join(player, room)
         if kind == 'join':
@@ -122,7 +123,7 @@ class Lobby:
         if not room:
             return
         if kind == 'map' and player.id == room.host and not room.started:
-            room.map = 'mexico' if message.get('map') == 'mexico' else 'district'
+            room.map = message.get('map') if message.get('map') in MAPS else 'district'
             return await self.info(room)
         if kind == 'start' and not room.started:
             room.started, room.ended, room.clock = True, False, 0

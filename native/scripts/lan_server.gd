@@ -9,6 +9,7 @@ var listener = TCPServer.new()
 var peers: Dictionary = {}
 var members: Dictionary = {}
 var host = ""
+const MAPS = ["district", "mexico", "castle", "harbor", "pyramid", "station"]
 var map_key = "district"
 var started = false
 var ended = false
@@ -140,7 +141,7 @@ func handle(id: String, packet: Dictionary) -> void:
 			return
 		if type == "host":
 			host = id
-			map_key = "mexico" if packet.get("map") == "mexico" else "district"
+			map_key = packet.map if packet.get("map") in MAPS else "district"
 		members[id] = {"name": peers[id].name, "hp": 120.0, "kills": 0, "deaths": 0, "shield": now + 2, "died": 0.0, "hurt": now, "activity": now, "state": {}, "fire": {}}
 		lobby_info()
 		if started:
@@ -154,7 +155,7 @@ func handle(id: String, packet: Dictionary) -> void:
 		send_to(id, {"type": "left_room"})
 		return
 	if type == "map" and id == host and not started:
-		map_key = "mexico" if packet.get("map") == "mexico" else "district"
+		map_key = packet.map if packet.get("map") in MAPS else "district"
 		lobby_info()
 		return
 	if type == "start" and id == host and not started:

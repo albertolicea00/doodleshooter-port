@@ -418,6 +418,9 @@ func take_damage(amount: float, point: Vector3 = Vector3.INF) -> void:
 		laser.queue_free()
 		game.sound.play_effect("enemyDie", global_position)
 		var corpse = model
+		# A corpse must not stop bullets, grapples or auto fire.
+		for hitbox in corpse.find_children("*", "Area3D", true, false):
+			hitbox.collision_layer = 0
 		corpse.reparent(game)
 		var tween = corpse.create_tween()
 		tween.tween_property(corpse, "rotation:x", PI * 0.5, 0.45)

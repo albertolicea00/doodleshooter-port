@@ -5,10 +5,13 @@ var actor: DoodleEnemy
 var part = "torso"
 var model_scale: float:
 	get:
-		return actor.model_scale
+		return actor.model_scale if is_instance_valid(actor) else 1.0
 
+# The model outlives its enemy as a corpse, so the actor may already be gone.
 func take_damage(amount: float, point: Vector3 = Vector3.INF) -> void:
-	actor.take_damage(amount, point)
+	if is_instance_valid(actor):
+		actor.take_damage(amount, point)
 
 func yank(from: Vector3) -> void:
-	actor.yank(from)
+	if is_instance_valid(actor):
+		actor.yank(from)

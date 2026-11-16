@@ -10,11 +10,12 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(output)
 	var game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
-	for screen in ["credits", "offline", "lan", "main"]:
+	for screen in ["credits", "offline", "lan", "maps", "main"]:
 		match screen:
 			"credits": game.show_credits()
 			"offline": game.show_offline_menu()
 			"lan": game.show_lan_menu()
+			"maps": game.show_map_menu(game.show_main_menu)
 			"main": game.show_main_menu()
 		for i in 8:
 			await process_frame

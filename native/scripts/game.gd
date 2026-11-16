@@ -28,6 +28,14 @@ var scoreboard: Label
 var menu_backdrop: ColorRect
 var editor_bar: PanelContainer
 var quality = 1
+# District and Mexico come from the original game; the other four are port additions built by tools/make-maps.py.
+const MAPS = [
+	{"key": "district", "name": "Doodle District", "music": "district"},
+	{"key": "mexico", "name": "Doodle Mexico", "music": "mexico"},
+	{"key": "castle", "name": "Doodle Castle", "music": "district"},
+	{"key": "harbor", "name": "Doodle Harbor", "music": "mexico"},
+	{"key": "pyramid", "name": "Doodle Pyramid", "music": "mexico"},
+	{"key": "station", "name": "Doodle Station", "music": "district"}]
 var show_fps = true
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
@@ -335,7 +343,7 @@ func show_main_menu() -> void:
 		_button("CONTINUE · WAVE " + str(checkpoint), func(): start_game(checkpoint))
 	_button("PLAY ONLINE", show_online_menu, "RedButton")
 	_button("LOCAL NETWORK · LAN", show_lan_menu)
-	_choices(["Doodle District", "Doodle Mexico · experimental"], 0 if map_key == "district" else 1, func(index): map_key = "district" if index == 0 else "mexico")
+	_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_main_menu), "AltButton")
 	_button("CONTROLS & SETTINGS", show_settings, "AltButton")
 	_button("CREDITS", show_credits, "AltButton")
 	var foot = Label.new()
@@ -344,6 +352,58 @@ func show_main_menu() -> void:
 	foot.add_theme_font_size_override("font_size", 18)
 	foot.modulate.a = 0.8
 	menu_items.add_child(foot)
+
+func map_info(key: String) -> Dictionary:
+	for info in MAPS:
+		if info.key == key:
+			return info
+	return MAPS[0]
+
+# Square cards with a rendered preview of each map.
+func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
+	_clear_menu("Choose a map", "District and Mexico are original · the rest are new in this port")
+	var grid = GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	for info in MAPS:
+		var chosen: bool = info.key == map_key
+		var card = Button.new()
+		card.theme_type_variation = "AltButton"
+		card.toggle_mode = true
+		card.button_pressed = chosen
+		card.custom_minimum_size = Vector2(194, 212)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		var column = VBoxContainer.new()
+		column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 10)
+		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(column)
+		var picture = TextureRect.new()
+		var preview = "res://assets/previews/%s.png" % info.key
+		if ResourceLoader.exists(preview):
+			picture.texture = load(preview)
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		picture.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		column.add_child(picture)
+		var label = Label.new()
+		label.text = info.name
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.add_theme_font_size_override("font_size", 20)
+		label.add_theme_color_override("font_color", DoodlePen.PAPER if chosen else DoodlePen.INK)
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		column.add_child(label)
+		var key: String = info.key
+		card.pressed.connect(func():
+			map_key = key
+			if pick.is_valid():
+				pick.call(key)
+			back.call(), CONNECT_DEFERRED)
+		grid.add_child(card)
+	menu_items.add_child(grid)
+	_button("BACK", back, "AltButton")
 
 func show_settings() -> void:
 	_clear_menu("Settings", "Choose how you want to play")
@@ -493,7 +553,7 @@ func start_game(first_wave: int) -> void:
 	level = DoodleLevel.new()
 	region.add_child(level)
 	level.load_map(map_key, network.in_match or match_mode == "bots")
-	sound.set_map(map_key)
+	sound.set_map(map_info(map_key).music)
 	region.bake_navigation_mesh(false)
 	player = DoodlePlayer.new()
 	player.game = self
@@ -1030,7 +1090,12 @@ func run_smoke() -> void:
 	dummy.free()
 	var enemy = spawn_enemy("grunt")
 	var old_score = score
+	var corpse_hitbox = enemy.model.find_child("hit_head", true, false).get_child(0)
 	enemy.take_damage(999)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert(corpse_hitbox.collision_layer == 0, "A corpse must not stay shootable")
+	corpse_hitbox.take_damage(10)
 	assert(score >= old_score + 100 and kills == 1)
 	player.take_damage(20)
 	assert(player.hp <= 100)
@@ -1171,6 +1236,22 @@ func run_smoke() -> void:
 	first.invulnerable = 0
 	bot_match.damage(first.peer_id, 999, "player")
 	assert(not bot_match.active and not playing, "Twenty offline kills must end the match")
+	# Port maps: every enemy spawn must reach the player start on the baked navigation mesh.
+	for key in ["castle", "harbor", "pyramid", "station"]:
+		show_main_menu()
+		map_key = key
+		match_mode = "survival"
+		await start_game(1)
+		playing = false
+		for i in 3:
+			await get_tree().physics_frame
+		var nav_map = get_world_3d().navigation_map
+		for point in level.spawns:
+			var route = NavigationServer3D.map_get_path(nav_map, point, level.start, true)
+			assert(route.size() > 1 and route[-1].distance_to(level.start) < 2.0, "%s: spawn %s cannot reach the start" % [key, point])
+		assert(player.is_on_floor() or player.position.y < 1.0, key + ": the player must start on the ground")
+	show_main_menu()
+	map_key = "mexico"
 	print("SMOKE PASS: mexico collision, destructibles, checkpoint, boss queue, enemy hitboxes, offline bot combat, respawn, pause, match limit")
 	_clear_world()
 	sound.stop_all()
@@ -1268,7 +1349,27 @@ func preview_grenade(from: Vector3, velocity: Vector3) -> void:
 func run_capture() -> void:
 	if "--mexico" in OS.get_cmdline_user_args():
 		map_key = "mexico"
+	for info in MAPS:
+		if "--map=" + info.key in OS.get_cmdline_user_args():
+			map_key = info.key
 	await start_game(1)
+	# Square overview used for the map cards: run with --resolution 720x720.
+	if "--preview" in OS.get_cmdline_user_args():
+		playing = false
+		ui.visible = false
+		player.set_physics_process(false)
+		player.rig.visible = false
+		player.camera.fov = 62
+		player.camera.global_transform = Transform3D(Basis(), Vector3(34, 40, 50)).looking_at(Vector3(0, 2, -4))
+		for i in 12:
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var overview = get_viewport().get_texture().get_image()
+		overview.resize(384, 384, Image.INTERPOLATE_LANCZOS)
+		overview.save_png(OS.get_environment("DOODLE_CAPTURE"))
+		print("CAPTURE: ", OS.get_environment("DOODLE_CAPTURE"))
+		get_tree().quit()
+		return
 	use_touch = "--touch" in OS.get_cmdline_user_args()
 	touch.visible = use_touch
 	for i in 45:
@@ -1338,7 +1439,7 @@ func show_lobby() -> void:
 		names += entry.name + (" · host" if entry.id == network.host_id else "") + "\n"
 	_clear_menu("Lobby " + network.code, names + "\nFree for all · first to 20 · 10 minute limit" + lan_host_note)
 	if network.peer_id == network.host_id:
-		_choices(["Doodle District", "Doodle Mexico"], 0 if map_key == "district" else 1, func(index): network.send_packet({"type": "map", "map": "district" if index == 0 else "mexico"}))
+		_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_lobby, func(key): network.send_packet({"type": "map", "map": key})), "AltButton")
 		_button("START MATCH", func(): network.send_packet({"type": "start"}), "StartButton")
 	_button("LEAVE LOBBY", show_main_menu, "AltButton")
 
