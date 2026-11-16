@@ -11,6 +11,10 @@ uniform float shade_scale = 1.0;
 uniform float shade_bias = 0.0;
 // 0: straight strokes, 1 and above: hand-drawn waver fixed to the surface.
 uniform float detail = 1.0;
+// 0: the original's crossed hatching. 1 (port addition): coloured-pencil
+// shading, a soft wash of the ink colour under broken strokes that all lean
+// the same way, so shaded faces no longer read as a grid.
+uniform float style = 1.0;
 varying vec3 world_position;
 varying vec3 world_normal;
 float hash21(vec2 p) {
@@ -29,6 +33,15 @@ float stripes(vec2 p, vec2 dir, float spacing, float width) {
     float f = abs(fract(t / spacing) - 0.5) * spacing;
     float soft = width * 0.6;
     return 1.0 - smoothstep(width * 0.5 - soft, width * 0.5 + soft, f);
+}
+// One layer of pencil strokes: every line has its own gaps and pressure.
+float strokes(vec2 p, vec2 dir, float spacing, float width) {
+    float across = dot(p, vec2(-dir.y, dir.x)) / spacing;
+    float along = dot(p, dir) / spacing;
+    float row = floor(across);
+    float lifted = smoothstep(0.2, 0.42, vnoise(vec2(along * 0.3 + row * 1.7, row * 3.17)));
+    float pressure = 0.62 + 0.38 * vnoise(vec2(along * 1.1, row * 5.3));
+    return stripes(p, dir, spacing, width) * lifted * pressure;
 }
 void vertex() {
     world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -63,13 +76,26 @@ void fragment() {
                 hp += (vnoise(hp * (2.5 / sp)) - 0.5) * sp * 0.4;
             }
         }
-        float h1 = stripes(hp, vec2(0.7071, 0.7071), sp, w);
-        float h2 = stripes(hp, vec2(-0.7071, 0.7071), sp * 1.15, w);
-        float h3 = stripes(hp, vec2(0.2588, 0.9659), sp * 0.7, w);
-        hatch = h1 * smoothstep(0.64, 0.5, shade);
-        hatch = max(hatch, h2 * smoothstep(0.42, 0.32, shade));
-        hatch = max(hatch, h3 * smoothstep(0.24, 0.14, shade));
-        hatch = max(hatch, smoothstep(0.12, 0.0, shade) * 0.9);
+        if (style > 0.5) {
+            float h1 = strokes(hp, vec2(0.7071, 0.7071), sp, w * 1.5);
+            float h2 = strokes(hp + vec2(3.7 * sp), vec2(0.8660, 0.5), sp * 0.8, w * 1.5);
+            float h3 = strokes(hp + vec2(9.1 * sp), vec2(0.5, 0.8660), sp * 0.62, w * 1.5);
+            hatch = h1 * smoothstep(0.7, 0.52, shade);
+            hatch = max(hatch, h2 * smoothstep(0.46, 0.32, shade));
+            hatch = max(hatch, h3 * smoothstep(0.26, 0.12, shade));
+            // Lit faces stay clean paper; the wash deepens as a face turns from the light.
+            float grain = 0.72 + 0.56 * vnoise(hp * (0.9 / sp));
+            float wash = 0.34 * smoothstep(0.86, 0.15, shade) * grain;
+            hatch = wash + hatch * (1.0 - wash);
+        } else {
+            float h1 = stripes(hp, vec2(0.7071, 0.7071), sp, w);
+            float h2 = stripes(hp, vec2(-0.7071, 0.7071), sp * 1.15, w);
+            float h3 = stripes(hp, vec2(0.2588, 0.9659), sp * 0.7, w);
+            hatch = h1 * smoothstep(0.64, 0.5, shade);
+            hatch = max(hatch, h2 * smoothstep(0.42, 0.32, shade));
+            hatch = max(hatch, h3 * smoothstep(0.24, 0.14, shade));
+            hatch = max(hatch, smoothstep(0.12, 0.0, shade) * 0.9);
+        }
     }
     float fade = mix(1.0, 0.28, smoothstep(14.0, 110.0, d));
     ALBEDO = mix(paper, ink.rgb, hatch * 0.72 * fade);

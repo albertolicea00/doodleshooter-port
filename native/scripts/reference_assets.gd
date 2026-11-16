@@ -7,6 +7,8 @@ const COLORS = [Color(0.10, 0.19, 0.76), Color(0.86, 0.12, 0.20), Color(0.18, 0.
 static var materials: Dictionary = {}
 static var models: Dictionary = {}
 static var detail = 1.0
+# 0: the original's crossed hatching, 1: the port's coloured-pencil shading.
+static var style = 1.0
 
 static func read_json(file: String) -> Variant:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://data/" + file + ".json"))
@@ -24,6 +26,7 @@ static func material(ink: int = 0, solid: bool = false, shade: Array = [1.0, 0.0
 		mat.set_shader_parameter("shade_scale", float(shade[0]))
 		mat.set_shader_parameter("shade_bias", float(shade[1]))
 		mat.set_shader_parameter("detail", detail)
+		mat.set_shader_parameter("style", style)
 		materials[key] = mat
 	return materials[key]
 
@@ -70,6 +73,11 @@ static func set_detail(level: float) -> void:
 	detail = level
 	for mat in materials.values():
 		mat.set_shader_parameter("detail", level)
+
+static func set_style(value: float) -> void:
+	style = value
+	for mat in materials.values():
+		mat.set_shader_parameter("style", value)
 
 static func dispose() -> void:
 	for node in models.values():

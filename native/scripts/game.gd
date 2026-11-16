@@ -50,6 +50,8 @@ var feel_haze = 0.0
 var daze = 0.0
 var feel_overlay: ColorRect
 var screen_effects = true
+# 0: the original's crossed hatching, 1: the port's coloured-pencil shading.
+var shading = 1
 var enemy_smoke = 20.0
 # Survival tuning chosen in the offline menu; Normal matches the original numbers.
 var difficulty = 1
@@ -213,6 +215,8 @@ func _setup_ui() -> void:
 	apply_quality(int(preferences.get_value("video", "quality", 1)))
 	show_fps = preferences.get_value("video", "fps", true)
 	screen_effects = preferences.get_value("video", "screen_effects", true)
+	shading = clampi(int(preferences.get_value("video", "shading", 1)), 0, 1)
+	ReferenceAssets.set_style(float(shading))
 	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 2)
 	wave_size = clampi(int(preferences.get_value("survival", "wave_size", 0)), 0, 2)
 	hurt_overlay = ColorRect.new()
@@ -460,6 +464,8 @@ func show_settings() -> void:
 	_button("CUSTOMIZE TOUCH LAYOUT", show_layout_editor)
 	_credit_section("Graphics detail", "")
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
+	_credit_section("Shading", "")
+	_choices(["Original hatching", "Coloured pencil"], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
@@ -1518,6 +1524,7 @@ func save_settings() -> void:
 	preferences.set_value("video", "quality", quality)
 	preferences.set_value("video", "fps", show_fps)
 	preferences.set_value("video", "screen_effects", screen_effects)
+	preferences.set_value("video", "shading", shading)
 	preferences.set_value("survival", "difficulty", difficulty)
 	preferences.set_value("survival", "wave_size", wave_size)
 	preferences.save(save_path)
@@ -1569,6 +1576,8 @@ func run_capture() -> void:
 	for info in MAPS:
 		if "--map=" + info.key in OS.get_cmdline_user_args():
 			map_key = info.key
+	if "--hatch" in OS.get_cmdline_user_args():
+		ReferenceAssets.set_style(0.0)
 	await start_game(1)
 	# Square overview used for the map cards: run with --resolution 720x720.
 	if "--preview" in OS.get_cmdline_user_args():
