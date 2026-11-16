@@ -37,7 +37,7 @@ function geometry(g) {
 }
 function nodeData(o) {
   return { name: o.name || o.type, position: o.position.toArray(), quaternion: o.quaternion.toArray(), scale: o.scale.toArray(), visible: o.visible,
-    ...(o.isMesh ? { mesh: geometry(o.geometry), ink: o.material.inkId ?? 0, fill: o.material.uniforms?.uFill?.value === 1 } : {}), children: o.children.map(nodeData) };
+    ...(o.isMesh ? { mesh: geometry(o.geometry), ink: o.material.inkId ?? 0, fill: o.material.uniforms?.uFill?.value === 1, shade: [o.material.uniforms?.uShadeScale?.value ?? 1, o.material.uniforms?.uShadeBias?.value ?? 0] } : {}), children: o.children.map(nodeData) };
 }
 for (const key of ['district', 'mexico']) for (const arena of [false, true]) {
   const scene = new THREE.Scene();
@@ -73,6 +73,8 @@ const weapons = {};
 for (const key of ['Rifle', 'Shotgun', 'Sniper', 'Katana']) {
   const w = new weaponsModule.namespace[key]({});
   w.root.visible = true;
+  // Name the parts the native reload, pump and tracer code animates or reads.
+  for (const [part, name] of [['muzzle', 'muzzle'], ['magMesh', 'mag'], ['foreEnd', 'fore_end'], ['boltH', 'bolt'], ['handL', 'hand_left']]) if (w[part]) w[part].name = name;
   weapons[key.toLowerCase()] = { model: nodeData(w.root), position: w.basePos.toArray(), aim_position: w.aimPos.toArray(), damage: w.damage ?? 80, magazine: w.magSize ?? 0, reserve: w.reserve ?? 0, interval: w.interval ?? 0.4, reload: w.reloadDur ?? 0, pellets: w.pellets ?? 1, spread: w.spread ?? 0, ads_spread: w.adsSpread ?? 0, fov: w.adsFov ?? 65 };
 }
 await fs.writeFile(path.join(output, 'weapons.json'), JSON.stringify(weapons));

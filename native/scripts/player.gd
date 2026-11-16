@@ -33,6 +33,9 @@ var aiming = false
 var throw_charge = 0.0
 var charging = false
 var models: Array[Node3D] = []
+# Named parts of each weapon model and their rest transforms.
+var parts: Array[Dictionary] = []
+var racked = false
 var jump_buffer = 0.0
 var mantle_cd = 0.0
 var stamina_pause = 0.0
@@ -88,7 +91,15 @@ func _ready() -> void:
 		var model = ReferenceAssets.model("weapons", key)
 		rig.add_child(model)
 		model.position = ReferenceAssets.vector(weapons[key].position)
+		model.rotation_order = EULER_ORDER_XYZ
 		models.append(model)
+		var found = {}
+		for part in ["muzzle", "mag", "fore_end", "bolt", "hand_left"]:
+			var node = model.find_child(part, true, false)
+			if node != null:
+				found[part] = node
+				found[part + "_rest"] = node.position
+		parts.append(found)
 	rope = MeshInstance3D.new()
 	var rope_mesh = CylinderMesh.new()
 	rope_mesh.top_radius = 0.018
@@ -304,7 +315,7 @@ func _physics_process(delta: float) -> void:
 	var key: String = weapon_names[weapon_index]
 	camera.fov = lerpf(camera.fov, float(weapons[key].fov) if aiming else (82.0 + clampf((velocity.length() - 7.0) / 16.0, 0, 1) * 8.0 + (3.0 if speed > 10.0 else 0.0)), 1.0 - exp(-delta * 12.0))
 	var base = ReferenceAssets.vector(weapons[key].aim_position if aiming else weapons[key].position)
-	models[weapon_index].position = base + Vector3(sin(bob) * 0.003, absf(cos(bob)) * 0.003 - (0.1 if reload_time > 0 else 0.0), recoil)
+	var offset = Vector3(sin(bob) * 0.003, absf(cos(bob)) * 0.003, recoil)
 	var pose = Vector3.ZERO
 	if weapon_index == 3:
 		pose = Vector3(1.4, 0.3, 1.24) if is_blocking() else Vector3(0.75, 0.15, -0.35)
@@ -313,8 +324,48 @@ func _physics_process(delta: float) -> void:
 			var side = 1.0 if slash_combo % 2 == 1 else -1.0
 			pose += Vector3(0.7 - 1.5 * progress, side * (-0.35 + 0.8 * progress), side * (1.3 - 2.7 * progress))
 	else:
-		pose.z = sin(reload_time * 4) * 0.5 if reload_time > 0 else 0.0
-		pose.x = -sin(clampf(cycle_time / 0.85, 0, 1) * PI) * 0.12
+		# Reload and cycling follow the original weapons.js motion.
+		var part: Dictionary = parts[weapon_index]
+		var duration = float(weapons[key].reload)
+		var t = clampf(1.0 - reload_time / duration, 0, 1) if reload_time > 0 else 0.0
+		var hand = Vector3.ZERO
+		var drop = 0.0
+		if reload_time > 0 and weapon_index == 1:
+			# Shells go in one at a time: the left hand feeds each one.
+			var s = sin(t * PI)
+			pose += Vector3(0.15, 0, 0.35) * s
+			offset.y -= 0.04 * s
+			hand = Vector3(0.1, -0.12, 0.55) * s
+		elif reload_time > 0:
+			# Magazine: tilt the gun over, drop the magazine and swing it back, then rack.
+			var tilt = sin(clampf(t / 0.22, 0, 1) * PI * 0.5) * (1.0 if t < 0.82 else clampf(1.0 - (t - 0.82) / 0.18, 0, 1))
+			pose += Vector3(-0.3, 0.25, 0.5) * tilt
+			offset += Vector3(0.03, -0.07, 0) * tilt
+			drop = sin(clampf((t - 0.18) / 0.5, 0, 1) * PI)
+			hand = Vector3(0.04, -0.2, 0.3) * drop
+			if t > 0.86 and not racked:
+				racked = true
+				recoil = 0.05
+		else:
+			racked = false
+		if part.has("mag"):
+			part.mag.position.y = part.mag_rest.y - drop * 0.3
+			part.mag.rotation.z = drop * 0.6
+		# Pump or bolt after a shot.
+		var cycle = 0.0
+		if cycle_time > 0:
+			cycle = sin(minf(1.0, (1.0 - cycle_time / (0.85 if weapon_index == 2 else 0.45)) * 1.15) * PI)
+			pose += Vector3(0.12, 0, 0.15) * cycle
+			offset.y -= 0.02 * cycle
+		if part.has("fore_end"):
+			part.fore_end.position.z = part.fore_end_rest.z + cycle * 0.16
+			hand.z += cycle * 0.16
+		if part.has("bolt"):
+			part.bolt.position.z = part.bolt_rest.z + cycle * 0.2
+			part.bolt.rotation.z = -cycle * 1.1
+		if part.has("hand_left"):
+			part.hand_left.position = part.hand_left_rest + hand
+	models[weapon_index].position = base + offset
 	models[weapon_index].rotation = pose
 	models[weapon_index].visible = not (weapon_index == 2 and aiming)
 	camera.rotation.z = lerpf(camera.rotation.z, -control.x * 0.022 - (0.08 if slide_time > 0 else 0.0), delta * 9)
@@ -381,7 +432,7 @@ func fire() -> void:
 			else:
 				game.level.hit_prop(hit.collider, float(config.damage))
 				game.burst(hit.position, 0, 4)
-		game.tracer(camera.global_position - camera.global_basis.y * 0.12, end, 3)
+		game.tracer(parts[weapon_index].muzzle.global_position if models[weapon_index].visible else camera.global_position - camera.global_basis.y * 0.12, end, 3)
 		if game.network.in_match and i == int(config.pellets) - 1:
 			game.network.send_packet({"type": "shot", "weapon": weapon_index, "end": [end.x, end.y, end.z]})
 	for entry in remote_hits.values():

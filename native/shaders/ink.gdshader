@@ -1,22 +1,76 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled;
+// Pen hatching ported from the original post pass (render.js): strokes are
+// laid out in world units on the plane a surface faces, their spacing steps
+// in powers of two with distance, and three stroke layers appear as the
+// surface turns away from the light. Lit surfaces such as the floor stay
+// clean paper.
 uniform vec4 ink : source_color = vec4(0.1, 0.19, 0.76, 1.0);
 uniform bool solid = false;
+uniform float shade_scale = 1.0;
+uniform float shade_bias = 0.0;
+// 0: straight strokes, 1 and above: hand-drawn waver fixed to the surface.
+uniform float detail = 1.0;
 varying vec3 world_position;
 varying vec3 world_normal;
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+float vnoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash21(i), hash21(i + vec2(1.0, 0.0)), f.x), mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+float stripes(vec2 p, vec2 dir, float spacing, float width) {
+    float t = dot(p, vec2(-dir.y, dir.x));
+    float f = abs(fract(t / spacing) - 0.5) * spacing;
+    float soft = width * 0.6;
+    return 1.0 - smoothstep(width * 0.5 - soft, width * 0.5 + soft, f);
+}
 void vertex() {
     world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
     world_normal = normalize(MODEL_NORMAL_MATRIX * NORMAL);
 }
 void fragment() {
     vec3 paper = vec3(0.97, 0.96, 0.91);
-    float shade = 1.0 - max(dot(normalize(world_normal), normalize(vec3(0.38, 0.82, 0.42))), 0.0);
-    // World-space strokes stay attached to surfaces when the camera moves.
-    vec3 p = world_position;
-    float hatch = step(0.87, fract((p.x + p.y + p.z) * 5.0));
-    float cross_hatch = step(0.93, fract((p.x - p.y + p.z) * 6.0));
-    float edge = pow(1.0 - abs(dot(normalize(NORMAL), normalize(VIEW))), 5.0);
-    float strength = max(edge * 0.8, hatch * smoothstep(0.15, 0.75, shade) * 0.65);
-    strength = max(strength, cross_hatch * smoothstep(0.6, 1.0, shade) * 0.45);
-    ALBEDO = solid ? ink.rgb : mix(paper, ink.rgb, strength + shade * 0.045);
+    vec3 n = normalize(world_normal);
+    if (!FRONT_FACING) {
+        n = -n;
+    }
+    float shade = clamp((dot(n, normalize(vec3(0.38, 0.82, 0.42))) * 0.5 + 0.5) * shade_scale + shade_bias, 0.0, 1.0);
+    float d = -VERTEX.z;
+    float hatch = 1.0;
+    if (!solid) {
+        float sc = VIEWPORT_SIZE.y / 900.0;
+        vec2 hp;
+        float sp;
+        float w;
+        if (d < 2.0) {
+            // The held weapon rides with the camera, so the screen is its stable frame.
+            hp = FRAGCOORD.xy;
+            sp = 8.5 * sc;
+            w = 1.5 * sc;
+        } else {
+            vec3 an = abs(n);
+            hp = an.y > max(an.x, an.z) ? world_position.xz : (an.x > an.z ? world_position.zy : world_position.xy);
+            float lod = exp2(floor(log2(max(1e-4, (0.0165 * d) / 0.16))));
+            sp = 0.16 * lod;
+            w = sp * 0.17;
+            if (detail > 0.5) {
+                hp += (vnoise(hp * (2.5 / sp)) - 0.5) * sp * 0.4;
+            }
+        }
+        float h1 = stripes(hp, vec2(0.7071, 0.7071), sp, w);
+        float h2 = stripes(hp, vec2(-0.7071, 0.7071), sp * 1.15, w);
+        float h3 = stripes(hp, vec2(0.2588, 0.9659), sp * 0.7, w);
+        hatch = h1 * smoothstep(0.64, 0.5, shade);
+        hatch = max(hatch, h2 * smoothstep(0.42, 0.32, shade));
+        hatch = max(hatch, h3 * smoothstep(0.24, 0.14, shade));
+        hatch = max(hatch, smoothstep(0.12, 0.0, shade) * 0.9);
+    }
+    float fade = mix(1.0, 0.28, smoothstep(14.0, 110.0, d));
+    ALBEDO = mix(paper, ink.rgb, hatch * 0.72 * fade);
 }

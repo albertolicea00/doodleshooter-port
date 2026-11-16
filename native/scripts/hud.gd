@@ -78,6 +78,9 @@ func _draw() -> void:
 	# Score and combo: top-left on desktop, under the ammunition on touch.
 	y = y + 26 if touch_mode else top + 30
 	write(Vector2(left, y), score_text, 26 if touch_mode else 30)
+	var score_width = font.get_string_size(score_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26 if touch_mode else 30).x
+	if game.show_fps:
+		write(Vector2(left + score_width + 24, y), "%d fps" % Engine.get_frames_per_second(), 20, Color(DoodlePen.INK, 0.7))
 	write(Vector2(left, y + 28), combo_text, 24 if touch_mode else 26, DoodlePen.RED)
 	# Wave, modifier, remaining enemies or match clock: top-right.
 	y = top + 30

@@ -27,6 +27,8 @@ var center_text: Label
 var scoreboard: Label
 var menu_backdrop: ColorRect
 var editor_bar: PanelContainer
+var quality = 1
+var show_fps = true
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
 var menu_items: VBoxContainer
@@ -172,6 +174,8 @@ func _setup_ui() -> void:
 	touch.custom = preferences.get_value("touch", "layout", {})
 	touch.opacity = preferences.get_value("touch", "opacity", 1.0)
 	touch.options.merge(preferences.get_value("touch", "options", {}), true)
+	apply_quality(int(preferences.get_value("video", "quality", 1)))
+	show_fps = preferences.get_value("video", "fps", true)
 	hurt_overlay = ColorRect.new()
 	hurt_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -345,12 +349,24 @@ func show_settings() -> void:
 	_clear_menu("Settings", "Choose how you want to play")
 	_button("TOUCH & AIMING", show_touch_settings)
 	_button("CUSTOMIZE TOUCH LAYOUT", show_layout_editor)
+	_credit_section("Graphics detail", "")
+	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
+	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
 	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
 	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
 	_button("CONTROLS REFERENCE", show_controls, "AltButton")
 	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
+
+# Low renders the scene at 70% size with straight pen strokes and no edge
+# smoothing; Medium adds the hand-drawn stroke waver and 2x smoothing; High
+# uses 4x smoothing.
+func apply_quality(level: int) -> void:
+	quality = clampi(level, 0, 2)
+	get_viewport().msaa_3d = [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][quality]
+	get_viewport().scaling_3d_scale = [0.7, 1.0, 1.0][quality]
+	ReferenceAssets.set_detail(float(quality))
 
 func show_controls() -> void:
 	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause")
@@ -721,9 +737,9 @@ func line_between(node: MeshInstance3D, from: Vector3, to: Vector3) -> void:
 		node.scale = Vector3(1, direction.length(), 1)
 
 func tracer(from: Vector3, to: Vector3, ink: int = 0) -> void:
-	var node = make_line(ink, 0.012)
+	var node = make_line(ink, 0.018)
 	line_between(node, from, to)
-	effects.append({"node": node, "life": 0.07})
+	effects.append({"node": node, "life": 0.09})
 
 func fire_projectile(from: Vector3, direction: Vector3, speed: float, damage: float, reflected: bool = false, blast: float = 0.0) -> void:
 	var node = make_line(0 if reflected else 1, 0.04)
@@ -1204,6 +1220,8 @@ func save_settings() -> void:
 	for setting in ["music_enabled", "music_volume", "effects_volume", "enabled"]:
 		preferences.set_value("audio", setting, sound.get(setting))
 	preferences.set_value("touch", "options", touch.options)
+	preferences.set_value("video", "quality", quality)
+	preferences.set_value("video", "fps", show_fps)
 	preferences.save(save_path)
 
 func burst(at: Vector3, ink: int, count: int) -> void:
@@ -1254,6 +1272,14 @@ func run_capture() -> void:
 	use_touch = "--touch" in OS.get_cmdline_user_args()
 	touch.visible = use_touch
 	for i in 45:
+		await get_tree().process_frame
+	# Optional poses for checking weapon animation and tracer origin in stills.
+	if "--reload" in OS.get_cmdline_user_args():
+		player.magazines[player.weapon_index] = 1
+		player.reload()
+		await get_tree().create_timer(0.6).timeout
+	if "--fire" in OS.get_cmdline_user_args():
+		player.fire()
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var path = OS.get_environment("DOODLE_CAPTURE")
