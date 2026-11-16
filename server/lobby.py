@@ -143,7 +143,7 @@ class Lobby:
                 value = state.get(field_name, [0, 0, 0])
                 if not isinstance(value, list) or len(value) != 3 or not all(isinstance(x, (int, float)) and math.isfinite(x) and abs(x) < 1000 for x in value):
                     return
-            if any(not isinstance(state.get(k, False), bool) for k in ('grappling', 'aiming', 'sprinting')) or not isinstance(state.get('weapon', 0), int) or state.get('weapon', 0) not in range(6):
+            if any(not isinstance(state.get(k, False), bool) for k in ('grappling', 'aiming', 'sprinting')) or not isinstance(state.get('weapon', 0), int) or state.get('weapon', 0) not in range(7):
                 return
             player.state = {k: state.get(k) for k in ('position', 'rotation', 'velocity', 'grapple', 'grappling', 'aiming', 'sprinting', 'weapon')}
             player.state.update(id=player.id, hp=player.hp, alive=player.hp > 0)
@@ -178,7 +178,7 @@ class Lobby:
         elif kind == 'shot' and player.hp > 0:
             end = message.get('end', [0, 0, 0])
             weapon = message.get('weapon', 0)
-            if not isinstance(end, list) or len(end) != 3 or not all(isinstance(x, (int, float)) and math.isfinite(x) and abs(x) < 1000 for x in end) or not isinstance(weapon, int) or weapon not in range(6):
+            if not isinstance(end, list) or len(end) != 3 or not all(isinstance(x, (int, float)) and math.isfinite(x) and abs(x) < 1000 for x in end) or not isinstance(weapon, int) or weapon not in range(7):
                 return
             await self.broadcast(room, 'shot', exclude=player.id, id=player.id, weapon=weapon, end=end)
         elif kind == 'grenade' and player.hp > 0:

@@ -19,14 +19,15 @@ var stamina = 1.0
 var rope: MeshInstance3D
 var weapons: Dictionary
 # Katana keeps slot 3; the revolver (in the original source but not its loadout) and the SMG (port addition) follow.
-var weapon_names = ["rifle", "shotgun", "sniper", "katana", "revolver", "smg"]
+var weapon_names = ["rifle", "shotgun", "sniper", "katana", "revolver", "smg", "bazooka"]
 var weapon_index = 0
-var magazines = [35, 6, 5, 0, 6, 30]
-var reserves = [175, 36, 25, 0, 36, 180]
+var magazines = [35, 6, 5, 0, 6, 30, 1]
+var reserves = [175, 36, 25, 0, 36, 180, 6]
 var fire_cd = 0.0
 var reload_time = 0.0
 var last_hurt = 10.0
 var grenades = 3
+var smokes = 2
 var katana_charge = 0.0
 var recoil = 0.0
 var bob = 0.0
@@ -300,6 +301,9 @@ func _physics_process(delta: float) -> void:
 			fire()
 	if Input.is_action_just_pressed("slash"):
 		slash()
+	if Input.is_action_just_pressed("smoke") and smokes > 0:
+		smokes -= 1
+		game.throw_grenade(camera.global_position, -camera.global_basis.z * 16.0 + Vector3.UP * 4.5, true, true)
 	if Input.is_action_just_pressed("grenade") and grenades > 0:
 		charging = true
 		throw_charge = 0
@@ -413,10 +417,14 @@ func fire() -> void:
 	magazines[weapon_index] -= 1
 	last_attack = weapon_names[weapon_index]
 	cycle_time = 0.85 if weapon_index == 2 else (0.45 if weapon_index == 1 else 0.0)
-	camera.rotation.x += [0.009, 0.05, 0.055, 0.0, 0.038, 0.007][weapon_index] * 0.55
+	camera.rotation.x += [0.009, 0.05, 0.055, 0.0, 0.038, 0.007, 0.07][weapon_index] * 0.55
 	fire_cd = maxf(float(config.interval), 0.85 if weapon_index == 2 else 0.0)
 	recoil = 0.045 if weapon_index in [0, 5] else 0.09
-	game.sound.play_effect(["shot", "shotgunFire", "sniperFire", "", "revolver", "shot"][weapon_index])
+	game.sound.play_effect(["shot", "shotgunFire", "sniperFire", "", "revolver", "shot", "shotgunFire"][weapon_index])
+	if weapon_index == 6:
+		# The rocket is a friendly projectile that explodes on the first thing it touches.
+		game.fire_projectile(parts[6].muzzle.global_position, -camera.global_basis.z, 46.0, 160.0, true, 5.0)
+		return
 	var remote_hits: Dictionary = {}
 	for i in int(config.pellets):
 		var spread: float = config.ads_spread if aiming else config.spread

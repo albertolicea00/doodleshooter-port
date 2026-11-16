@@ -38,6 +38,8 @@ make android
 
 ## Offline play
 
+Port additions (not in the original game): seven extra maps chosen from animated preview cards, the SMG and bazooka, smoke grenades (H), Easy/Normal/Hard and wave-size choices for survival, a graphics detail setting, and a frame rate counter. The revolver is taken from the original source.
+
 Choose **Play offline** from the main menu:
 
 - **Survival**: fight growing enemy waves and bosses, with saved checkpoints.

@@ -82,5 +82,13 @@ weapons.smg = { ...structuredClone(weapons.rifle), damage: 15, magazine: 30, res
 weapons.smg.model.scale = [0.82, 0.82, 0.66];
 weapons.smg.position = [0.2, -0.17, -0.5];
 weapons.smg.aim_position = [0, -0.0453, -0.42];
+// Port addition, not in the original: a rocket launcher assembled from boxes.
+const launcher = new THREE.Group();
+const part = (w, h, d, x, y, z, ink) => { const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), render.makeInkMaterial({ ink })); mesh.position.set(x, y, z); launcher.add(mesh); return mesh; };
+part(0.14, 0.14, 1.15, 0, 0.02, -0.35, 0); part(0.2, 0.2, 0.18, 0, 0.02, -0.95, 2); part(0.19, 0.19, 0.14, 0, 0.02, 0.24, 2);
+part(0.05, 0.16, 0.07, 0, -0.12, -0.18, 2); part(0.05, 0.12, 0.06, 0, -0.1, -0.52, 2); part(0.04, 0.09, 0.12, 0, 0.13, -0.3, 1); part(0.16, 0.05, 0.3, 0, 0.11, -0.05, 2);
+const launcherMuzzle = new THREE.Object3D(); launcherMuzzle.name = 'muzzle'; launcherMuzzle.position.set(0, 0.02, -1.05); launcher.add(launcherMuzzle);
+launcher.scale.setScalar(0.8);
+weapons.bazooka = { model: nodeData(launcher), position: [0.26, -0.2, -0.34], aim_position: [0.12, -0.15, -0.3], damage: 160, magazine: 1, reserve: 6, interval: 1.0, reload: 2.0, pellets: 1, spread: 0, ads_spread: 0, fov: 60 };
 await fs.writeFile(path.join(output, 'weapons.json'), JSON.stringify(weapons));
 console.log('Enemy and weapon models converted.');

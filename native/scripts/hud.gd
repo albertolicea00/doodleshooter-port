@@ -12,15 +12,26 @@ var info: Array = []
 var boss_name = ""
 var boss_fraction = 0.0
 var font: Font
+var popups: Array = []
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	font = get_theme_default_font()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	var live = game != null and is_instance_valid(game.player)
+	game.hurt_overlay.material.set_shader_parameter("hurt", game.hurt_flash)
+	game.hurt_overlay.material.set_shader_parameter("low", 1.0 if visible and live and game.player.alive and game.player.hp < 36 else 0.0)
+	for entry in popups:
+		entry.life -= delta
+	popups = popups.filter(func(entry): return entry.life > 0)
 	if visible:
 		queue_redraw()
+
+# Points rising beside the crosshair, like the original kill feed.
+func popup(text: String) -> void:
+	popups.append({"text": text, "life": 1.2})
 
 func write(at: Vector2, text: String, font_size: int, color: Color = DoodlePen.INK, right: bool = false) -> float:
 	var width = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
@@ -66,6 +77,12 @@ func _draw() -> void:
 		draw_arc(Vector2(x + 7, y - 9), 7, 0, TAU, 16, DoodlePen.INK, 2.5, true)
 		draw_line(Vector2(x + 7, y - 21), Vector2(x + 7, y - 16), DoodlePen.RED, 3)
 		x += 19
+	# Smoke grenades: filled cans.
+	x += 6
+	for i in player.smokes:
+		draw_rect(Rect2(x + 1, y - 17, 11, 16), Color(DoodlePen.INK, 0.55))
+		draw_rect(Rect2(x + 1, y - 17, 11, 16), DoodlePen.INK, false, 2.0)
+		x += 17
 	y += 10
 	x = left
 	for i in mini(magazine, 40) if rows > 0 else 0:
@@ -98,6 +115,10 @@ func _draw() -> void:
 		write(Vector2(size.x * 0.5 - boss_width * 0.5, size.y * 0.06 + 24), boss_name, 26)
 		bar(Rect2(size.x * 0.5 - 210, size.y * 0.06 + 32, 420, 20), boss_fraction, DoodlePen.RED, 7.0)
 	_draw_crosshair(player, size * 0.5)
+	for i in popups.size():
+		var entry: Dictionary = popups[i]
+		var rise = (1.2 - entry.life) * 40.0
+		write(size * 0.5 + Vector2(46, -18 - rise - i * 4), entry.text, 28, Color(DoodlePen.RED, clampf(entry.life * 2.0, 0, 1)))
 
 func _draw_slots(player: DoodlePlayer, right: float, bottom: float) -> void:
 	write(Vector2(right, bottom), DoodleTouchControls.NAMES[player.weapon_index], 36, DoodlePen.INK, true)

@@ -2,7 +2,7 @@ class_name DoodleTouchControls
 extends Control
 
 const STICK_RADIUS = 78.0
-const NAMES = ["Rifle", "Shotgun", "Sniper", "Katana", "Revolver", "SMG"]
+const NAMES = ["Rifle", "Shotgun", "Sniper", "Katana", "Revolver", "SMG", "Bazooka"]
 var player: DoodlePlayer
 var move_vector = Vector2.ZERO
 var move_finger = -1
@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
 	# Auto fire: shoot while something that can be hurt is under the crosshair.
 	var reach = 3.2 if player.weapon_index == 3 else 18.0 if player.weapon_index == 1 else 120.0
 	var target = options.auto_fire and player.ray(reach).get("collider") != null and player.ray(reach).collider.has_method("take_damage")
-	if target and player.weapon_index in [1, 2, 4] and auto_firing:
+	if target and player.weapon_index in [1, 2, 4, 6] and auto_firing:
 		# Single-shot weapons need a fresh press for every shot.
 		target = false
 	if target != auto_firing:
@@ -92,6 +92,7 @@ func layout() -> void:
 		"grapple": [Vector2(r - 110, b - 320), 38.0, "HOOK"],
 		"slash": [Vector2(r - 285, b - 140), 36.0, "SLASH"],
 		"grenade": [Vector2(r - 270, b - 240), 34.0, "NADE"],
+		"smoke": [Vector2(r - 200, b - 325), 30.0, "SMOKE"],
 		"pause": [Vector2(r - 44, inset[1] + 44), 26.0, ""] }
 	if show_score or editing:
 		buttons["scoreboard"] = [Vector2(r - 112, inset[1] + 44), 26.0, "SCORE"]
@@ -106,7 +107,7 @@ func layout() -> void:
 	stick_radius = STICK_RADIUS * _tweak("stick")[2]
 	stick_rest = _place("stick", Vector2(inset[0] + 150, b - 150), Vector2(stick_radius, stick_radius))
 	# One chip per weapon along the bottom centre replaces a blind cycle button.
-	var chip = Vector2(84, 46) * _tweak("weapons")[2]
+	var chip = Vector2(76, 46) * _tweak("weapons")[2]
 	var step = chip.x + 8
 	var first = _place("weapons", Vector2(size.x * 0.5 - step * NAMES.size() * 0.5 + 4, b - 12 - chip.y), Vector2.ZERO)
 	first = first.clamp(Vector2.ZERO, size - Vector2(step * NAMES.size(), chip.y))

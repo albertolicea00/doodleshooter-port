@@ -64,4 +64,10 @@ Online mode requires a separately running Python server; the LAN mode hosts its 
 
 The earlier iOS export attempt stopped with `App Store Team ID not specified`. The user explicitly deferred iOS setup. The preset retains `com.doodleshooter.port`; no signing credentials, iOS build, or device validation have been added.
 
-See `PARITY.md` for the remaining comparison and implementation work. No new maps have been added.
+## Port additions (November 15)
+
+Automated checks added: every enemy spawn on the seven port maps reaches the player start on the baked navigation mesh; a corpse's hitboxes are disabled and no longer crash when shot; a smoke cloud blocks only sight lines that cross it; the bazooka launches a friendly rocket and spends its round. Desktop still frames were inspected for the ported hatching, the reload pose, the revolver, SMG and bazooka view models, the Castle map in first person, and the map picker.
+
+Not verified: the animated previews in motion, tracers leaving the muzzle (too brief for the still), shell/bolt/cylinder reload motion, smoke clouds on screen, the hurt vignette and score pop-ups, difficulty and wave-size balance, the graphics detail levels' frame rates, any port map in play, and all of this on Android — the final build was installed on the emulator but not exercised. The Python lobby tests were not rerun because the `.venv` is absent on this machine; `server/lobby.py` changed (new weapon ids, damage entries, and map keys).
+
+See `PARITY.md` for the remaining comparison and implementation work.

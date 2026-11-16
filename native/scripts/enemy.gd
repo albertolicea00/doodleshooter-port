@@ -36,7 +36,7 @@ var target_los = false
 
 func _ready() -> void:
 	stats = game.enemy_stats[kind]
-	hp = float(stats.hp)
+	hp = float(stats.hp) * game.health_modifier
 	if stats.get("boss", false):
 		hp *= 1.0 + 0.35 * maxf(0, floorf(float(game.wave - 5) / 15.0))
 	elif game.swarm:
@@ -98,7 +98,7 @@ func _physics_process(delta: float) -> void:
 	var center = global_position + Vector3.UP * 1.3 * model_scale
 	var query = PhysicsRayQueryParameters3D.create(center, game.player.camera.global_position, 1 | 2, [get_rid()])
 	var hit = get_world_3d().direct_space_state.intersect_ray(query)
-	target_los = not hit.is_empty() and hit.collider == game.player
+	target_los = not hit.is_empty() and hit.collider == game.player and not game.smoke_blocks(center, game.player.camera.global_position)
 	var flat = Vector3(offset.x, 0, offset.z)
 	if flat.length() > 0.1:
 		model.rotation.y = lerp_angle(model.rotation.y, atan2(flat.x, flat.z), 1 - exp(-delta * 7))

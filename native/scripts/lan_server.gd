@@ -228,7 +228,7 @@ func handle(id: String, packet: Dictionary) -> void:
 				broadcast({"type": "broken", "id": int(prop)}, id)
 
 func weapon_valid(value: Variant) -> bool:
-	return (value is float or value is int) and value >= 0 and value <= 5 and value == int(value)
+	return (value is float or value is int) and value >= 0 and value <= 6 and value == int(value)
 
 func hurt(id: String, amount: float, attacker: String, source: String) -> void:
 	if not members.has(id) or ended:

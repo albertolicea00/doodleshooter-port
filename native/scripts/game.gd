@@ -42,6 +42,11 @@ const MAPS = [
 const PREVIEW_FRAMES = 10
 const PREVIEW_SIZE = 192
 var show_fps = true
+var smokes: Array = []
+# Survival tuning chosen in the offline menu; Normal matches the original numbers.
+var difficulty = 1
+var wave_size = 0
+var health_modifier = 1.0
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
 var menu_items: VBoxContainer
@@ -118,7 +123,7 @@ func _ready() -> void:
 		run_capture.call_deferred()
 
 func _setup_inputs() -> void:
-	var keys = {"forward": KEY_W, "back": KEY_S, "left": KEY_A, "right": KEY_D, "jump": KEY_SPACE, "sprint": KEY_SHIFT, "dash": KEY_C, "grapple": KEY_Q, "reload": KEY_R, "slash": KEY_F, "grenade": KEY_G, "pause": KEY_ESCAPE, "scoreboard": KEY_TAB, "weapon_0": KEY_1, "weapon_1": KEY_2, "weapon_2": KEY_3, "weapon_3": KEY_4, "weapon_4": KEY_5, "weapon_5": KEY_6}
+	var keys = {"forward": KEY_W, "back": KEY_S, "left": KEY_A, "right": KEY_D, "jump": KEY_SPACE, "sprint": KEY_SHIFT, "dash": KEY_C, "grapple": KEY_Q, "reload": KEY_R, "slash": KEY_F, "grenade": KEY_G, "pause": KEY_ESCAPE, "scoreboard": KEY_TAB, "weapon_0": KEY_1, "weapon_1": KEY_2, "weapon_2": KEY_3, "weapon_3": KEY_4, "weapon_4": KEY_5, "weapon_5": KEY_6, "weapon_6": KEY_7, "smoke": KEY_H}
 	for action in keys:
 		InputMap.add_action(action)
 		var event = InputEventKey.new()
@@ -189,10 +194,15 @@ func _setup_ui() -> void:
 	touch.options.merge(preferences.get_value("touch", "options", {}), true)
 	apply_quality(int(preferences.get_value("video", "quality", 1)))
 	show_fps = preferences.get_value("video", "fps", true)
+	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 2)
+	wave_size = clampi(int(preferences.get_value("survival", "wave_size", 0)), 0, 2)
 	hurt_overlay = ColorRect.new()
 	hurt_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hurt_overlay.color = Color(0.86, 0.12, 0.2, 0)
+	var hurt_material = ShaderMaterial.new()
+	hurt_material.shader = preload("res://shaders/hurt.gdshader")
+	hurt_overlay.material = hurt_material
 	ui.add_child(hurt_overlay)
 	# The original dims the scene with translucent paper behind every panel.
 	menu_backdrop = ColorRect.new()
@@ -449,7 +459,7 @@ func apply_quality(level: int) -> void:
 	ReferenceAssets.set_detail(float(quality))
 
 func show_controls() -> void:
-	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–6 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause")
+	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–7 / mouse wheel / Y: switch weapon · H: smoke grenade\nTab: scoreboard · Esc / Start: pause")
 	_credit_section("Touch", "The left thumb moves. Push fully forward to sprint and drag on up to RUN to keep running. Drag anywhere else to look, even while holding FIRE. SLIDE on the ground becomes DASH in the air. Tap a weapon chip to switch and tap the active one to reload. Every one of these can be changed under Touch & aiming.")
 	_button("BACK", show_settings, "AltButton")
 
@@ -608,6 +618,9 @@ func _clear_world() -> void:
 	for dot in trajectory_nodes:
 		dot.free()
 	trajectory_nodes.clear()
+	for cloud in smokes:
+		cloud.node.free()
+	smokes.clear()
 	for list in [projectiles, grenades, pickups, effects]:
 		for item in list:
 			if is_instance_valid(item.node):
@@ -674,9 +687,10 @@ func start_wave(number: int) -> void:
 	var selection = randi_range(0, allowed - 1)
 	modifier = ["", "Caffeine · faster enemies", "Heavy Ink · harder hits", "Swarm · more enemies, less health"][selection]
 	speed_modifier = [1.0, 1.35, 0.9, 1.15][selection]
-	damage_modifier = [1.0, 0.85, 1.4, 0.9][selection] * 1.2
+	damage_modifier = [1.0, 0.85, 1.4, 0.9][selection] * 1.2 * [0.6, 1.0, 1.35][difficulty]
+	health_modifier = [0.75, 1.0, 1.3][difficulty]
 	swarm = selection == 3
-	var count = roundi(mini(5 + wave * 2, 32 + wave) * (1.35 if swarm else 1.0))
+	var count = roundi(mini(5 + wave * 2, 32 + wave) * (1.35 if swarm else 1.0) * [0.75, 1.0, 1.3][difficulty] * [1.0, 1.6, 2.4][wave_size])
 	if wave % 5 == 0:
 		spawn_queue.append(["boss", "eraser", "inkblot"][int((wave - 5) / 5) % 3])
 		count = 7 + wave
@@ -687,6 +701,7 @@ func start_wave(number: int) -> void:
 	spawn_timer = 2.0
 	intermission = 0.0
 	player.grenades = mini(5, player.grenades + 1)
+	player.smokes = mini(3, player.smokes + 1)
 	for i in 7:
 		spawn_pickup("ammo" if i < 5 else "health", level.pickup_spots.pick_random())
 	sound.play_effect("wave")
@@ -727,7 +742,7 @@ func _process(delta: float) -> void:
 			start_wave(wave + 1)
 	elif not spawn_queue.is_empty():
 		spawn_timer -= delta
-		if spawn_timer <= 0 and enemies.size() < mini(4 + int(wave * 0.9), 18 + int(wave / 3)):
+		if spawn_timer <= 0 and enemies.size() < mini(4 + int(wave * 0.9), 18 + int(wave / 3)) + [0, 4, 9][wave_size]:
 			spawn_enemy(spawn_queue.pop_front())
 			spawn_timer = maxf(0.7, 2.9 - wave * 0.13)
 	elif enemies.is_empty():
@@ -769,6 +784,7 @@ func enemy_killed(enemy: DoodleEnemy) -> void:
 		player.katana_charge = minf(1, player.katana_charge + 1.0 / 3.0)
 		player.blood_level = minf(1, player.blood_level + 0.3)
 	score += points
+	hud.popup("+%d" % points)
 	burst(enemy.position + Vector3.UP, 1, 26)
 	blood_pool(enemy.position, 0.8, 1)
 	if randf() < 0.5:
@@ -826,14 +842,40 @@ func fire_projectile(from: Vector3, direction: Vector3, speed: float, damage: fl
 	line_between(node, from, from + direction * 0.5)
 	projectiles.append({"node": node, "position": from, "velocity": direction * speed, "damage": damage, "life": 5.0, "reflected": reflected, "blast": blast})
 
-func throw_grenade(from: Vector3, velocity: Vector3, mine: bool = true) -> void:
+# A smoke cloud hides the player from any enemy whose line of sight crosses it.
+func smoke_blocks(from: Vector3, to: Vector3) -> bool:
+	for cloud in smokes:
+		var along = clampf((cloud.position - from).dot(to - from) / maxf(0.001, from.distance_squared_to(to)), 0, 1)
+		if from.lerp(to, along).distance_to(cloud.position) < 5.5:
+			return true
+	return false
+
+func release_smoke(at: Vector3) -> void:
+	var cloud = Node3D.new()
+	add_child(cloud)
+	cloud.position = at
+	for i in 9:
+		var puff = MeshInstance3D.new()
+		var ball = SphereMesh.new()
+		ball.radius = randf_range(2.0, 3.2)
+		ball.height = ball.radius * 2
+		ball.radial_segments = 12
+		ball.rings = 6
+		puff.mesh = ball
+		puff.material_override = ReferenceAssets.material(2, false)
+		puff.position = Vector3(randf_range(-3.2, 3.2), randf_range(0.6, 3.4), randf_range(-3.2, 3.2))
+		cloud.add_child(puff)
+	smokes.append({"node": cloud, "position": at + Vector3.UP * 1.5, "life": 11.0})
+	sound.play_effect("fuse", at)
+
+func throw_grenade(from: Vector3, velocity: Vector3, mine: bool = true, smoke: bool = false) -> void:
 	var node = RigidBody3D.new()
 	var visual = MeshInstance3D.new()
 	var sphere = SphereMesh.new()
 	sphere.radius = 0.12
 	sphere.height = 0.24
 	visual.mesh = sphere
-	visual.material_override = ReferenceAssets.material(3, true)
+	visual.material_override = ReferenceAssets.material(2 if smoke else 3, true)
 	node.add_child(visual)
 	var shape = CollisionShape3D.new()
 	var bound = SphereShape3D.new()
@@ -849,8 +891,8 @@ func throw_grenade(from: Vector3, velocity: Vector3, mine: bool = true) -> void:
 	add_child(node)
 	node.position = from
 	node.linear_velocity = velocity
-	grenades.append({"node": node, "life": 2.1, "mine": mine})
-	if network.in_match and mine:
+	grenades.append({"node": node, "life": 1.3 if smoke else 2.1, "mine": mine, "smoke": smoke})
+	if network.in_match and mine and not smoke:
 		network.send_packet({"type": "grenade", "position": [from.x, from.y, from.z], "velocity": [velocity.x, velocity.y, velocity.z]})
 
 func explode(at: Vector3, radius: float, damage: float, friendly: bool = true) -> void:
@@ -910,9 +952,18 @@ func _physics_process(delta: float) -> void:
 		grenade.node.freeze = false
 		grenade.life -= delta
 		if grenade.life <= 0:
-			explode(grenade.node.position, 6.4, 120, grenade.mine)
+			if grenade.smoke:
+				release_smoke(grenade.node.position)
+			else:
+				explode(grenade.node.position, 6.4, 120, grenade.mine)
 			grenade.node.queue_free()
 	grenades = grenades.filter(func(g): return g.life > 0)
+	for cloud in smokes:
+		cloud.life -= delta
+		cloud.node.scale = Vector3.ONE * clampf(minf(11.0 - cloud.life, cloud.life) * 1.5, 0.05, 1.0)
+		if cloud.life <= 0:
+			cloud.node.queue_free()
+	smokes = smokes.filter(func(c): return c.life > 0)
 	for projectile in projectiles:
 		projectile.life -= delta
 		if projectile.blast > 0:
@@ -941,7 +992,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				projectile.life = 0
 			if projectile.life <= 0 and projectile.blast > 0:
-				explode(hit.position, 3.2, projectile.damage, projectile.reflected)
+				explode(hit.position, maxf(3.2, projectile.blast), projectile.damage, projectile.reflected)
 		projectile.position = to
 		line_between(projectile.node, to, to + projectile.velocity.normalized() * 0.5)
 		if projectile.life <= 0:
@@ -1131,6 +1182,13 @@ func run_smoke() -> void:
 	assert(playing and not paused)
 	throw_grenade(player.camera.global_position, Vector3.UP)
 	assert(grenades.size() == 1)
+	release_smoke(Vector3(0, 0, 10))
+	assert(smoke_blocks(Vector3(0, 1.5, 0), Vector3(0, 1.5, 20)) and not smoke_blocks(Vector3(30, 1.5, 0), Vector3(30, 1.5, 20)), "Smoke must block only sight lines that cross it")
+	player.switch_weapon(6)
+	player.fire_cd = 0
+	player.fire()
+	assert(projectiles.size() > 0 and projectiles[-1].reflected and player.magazines[6] == 0, "The bazooka must launch a friendly rocket")
+	player.switch_weapon(0)
 	player.switch_weapon(1)
 	player.magazines[1] = 2
 	player.reserves[1] = 10
@@ -1323,6 +1381,8 @@ func save_settings() -> void:
 	preferences.set_value("touch", "options", touch.options)
 	preferences.set_value("video", "quality", quality)
 	preferences.set_value("video", "fps", show_fps)
+	preferences.set_value("survival", "difficulty", difficulty)
+	preferences.set_value("survival", "wave_size", wave_size)
 	preferences.save(save_path)
 
 func burst(at: Vector3, ink: int, count: int) -> void:
@@ -1513,7 +1573,7 @@ func _network_packet(packet: Dictionary) -> void:
 			if remote_players.has(packet.id):
 				var remote = remote_players[packet.id]
 				tracer(remote.position + Vector3.UP * 1.4, ReferenceAssets.vector(packet.end), 0)
-				sound.play_effect(["enemyShot", "shotgun", "sniperShot", "katanaSwing", "revolver", "enemyShot"][clampi(int(packet.weapon), 0, 5)], remote.position)
+				sound.play_effect(["enemyShot", "shotgun", "sniperShot", "katanaSwing", "revolver", "enemyShot", "shotgun"][clampi(int(packet.weapon), 0, 6)], remote.position)
 		"grenade":
 			if not starting and network.in_match:
 				throw_grenade(ReferenceAssets.vector(packet.position), ReferenceAssets.vector(packet.velocity), false)
@@ -1589,8 +1649,9 @@ func reset_arena_player(index: int) -> void:
 	player.hp = 120
 	player.alive = true
 	player.grenades = 3
-	player.magazines = [35, 6, 5, 0, 6, 30]
-	player.reserves = [175, 36, 25, 0, 36, 180]
+	player.magazines = [35, 6, 5, 0, 6, 30, 1]
+	player.reserves = [175, 36, 25, 0, 36, 180, 6]
+	player.smokes = 2
 	player.reload_time = 0
 	player.cycle_time = 0
 	player.fire_cd = 0
@@ -1605,6 +1666,8 @@ func reset_arena_player(index: int) -> void:
 func show_offline_menu() -> void:
 	_clear_menu("Play offline", "No Internet connection or server needed")
 	_button("SURVIVAL · ENEMY WAVES", func(): match_mode = "survival"; start_game(1), "StartButton")
+	_choices(["Easy", "Normal", "Hard"], difficulty, func(index): difficulty = index; save_settings())
+	_choices(["Normal waves", "Large waves", "Huge waves"], wave_size, func(index): wave_size = index; save_settings())
 	_credit_section("Free for all with bots", "Fight other doodlers in the arena. Bots fight you and each other. First to 20 kills, or the highest score after 10 minutes. Respawns are automatic.")
 	var count = OptionButton.new()
 	for i in range(1, 10):
