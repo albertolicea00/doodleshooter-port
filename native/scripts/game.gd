@@ -48,6 +48,8 @@ var feel_blur = 0.0
 var feel_dizzy = 0.0
 var feel_haze = 0.0
 var daze = 0.0
+# How much smoke the player has breathed; it wears off over about six seconds after leaving the cloud.
+var smoke_dose = 0.0
 var feel_overlay: ColorRect
 var screen_effects = true
 # 0: the original's crossed hatching, 1: the port's coloured-pencil shading.
@@ -651,6 +653,7 @@ func _clear_world() -> void:
 	feel_dizzy = 0.0
 	feel_haze = 0.0
 	daze = 0.0
+	smoke_dose = 0.0
 	enemy_smoke = 20.0
 	feel_overlay.visible = false
 	for list in [projectiles, grenades, pickups, effects]:
@@ -929,12 +932,20 @@ func update_feel(delta: float) -> void:
 	var eye: Vector3 = player.camera.global_position
 	for cloud in smokes:
 		smoke = maxf(smoke, clampf(1.0 - (eye.distance_to(cloud.position) - 3.0) / 3.5, 0, 1) * cloud.node.scale.x)
+	# Breathing smoke stings a little (never below 8 health) and the dizziness outlasts the cloud.
+	if smoke > 0.3:
+		smoke_dose = minf(1.0, smoke_dose + delta * 1.5 * smoke)
+		if player.alive and player.hp > 8.0 and not network.in_match:
+			player.hp = maxf(8.0, player.hp - 4.0 * smoke * delta)
+			player.last_hurt = 0
+	else:
+		smoke_dose = maxf(0, smoke_dose - delta / 6.0)
 	var low = clampf((42.0 - player.hp) / 30.0, 0, 1) if player.alive else 0.0
 	daze = maxf(0, daze - delta * 0.8)
 	var ease = 1.0 - exp(-delta * 4.0)
 	feel_haze = lerpf(feel_haze, smoke, ease)
-	feel_blur = lerpf(feel_blur, clampf(smoke + low * 0.3 + daze * 0.6, 0, 1), ease)
-	feel_dizzy = lerpf(feel_dizzy, clampf(smoke * 0.8 + low * 0.7 + daze, 0, 1) if screen_effects else 0.0, ease)
+	feel_blur = lerpf(feel_blur, clampf(smoke + smoke_dose * 0.45 + low * 0.3 + daze * 0.6, 0, 1), ease)
+	feel_dizzy = lerpf(feel_dizzy, clampf(maxf(smoke * 0.8, smoke_dose) + low * 0.7 + daze, 0, 1) if screen_effects else 0.0, ease)
 	feel_overlay.visible = feel_blur > 0.01 or feel_dizzy > 0.01 or feel_haze > 0.01
 	feel_overlay.material.set_shader_parameter("blur", feel_blur)
 	feel_overlay.material.set_shader_parameter("dizzy", feel_dizzy)
@@ -1307,19 +1318,26 @@ func run_smoke() -> void:
 	release_smoke(Vector3(0, 0, 10))
 	assert(smoke_blocks(Vector3(0, 1.5, 0), Vector3(0, 1.5, 20)) and not smoke_blocks(Vector3(30, 1.5, 0), Vector3(30, 1.5, 20)), "Smoke must block only sight lines that cross it")
 	var clear_blur = feel_blur
+	var healthy = player.hp
 	release_smoke(player.global_position)
 	for i in 30:
 		update_feel(0.1)
 	assert(feel_blur > 0.6 and feel_haze > 0.6 and feel_dizzy > 0.4 and feel_overlay.visible, "Standing in smoke must blur, grey and sway the view")
+	assert(player.hp < healthy - 5 and player.hp > healthy - 20, "Smoke must cost a little health")
 	screen_effects = false
 	for i in 30:
 		update_feel(0.1)
 	assert(feel_dizzy < 0.05 and feel_blur > 0.6, "Turning the sway off must keep the blur")
 	screen_effects = true
 	smokes.pop_back().node.free()
-	for i in 60:
+	for i in 20:
 		update_feel(0.1)
-	assert(feel_blur <= clear_blur + 0.05, "The view must clear once the smoke is gone")
+	assert(feel_dizzy > 0.3 and feel_haze < 0.1, "Dizziness must outlast the cloud")
+	for i in 80:
+		update_feel(0.1)
+	assert(feel_blur <= clear_blur + 0.05 and feel_dizzy < 0.1, "The view must clear a few seconds after the smoke is gone")
+	player.hp = healthy
+	player.last_hurt = 10.0
 	lob_smoke(player.global_position + Vector3(14, 1.5, 0))
 	assert(grenades.size() == 2 and grenades[-1].smoke and not grenades[-1].mine and grenades[-1].node.linear_velocity.y > 0, "An enemy smoke grenade must be thrown on an arc")
 	grenades.pop_back().node.free()
@@ -1579,6 +1597,21 @@ func run_capture() -> void:
 	if "--hatch" in OS.get_cmdline_user_args():
 		ReferenceAssets.set_style(0.0)
 	await start_game(1)
+	# Clean elevated view of a map for the README gallery.
+	if "--scenic" in OS.get_cmdline_user_args():
+		playing = false
+		ui.visible = false
+		player.set_physics_process(false)
+		player.rig.visible = false
+		player.camera.fov = 70
+		player.camera.global_transform = Transform3D(Basis(), Vector3(26, 13, 40)).looking_at(Vector3(0, 3, -6))
+		for i in 8:
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(OS.get_environment("DOODLE_CAPTURE"))
+		print("CAPTURE: ", OS.get_environment("DOODLE_CAPTURE"))
+		get_tree().quit()
+		return
 	# Square overview used for the map cards: run with --resolution 720x720.
 	if "--preview" in OS.get_cmdline_user_args():
 		playing = false

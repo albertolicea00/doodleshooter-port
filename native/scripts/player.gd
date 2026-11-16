@@ -16,6 +16,10 @@ var grapple_anchor = Vector3.ZERO
 var grapple_body: Node3D
 var grapple_offset = Vector3.ZERO
 var stamina = 1.0
+# Port tuning at the user's request: the original drains 0.08 per second on the rope and refills 0.4 on the ground and 0.2 in the air.
+const STAMINA_DRAIN = 0.16
+const STAMINA_GROUND = 0.2
+const STAMINA_AIR = 0.1
 var rope: MeshInstance3D
 var weapons: Dictionary
 # Katana keeps slot 3; the revolver (in the original source but not its loadout) and the SMG (port addition) follow.
@@ -189,12 +193,12 @@ func _physics_process(delta: float) -> void:
 		jumps = 1
 		coyote = 0.13
 		if not grapple_active and stamina_pause <= 0:
-			stamina = minf(1.0, stamina + 0.4 * delta)
+			stamina = minf(1.0, stamina + STAMINA_GROUND * delta)
 	else:
 		coyote -= delta
 		velocity.y -= 26.0 * (0.88 if grapple_active else 1.0) * delta
 		if not grapple_active and stamina_pause <= 0:
-			stamina = minf(1.0, stamina + 0.2 * delta)
+			stamina = minf(1.0, stamina + STAMINA_AIR * delta)
 	var horizontal = Vector3(velocity.x, 0, velocity.z)
 	if slide_time <= 0:
 		if is_on_floor():
@@ -592,7 +596,7 @@ func update_grapple(delta: float, control: Vector2) -> void:
 	else:
 		grapple_hook = grapple_anchor
 		grapple_age += delta
-		stamina = maxf(0, stamina - delta * 0.08)
+		stamina = maxf(0, stamina - delta * STAMINA_DRAIN)
 		var toward = grapple_anchor - (global_position + Vector3.UP)
 		var distance = toward.length()
 		var direction = toward.normalized()
