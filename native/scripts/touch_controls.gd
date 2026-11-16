@@ -272,6 +272,73 @@ func _label(at: Vector2, text: String, font_size: int, color: Color) -> void:
 	var width = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	draw_string(font, at + Vector2(-width * 0.5, font_size * 0.34), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
+# Connected pen strokes; points are in icon units around the button centre.
+func _strokes(c: Vector2, u: float, tone: Color, width: float, paths: Array) -> void:
+	for path in paths:
+		var points = PackedVector2Array()
+		for point in path:
+			points.append(c + point * u)
+		draw_polyline(points, tone, width, true)
+
+# Draws the picture for a control's label; false when there is none.
+func _icon(kind: String, c: Vector2, r: float, tone: Color) -> bool:
+	var u = r * 0.52
+	var w = maxf(2.0, r * 0.075)
+	match kind:
+		"FIRE":
+			# A bullet standing on its case.
+			_strokes(c, u, tone, w, [[Vector2(-0.34, 0.85), Vector2(-0.34, -0.15), Vector2(-0.2, -0.65), Vector2(0, -0.95), Vector2(0.2, -0.65), Vector2(0.34, -0.15), Vector2(0.34, 0.85), Vector2(-0.34, 0.85)],
+				[Vector2(-0.34, -0.15), Vector2(0.34, -0.15)], [Vector2(-0.42, 0.6), Vector2(0.42, 0.6)]])
+		"JUMP":
+			# A figure in the air, arms up, above the ground line.
+			draw_arc(c + Vector2(0, -0.72) * u, 0.2 * u, 0, TAU, 14, tone, w, true)
+			_strokes(c, u, tone, w, [[Vector2(0, -0.5), Vector2(0, 0.08)], [Vector2(-0.5, -0.78), Vector2(0, -0.35), Vector2(0.5, -0.78)],
+				[Vector2(-0.18, 0.62), Vector2(-0.38, 0.3), Vector2(0, 0.08), Vector2(0.38, 0.3), Vector2(0.18, 0.62)], [Vector2(-0.6, 0.95), Vector2(0.6, 0.95)]])
+		"SLIDE":
+			# A crouched runner.
+			draw_arc(c + Vector2(0.42, -0.42) * u, 0.2 * u, 0, TAU, 14, tone, w, true)
+			_strokes(c, u, tone, w, [[Vector2(0.28, -0.24), Vector2(-0.3, 0.18)], [Vector2(0.6, 0.12), Vector2(0.12, -0.08), Vector2(-0.2, -0.3)],
+				[Vector2(-0.3, 0.18), Vector2(0.22, 0.42), Vector2(0.08, 0.86)], [Vector2(-0.3, 0.18), Vector2(-0.7, 0.5), Vector2(-0.92, 0.86)], [Vector2(-0.95, 0.95), Vector2(0.6, 0.95)]])
+		"DASH":
+			# A runner at full stretch with speed lines behind.
+			draw_arc(c + Vector2(0.48, -0.6) * u, 0.2 * u, 0, TAU, 14, tone, w, true)
+			_strokes(c, u, tone, w, [[Vector2(0.34, -0.42), Vector2(-0.12, 0.1)], [Vector2(0.72, -0.05), Vector2(0.2, -0.22), Vector2(-0.3, -0.4)],
+				[Vector2(-0.12, 0.1), Vector2(0.34, 0.38), Vector2(0.12, 0.82)], [Vector2(-0.12, 0.1), Vector2(-0.58, 0.34), Vector2(-0.9, 0.14)],
+				[Vector2(-0.95, -0.55), Vector2(-0.45, -0.55)], [Vector2(-1.0, -0.2), Vector2(-0.6, -0.2)], [Vector2(-0.9, 0.7), Vector2(-0.4, 0.7)]])
+		"AIM":
+			draw_arc(c, 0.62 * u, 0, TAU, 24, tone, w, true)
+			draw_circle(c, 0.09 * u, tone)
+			_strokes(c, u, tone, w, [[Vector2(0, -0.95), Vector2(0, -0.35)], [Vector2(0, 0.35), Vector2(0, 0.95)], [Vector2(-0.95, 0), Vector2(-0.35, 0)], [Vector2(0.35, 0), Vector2(0.95, 0)]])
+		"BLOCK":
+			# A shield.
+			_strokes(c, u, tone, w, [[Vector2(-0.62, -0.75), Vector2(0.62, -0.75), Vector2(0.62, 0.05), Vector2(0.36, 0.6), Vector2(0, 0.92), Vector2(-0.36, 0.6), Vector2(-0.62, 0.05), Vector2(-0.62, -0.75)], [Vector2(0, -0.75), Vector2(0, 0.92)]])
+		"HOOK":
+			# A grappling hook on its rope.
+			draw_arc(c + Vector2(0, -0.72) * u, 0.16 * u, 0, TAU, 12, tone, w, true)
+			draw_arc(c + Vector2(0, 0.25) * u, 0.55 * u, 0, PI, 16, tone, w, true)
+			_strokes(c, u, tone, w, [[Vector2(0, -0.56), Vector2(0, 0.8)], [Vector2(-0.75, 0.0), Vector2(-0.55, 0.25), Vector2(-0.3, 0.05)], [Vector2(0.75, 0.0), Vector2(0.55, 0.25), Vector2(0.3, 0.05)]])
+		"SLASH":
+			# A blade with its guard and the arc of the cut.
+			_strokes(c, u, tone, w, [[Vector2(-0.7, 0.75), Vector2(0.55, -0.6), Vector2(0.72, -0.85), Vector2(0.42, -0.72)], [Vector2(-0.58, 0.2), Vector2(-0.18, 0.62)]])
+			draw_arc(c + Vector2(-0.1, 0.1) * u, 0.95 * u, -0.25, 1.25, 14, tone, w * 0.8, true)
+		"NADE":
+			draw_arc(c + Vector2(0, 0.25) * u, 0.58 * u, 0, TAU, 20, tone, w, true)
+			draw_arc(c + Vector2(-0.42, -0.62) * u, 0.15 * u, 0, TAU, 10, tone, w * 0.8, true)
+			_strokes(c, u, tone, w, [[Vector2(-0.2, -0.33), Vector2(-0.2, -0.6), Vector2(0.2, -0.6), Vector2(0.2, -0.33)], [Vector2(0.2, -0.55), Vector2(0.62, -0.38), Vector2(0.7, -0.05)]])
+		"SMOKE":
+			# A canister with puffs rising from it.
+			_strokes(c, u, tone, w, [[Vector2(-0.28, 0.1), Vector2(0.28, 0.1), Vector2(0.28, 0.9), Vector2(-0.28, 0.9), Vector2(-0.28, 0.1)], [Vector2(-0.28, 0.45), Vector2(0.28, 0.45)]])
+			for puff in [[Vector2(0, -0.25), 0.24], [Vector2(-0.38, -0.55), 0.2], [Vector2(0.36, -0.62), 0.22]]:
+				draw_arc(c + puff[0] * u, puff[1] * u, 0, TAU, 12, tone, w * 0.8, true)
+		"RELOAD":
+			draw_arc(c, 0.68 * u, -0.6, PI * 1.35, 20, tone, w, true)
+			_strokes(c, u, tone, w, [[Vector2(0.3, -0.72), Vector2(0.6, -0.36), Vector2(0.9, -0.66)]])
+		"SCORE":
+			_strokes(c, u, tone, w, [[Vector2(-0.7, -0.5), Vector2(-0.5, -0.5)], [Vector2(-0.25, -0.5), Vector2(0.7, -0.5)], [Vector2(-0.7, 0), Vector2(-0.5, 0)], [Vector2(-0.25, 0), Vector2(0.7, 0)], [Vector2(-0.7, 0.5), Vector2(-0.5, 0.5)], [Vector2(-0.25, 0.5), Vector2(0.4, 0.5)]])
+		_:
+			return false
+	return true
+
 func _draw() -> void:
 	if not visible:
 		return
@@ -288,7 +355,9 @@ func _draw() -> void:
 			for side in [-6, 6]:
 				draw_line(b[0] + Vector2(side, -10), b[0] + Vector2(side, 10), tone, 4, true)
 			continue
-		_label(b[0], b[2], int(b[1] * (0.43 if action == "fire" else 0.47)), tone)
+		# Pen icons in play; the layout editor keeps the words so every control can be told apart.
+		if editing or not _icon(b[2], b[0], b[1], tone):
+			_label(b[0], b[2], int(b[1] * (0.43 if action == "fire" else 0.47)), tone)
 	var live = is_instance_valid(player)
 	for i in slots.size():
 		var active = live and i == player.weapon_index
