@@ -152,7 +152,7 @@ func _physics_process(delta: float) -> void:
 		look(stick * delta * 2.5)
 	aiming = Input.is_action_pressed("aim")
 	var wish = global_basis * Vector3(control.x, 0, control.y)
-	var speed = 10.6 if Input.is_action_pressed("sprint") or control.length() > 0.94 and OS.has_feature("mobile") else 6.6
+	var speed = 10.6 if Input.is_action_pressed("sprint") or (game.touch != null and game.touch.sprinting) else 6.6
 	if aiming:
 		speed = 4.2
 	fire_cd -= delta

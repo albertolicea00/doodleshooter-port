@@ -26,6 +26,7 @@ var hud: DoodleHud
 var center_text: Label
 var scoreboard: Label
 var menu_backdrop: ColorRect
+var editor_bar: PanelContainer
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
 var menu_items: VBoxContainer
@@ -168,6 +169,8 @@ func _setup_ui() -> void:
 	touch = DoodleTouchControls.new()
 	ui.add_child(touch)
 	touch.visible = false
+	touch.custom = preferences.get_value("touch", "layout", {})
+	touch.opacity = preferences.get_value("touch", "opacity", 1.0)
 	hurt_overlay = ColorRect.new()
 	hurt_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -194,6 +197,32 @@ func _setup_ui() -> void:
 	menu.add_child(menu_scroll)
 	menu_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	menu_scroll.add_child(menu_items)
+	# Toolbar for the touch layout editor.
+	editor_bar = PanelContainer.new()
+	editor_bar.add_theme_stylebox_override("panel", DoodlePen.box(Color(DoodlePen.PAPER, 0.95), DoodlePen.INK, 2.5, 0.0, Vector2(14, 8)))
+	editor_bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	editor_bar.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	editor_bar.offset_top = 10
+	editor_bar.visible = false
+	ui.add_child(editor_bar)
+	var editor_rows = VBoxContainer.new()
+	editor_bar.add_child(editor_rows)
+	var editor_hint = Label.new()
+	editor_hint.text = "Drag a control to move it · tap one, then resize it"
+	editor_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	editor_hint.add_theme_font_size_override("font_size", 20)
+	editor_rows.add_child(editor_hint)
+	var editor_tools = HBoxContainer.new()
+	editor_tools.add_theme_constant_override("separation", 8)
+	editor_rows.add_child(editor_tools)
+	for tool in [["SMALLER", func(): touch.resize_selected(-0.1), "AltButton"], ["BIGGER", func(): touch.resize_selected(0.1), "AltButton"], ["FAINTER", func(): touch.fade(-0.1), "AltButton"], ["BOLDER", func(): touch.fade(0.1), "AltButton"], ["RESET", func(): touch.restore_defaults(), "RedButton"], ["DONE", close_layout_editor, ""]]:
+		var button = Button.new()
+		button.text = tool[0]
+		button.theme_type_variation = tool[2]
+		button.add_theme_font_size_override("font_size", 20)
+		button.pressed.connect(tool[1])
+		editor_tools.add_child(button)
+	touch.toolbar = editor_bar
 	scope = ColorRect.new()
 	scope.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scope.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -229,6 +258,8 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	if scope != null:
 		scope.visible = false
 	touch.visible = false
+	touch.editing = false
+	editor_bar.visible = false
 	touch.reset()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
@@ -310,8 +341,9 @@ func show_main_menu() -> void:
 	menu_items.add_child(foot)
 
 func show_settings() -> void:
-	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause\nTouch: left thumb moves, drag anywhere else to look, AIM latches, tap a weapon chip to switch")
+	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause\nTouch: left thumb moves, push fully forward to sprint, drag up to RUN to keep running\nDrag anywhere else to look, even while holding FIRE · AIM latches\nSLIDE on the ground becomes DASH in the air · tap a weapon chip to switch, tap the active one to reload")
 	_toggle("Touch controls", use_touch, func(value): use_touch = value)
+	_button("CUSTOMIZE TOUCH LAYOUT", show_layout_editor)
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
 	for item in [["Music volume", "music_volume"], ["Effects volume", "effects_volume"]]:
@@ -327,6 +359,22 @@ func show_settings() -> void:
 		slider.value_changed.connect(func(value): sound.set(item[1], value); save_settings())
 		menu_items.add_child(slider)
 	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
+
+# The controls stay on screen, over the paused game when there is one, and
+# can be dragged and resized; the result is stored with the other settings.
+func show_layout_editor() -> void:
+	menu.visible = false
+	touch.reset()
+	touch.editing = true
+	touch.selected = ""
+	touch.visible = true
+	editor_bar.visible = true
+
+func close_layout_editor() -> void:
+	preferences.set_value("touch", "layout", touch.custom)
+	preferences.set_value("touch", "opacity", touch.opacity)
+	preferences.save(save_path)
+	show_settings()
 
 func show_credits() -> void:
 	_clear_menu("Credits", "doodleshooter-port · unofficial native adaptation")
@@ -475,7 +523,9 @@ func _notification(what: int) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and not starting:
-		if paused:
+		if editor_bar.visible:
+			close_layout_editor()
+		elif paused:
 			resume_game()
 		elif playing:
 			pause_menu()
@@ -876,6 +926,16 @@ func run_smoke() -> void:
 	drag.position = finger.position + Vector2(touch.STICK_RADIUS * 0.9, 0)
 	touch._input(drag)
 	assert(touch.move_vector.x > 0.8, "Touch joystick must generate movement")
+	assert(not touch.sprinting, "Sideways movement must not sprint")
+	drag.position = finger.position + Vector2(0, -touch.STICK_RADIUS)
+	touch._input(drag)
+	assert(touch.sprinting, "Pushing the joystick fully forward must sprint")
+	touch.custom = {"fire": [-40.0, -30.0, 1.2]}
+	touch.layout()
+	var moved: Array = touch.buttons.fire
+	touch.custom = {}
+	touch.layout()
+	assert(moved[0].is_equal_approx(touch.buttons.fire[0] + Vector2(-40, -30)) and moved[1] > touch.buttons.fire[1], "A saved layout must move and resize its control")
 	var fire_finger = InputEventScreenTouch.new()
 	fire_finger.index = 5
 	touch.layout()
