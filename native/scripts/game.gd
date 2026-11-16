@@ -43,6 +43,14 @@ const PREVIEW_FRAMES = 10
 const PREVIEW_SIZE = 192
 var show_fps = true
 var smokes: Array = []
+# Port additions: how smeared, swaying and greyed-out the view is right now.
+var feel_blur = 0.0
+var feel_dizzy = 0.0
+var feel_haze = 0.0
+var daze = 0.0
+var feel_overlay: ColorRect
+var screen_effects = true
+var enemy_smoke = 20.0
 # Survival tuning chosen in the offline menu; Normal matches the original numbers.
 var difficulty = 1
 var wave_size = 0
@@ -165,6 +173,16 @@ func _setup_ui() -> void:
 	paper_mat.shader = preload("res://shaders/paper.gdshader")
 	paper.material = paper_mat
 	ui.add_child(paper)
+	# Drawn first so it smears the world but leaves the paper lines and HUD sharp.
+	feel_overlay = ColorRect.new()
+	feel_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	feel_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var feel_material = ShaderMaterial.new()
+	feel_material.shader = preload("res://shaders/woozy.gdshader")
+	feel_overlay.material = feel_material
+	feel_overlay.visible = false
+	ui.add_child(feel_overlay)
+	ui.move_child(feel_overlay, 0)
 	hud = DoodleHud.new()
 	hud.game = self
 	hud.visible = false
@@ -194,6 +212,7 @@ func _setup_ui() -> void:
 	touch.options.merge(preferences.get_value("touch", "options", {}), true)
 	apply_quality(int(preferences.get_value("video", "quality", 1)))
 	show_fps = preferences.get_value("video", "fps", true)
+	screen_effects = preferences.get_value("video", "screen_effects", true)
 	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 2)
 	wave_size = clampi(int(preferences.get_value("survival", "wave_size", 0)), 0, 2)
 	hurt_overlay = ColorRect.new()
@@ -442,6 +461,7 @@ func show_settings() -> void:
 	_credit_section("Graphics detail", "")
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
+	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
 	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
@@ -621,6 +641,12 @@ func _clear_world() -> void:
 	for cloud in smokes:
 		cloud.node.free()
 	smokes.clear()
+	feel_blur = 0.0
+	feel_dizzy = 0.0
+	feel_haze = 0.0
+	daze = 0.0
+	enemy_smoke = 20.0
+	feel_overlay.visible = false
 	for list in [projectiles, grenades, pickups, effects]:
 		for item in list:
 			if is_instance_valid(item.node):
@@ -709,6 +735,7 @@ func start_wave(number: int) -> void:
 func _process(delta: float) -> void:
 	if not playing:
 		return
+	update_feel(delta)
 	if network.in_match:
 		update_online(delta)
 		return
@@ -751,6 +778,16 @@ func _process(delta: float) -> void:
 		player.hp = minf(120, player.hp + 40)
 		sound.play_effect("waveClear")
 	sound.intensity = clampf(float(enemies.size()) / 15.0 + (0.25 if player.hp < 35 else 0.0), 0, 1)
+	# Port addition: from wave 3 on Normal and Hard, a gunner who sees the player now and then lobs smoke at them.
+	enemy_smoke -= delta
+	if enemy_smoke <= 0 and wave >= 3 and difficulty > 0:
+		enemy_smoke = 2.0
+		for enemy in enemies:
+			var gap = enemy.global_position.distance_to(player.global_position)
+			if enemy.alive and enemy.target_los and enemy.kind in ["grunt", "heavy", "shield"] and gap > 9 and gap < 34:
+				lob_smoke(enemy.global_position + Vector3.UP * 1.5 * enemy.model_scale)
+				enemy_smoke = randf_range(24, 36) if difficulty == 1 else randf_range(14, 22)
+				break
 	for dot in trajectory_nodes:
 		dot.visible = player.charging
 	_update_effects(delta)
@@ -854,27 +891,74 @@ func release_smoke(at: Vector3) -> void:
 	var cloud = Node3D.new()
 	add_child(cloud)
 	cloud.position = at
-	for i in 9:
+	var haze = ShaderMaterial.new()
+	haze.shader = preload("res://shaders/smoke.gdshader")
+	# Drawn after the ink outline pass, so outlines of things behind the cloud do not show through it.
+	haze.render_priority = 1
+	for i in 14:
 		var puff = MeshInstance3D.new()
 		var ball = SphereMesh.new()
-		ball.radius = randf_range(2.0, 3.2)
+		ball.radius = randf_range(1.6, 3.0)
 		ball.height = ball.radius * 2
-		ball.radial_segments = 12
-		ball.rings = 6
+		ball.radial_segments = 16
+		ball.rings = 8
 		puff.mesh = ball
-		puff.material_override = ReferenceAssets.material(2, false)
-		puff.position = Vector3(randf_range(-3.2, 3.2), randf_range(0.6, 3.4), randf_range(-3.2, 3.2))
+		puff.material_override = haze
+		puff.position = Vector3(randf_range(-3.4, 3.4), randf_range(0.4, 3.6), randf_range(-3.4, 3.4))
+		puff.rotation = Vector3(randf() * TAU, randf() * TAU, 0)
+		puff.set_meta("spin", randf_range(-0.35, 0.35))
 		cloud.add_child(puff)
-	smokes.append({"node": cloud, "position": at + Vector3.UP * 1.5, "life": 11.0})
+	smokes.append({"node": cloud, "position": at + Vector3.UP * 1.5, "life": 11.0, "material": haze})
 	sound.play_effect("fuse", at)
+
+# An enemy's smoke grenade, thrown on an arc that lands at the player's feet.
+func lob_smoke(from: Vector3) -> void:
+	var target: Vector3 = player.global_position
+	var flight = clampf(from.distance_to(target) / 16.0, 0.75, 1.2)
+	throw_grenade(from, (target - from) / flight + Vector3.UP * 11.0 * flight, false, true)
+
+# Port addition: smoke in the eyes, low health and heavy hits blur and sway the view.
+func update_feel(delta: float) -> void:
+	var smoke = 0.0
+	var eye: Vector3 = player.camera.global_position
+	for cloud in smokes:
+		smoke = maxf(smoke, clampf(1.0 - (eye.distance_to(cloud.position) - 3.0) / 3.5, 0, 1) * cloud.node.scale.x)
+	var low = clampf((42.0 - player.hp) / 30.0, 0, 1) if player.alive else 0.0
+	daze = maxf(0, daze - delta * 0.8)
+	var ease = 1.0 - exp(-delta * 4.0)
+	feel_haze = lerpf(feel_haze, smoke, ease)
+	feel_blur = lerpf(feel_blur, clampf(smoke + low * 0.3 + daze * 0.6, 0, 1), ease)
+	feel_dizzy = lerpf(feel_dizzy, clampf(smoke * 0.8 + low * 0.7 + daze, 0, 1) if screen_effects else 0.0, ease)
+	feel_overlay.visible = feel_blur > 0.01 or feel_dizzy > 0.01 or feel_haze > 0.01
+	feel_overlay.material.set_shader_parameter("blur", feel_blur)
+	feel_overlay.material.set_shader_parameter("dizzy", feel_dizzy)
+	feel_overlay.material.set_shader_parameter("haze", feel_haze)
 
 func throw_grenade(from: Vector3, velocity: Vector3, mine: bool = true, smoke: bool = false) -> void:
 	var node = RigidBody3D.new()
 	var visual = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.12
-	sphere.height = 0.24
-	visual.mesh = sphere
+	if smoke:
+		# A canister with a coloured band, so it does not read as a frag grenade.
+		var can = CylinderMesh.new()
+		can.top_radius = 0.075
+		can.bottom_radius = 0.075
+		can.height = 0.26
+		can.radial_segments = 10
+		visual.mesh = can
+		var band = MeshInstance3D.new()
+		var ring = CylinderMesh.new()
+		ring.top_radius = 0.082
+		ring.bottom_radius = 0.082
+		ring.height = 0.07
+		ring.radial_segments = 10
+		band.mesh = ring
+		band.material_override = ReferenceAssets.material(9, true)
+		visual.add_child(band)
+	else:
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.12
+		sphere.height = 0.24
+		visual.mesh = sphere
 	visual.material_override = ReferenceAssets.material(2 if smoke else 3, true)
 	node.add_child(visual)
 	var shape = CollisionShape3D.new()
@@ -927,15 +1011,41 @@ func explode(at: Vector3, radius: float, damage: float, friendly: bool = true) -
 			if prop.position.distance_to(at) < radius:
 				level.hit_prop(prop.body, damage)
 
+func pickup_part(parent: Node3D, mesh: Mesh, ink: int, solid: bool, at: Vector3 = Vector3.ZERO) -> void:
+	var part = MeshInstance3D.new()
+	part.mesh = mesh
+	part.material_override = ReferenceAssets.material(ink, solid, [0.62, 0.0])
+	part.position = at
+	parent.add_child(part)
+
+# The original's pickup models: a blue ink bottle with a black cap and label
+# for ammunition, a green cross for health. Its Mexico taco is not reproduced.
 func spawn_pickup(kind: String, at: Vector3) -> void:
-	var node = MeshInstance3D.new()
-	var mesh = BoxMesh.new()
-	mesh.size = Vector3(0.45, 0.3, 0.45)
-	node.mesh = mesh
-	node.material_override = ReferenceAssets.material(4 if kind == "health" else 3, true)
+	var node = Node3D.new()
+	if kind == "ammo":
+		var bottle = CylinderMesh.new()
+		bottle.top_radius = 0.22
+		bottle.bottom_radius = 0.24
+		bottle.height = 0.5
+		bottle.radial_segments = 10
+		pickup_part(node, bottle, 0, false)
+		var cap = CylinderMesh.new()
+		cap.top_radius = 0.1
+		cap.bottom_radius = 0.1
+		cap.height = 0.16
+		cap.radial_segments = 8
+		pickup_part(node, cap, 2, true, Vector3(0, 0.33, 0))
+		var label = BoxMesh.new()
+		label.size = Vector3(0.3, 0.2, 0.02)
+		pickup_part(node, label, 2, true, Vector3(0, 0, 0.24))
+	else:
+		for size in [Vector3(0.6, 0.2, 0.2), Vector3(0.2, 0.6, 0.2)]:
+			var bar = BoxMesh.new()
+			bar.size = size
+			pickup_part(node, bar, 4, true)
 	add_child(node)
-	node.position = at + Vector3.UP * 0.5
-	pickups.append({"node": node, "kind": kind, "life": 35.0})
+	node.position = at + Vector3.UP * 0.6
+	pickups.append({"node": node, "kind": kind, "life": 35.0, "base": node.position.y, "time": randf() * 6.0})
 
 func _physics_process(delta: float) -> void:
 	# Touch actions do not generate InputEvents; observe pause/weapon here too.
@@ -961,6 +1071,10 @@ func _physics_process(delta: float) -> void:
 	for cloud in smokes:
 		cloud.life -= delta
 		cloud.node.scale = Vector3.ONE * clampf(minf(11.0 - cloud.life, cloud.life) * 1.5, 0.05, 1.0)
+		cloud.material.set_shader_parameter("fade", clampf(cloud.life / 2.5, 0, 1))
+		for puff in cloud.node.get_children():
+			puff.rotate_y(delta * float(puff.get_meta("spin")))
+			puff.position.y += delta * 0.07
 		if cloud.life <= 0:
 			cloud.node.queue_free()
 	smokes = smokes.filter(func(c): return c.life > 0)
@@ -1000,7 +1114,9 @@ func _physics_process(delta: float) -> void:
 	projectiles = projectiles.filter(func(p): return p.life > 0)
 	for pickup in pickups:
 		pickup.life -= delta
-		pickup.node.rotate_y(delta * 2)
+		pickup.time += delta
+		pickup.node.rotate_y(delta * 1.8)
+		pickup.node.position.y = pickup.base + sin(pickup.time * 2.5) * 0.12
 		if pickup.node.position.distance_to(player.position + Vector3.UP * 0.7) < 1.7:
 			if pickup.kind == "health":
 				player.hp = minf(120, player.hp + 35)
@@ -1184,6 +1300,23 @@ func run_smoke() -> void:
 	assert(grenades.size() == 1)
 	release_smoke(Vector3(0, 0, 10))
 	assert(smoke_blocks(Vector3(0, 1.5, 0), Vector3(0, 1.5, 20)) and not smoke_blocks(Vector3(30, 1.5, 0), Vector3(30, 1.5, 20)), "Smoke must block only sight lines that cross it")
+	var clear_blur = feel_blur
+	release_smoke(player.global_position)
+	for i in 30:
+		update_feel(0.1)
+	assert(feel_blur > 0.6 and feel_haze > 0.6 and feel_dizzy > 0.4 and feel_overlay.visible, "Standing in smoke must blur, grey and sway the view")
+	screen_effects = false
+	for i in 30:
+		update_feel(0.1)
+	assert(feel_dizzy < 0.05 and feel_blur > 0.6, "Turning the sway off must keep the blur")
+	screen_effects = true
+	smokes.pop_back().node.free()
+	for i in 60:
+		update_feel(0.1)
+	assert(feel_blur <= clear_blur + 0.05, "The view must clear once the smoke is gone")
+	lob_smoke(player.global_position + Vector3(14, 1.5, 0))
+	assert(grenades.size() == 2 and grenades[-1].smoke and not grenades[-1].mine and grenades[-1].node.linear_velocity.y > 0, "An enemy smoke grenade must be thrown on an arc")
+	grenades.pop_back().node.free()
 	player.switch_weapon(6)
 	player.fire_cd = 0
 	player.fire()
@@ -1321,9 +1454,12 @@ func run_smoke() -> void:
 		match_mode = "survival"
 		await start_game(1)
 		playing = false
-		for i in 3:
-			await get_tree().physics_frame
 		var nav_map = get_world_3d().navigation_map
+		# The navigation server publishes a baked region a few frames later, and later still on the busier maps.
+		for i in 240:
+			await get_tree().physics_frame
+			if i >= 3 and not NavigationServer3D.map_get_path(nav_map, level.spawns[0], level.start, true).is_empty():
+				break
 		for point in level.spawns:
 			var route = NavigationServer3D.map_get_path(nav_map, point, level.start, true)
 			assert(route.size() > 1 and route[-1].distance_to(level.start) < 2.0, "%s: spawn %s cannot reach the start" % [key, point])
@@ -1381,6 +1517,7 @@ func save_settings() -> void:
 	preferences.set_value("touch", "options", touch.options)
 	preferences.set_value("video", "quality", quality)
 	preferences.set_value("video", "fps", show_fps)
+	preferences.set_value("video", "screen_effects", screen_effects)
 	preferences.set_value("survival", "difficulty", difficulty)
 	preferences.set_value("survival", "wave_size", wave_size)
 	preferences.save(save_path)
@@ -1471,6 +1608,16 @@ func run_capture() -> void:
 	if "--fire" in OS.get_cmdline_user_args():
 		player.fire()
 		await get_tree().process_frame
+	# Optional states for checking the smoke cloud and the woozy view in stills.
+	if "--cloud" in OS.get_cmdline_user_args():
+		release_smoke(player.global_position - player.camera.global_basis.z * 13.0)
+		await get_tree().create_timer(1.5).timeout
+	if "--insmoke" in OS.get_cmdline_user_args():
+		release_smoke(player.global_position)
+		await get_tree().create_timer(1.5).timeout
+	if "--lowhp" in OS.get_cmdline_user_args():
+		player.hp = 12
+		await get_tree().create_timer(1.5).timeout
 	await RenderingServer.frame_post_draw
 	var path = OS.get_environment("DOODLE_CAPTURE")
 	if path.is_empty():

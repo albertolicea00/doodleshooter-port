@@ -1,7 +1,9 @@
 class_name ReferenceAssets
 extends RefCounted
 
-const COLORS = [Color(0.10, 0.19, 0.76), Color(0.86, 0.12, 0.20), Color(0.18, 0.20, 0.26), Color(0.92, 0.55, 0.08), Color(0.12, 0.60, 0.30), Color(0.90, 0.40, 0.66)]
+# The first six inks are the original's. Yellow, lime, purple and teal are port additions used by the port maps.
+const COLORS = [Color(0.10, 0.19, 0.76), Color(0.86, 0.12, 0.20), Color(0.18, 0.20, 0.26), Color(0.92, 0.55, 0.08), Color(0.12, 0.60, 0.30), Color(0.90, 0.40, 0.66),
+	Color(0.90, 0.70, 0.02), Color(0.42, 0.72, 0.08), Color(0.50, 0.24, 0.74), Color(0.04, 0.58, 0.62)]
 static var materials: Dictionary = {}
 static var models: Dictionary = {}
 static var detail = 1.0

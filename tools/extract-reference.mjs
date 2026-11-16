@@ -82,12 +82,17 @@ weapons.smg = { ...structuredClone(weapons.rifle), damage: 15, magazine: 30, res
 weapons.smg.model.scale = [0.82, 0.82, 0.66];
 weapons.smg.position = [0.2, -0.17, -0.5];
 weapons.smg.aim_position = [0, -0.0453, -0.42];
-// Port addition, not in the original: a rocket launcher assembled from boxes.
+// Port addition, not in the original: a rocket launcher. A round tube with a
+// flared muzzle and exhaust, a red warhead showing at the front, grips and a sight.
 const launcher = new THREE.Group();
 const part = (w, h, d, x, y, z, ink) => { const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), render.makeInkMaterial({ ink })); mesh.position.set(x, y, z); launcher.add(mesh); return mesh; };
-part(0.14, 0.14, 1.15, 0, 0.02, -0.35, 0); part(0.2, 0.2, 0.18, 0, 0.02, -0.95, 2); part(0.19, 0.19, 0.14, 0, 0.02, 0.24, 2);
-part(0.05, 0.16, 0.07, 0, -0.12, -0.18, 2); part(0.05, 0.12, 0.06, 0, -0.1, -0.52, 2); part(0.04, 0.09, 0.12, 0, 0.13, -0.3, 1); part(0.16, 0.05, 0.3, 0, 0.11, -0.05, 2);
-const launcherMuzzle = new THREE.Object3D(); launcherMuzzle.name = 'muzzle'; launcherMuzzle.position.set(0, 0.02, -1.05); launcher.add(launcherMuzzle);
+// Tube section along the barrel: radius at the rear end, radius at the front end, length, centre z.
+const tube = (rear, front, length, z, ink, fill = false) => { const g = new THREE.CylinderGeometry(rear, front, length, 14); g.rotateX(Math.PI / 2); const mesh = new THREE.Mesh(g, render.makeInkMaterial({ ink, fill })); mesh.position.set(0, 0.02, z); launcher.add(mesh); return mesh; };
+tube(0.07, 0.07, 1.15, -0.35, 0); tube(0.075, 0.125, 0.2, -0.98, 2); tube(0.13, 0.07, 0.18, 0.28, 2);
+tube(0.086, 0.086, 0.05, -0.12, 2, true); tube(0.086, 0.086, 0.05, -0.62, 2, true); tube(0.06, 0.001, 0.2, -1.16, 1, true); tube(0.06, 0.06, 0.08, -1.04, 1, true);
+part(0.05, 0.16, 0.07, 0, -0.12, -0.18, 2); part(0.05, 0.12, 0.06, 0, -0.1, -0.52, 2); part(0.03, 0.03, 0.2, 0, -0.085, -0.3, 2);
+part(0.03, 0.1, 0.03, 0, 0.13, -0.42, 1); part(0.03, 0.06, 0.1, 0, 0.12, -0.22, 2); tube(0.1, 0.1, 0.22, 0.08, 3);
+const launcherMuzzle = new THREE.Object3D(); launcherMuzzle.name = 'muzzle'; launcherMuzzle.position.set(0, 0.02, -1.26); launcher.add(launcherMuzzle);
 launcher.scale.setScalar(0.8);
 weapons.bazooka = { model: nodeData(launcher), position: [0.26, -0.2, -0.34], aim_position: [0.12, -0.15, -0.3], damage: 160, magazine: 1, reserve: 6, interval: 1.0, reload: 2.0, pellets: 1, spread: 0, ads_spread: 0, fov: 60 };
 await fs.writeFile(path.join(output, 'weapons.json'), JSON.stringify(weapons));

@@ -205,6 +205,9 @@ func think_gun(delta: float, target: Vector3, distance: float) -> void:
 		return
 	var muzzle = global_position + Vector3.UP * 1.45 * model_scale
 	var point: Vector3 = game.player.camera.global_position
+	# Port addition: on Hard, gunners lead a moving target instead of aiming where it was.
+	if game.difficulty == 2 and kind != "sniper" and not game.network.in_match:
+		point += game.player.velocity * (distance / float(stats.get("pspeed", 32))) * 0.6
 	if kind == "sniper":
 		if cooldown > 0:
 			return

@@ -381,7 +381,9 @@ func _physics_process(delta: float) -> void:
 	models[weapon_index].position = base + offset
 	models[weapon_index].rotation = pose
 	models[weapon_index].visible = not (weapon_index == 2 and aiming)
-	camera.rotation.z = lerpf(camera.rotation.z, -control.x * 0.022 - (0.08 if slide_time > 0 else 0.0), delta * 9)
+	# Port addition: the horizon rolls while the player is dizzy.
+	var sway = sin(Time.get_ticks_msec() * 0.0017) * 0.07 * game.feel_dizzy
+	camera.rotation.z = lerpf(camera.rotation.z, -control.x * 0.022 - (0.08 if slide_time > 0 else 0.0) + sway, delta * 9)
 
 
 func reload() -> void:
@@ -487,6 +489,9 @@ func take_damage(amount: float) -> void:
 	game.sound.play_effect("hurt")
 	game.hurt_flash = 0.22
 	game.shake += amount / 80.0
+	# Port addition: a heavy hit leaves the player dazed for a moment.
+	if amount >= 20.0:
+		game.daze = minf(1.0, game.daze + amount / 60.0)
 	Input.start_joy_vibration(0, 0.8, 0.5, 0.16)
 	if hp <= 0:
 		alive = false
