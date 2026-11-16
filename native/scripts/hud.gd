@@ -100,16 +100,16 @@ func _draw() -> void:
 	_draw_crosshair(player, size * 0.5)
 
 func _draw_slots(player: DoodlePlayer, right: float, bottom: float) -> void:
-	write(Vector2(right, bottom), player.weapon_names[player.weapon_index].capitalize(), 36, DoodlePen.INK, true)
-	var y = bottom - 44 - 28 * 3
-	for i in 4:
+	write(Vector2(right, bottom), DoodleTouchControls.NAMES[player.weapon_index], 36, DoodlePen.INK, true)
+	var y = bottom - 44 - 28 * (player.weapon_names.size() - 1)
+	for i in player.weapon_names.size():
 		var active = i == player.weapon_index
-		var empty = i < 3 and player.magazines[i] + player.reserves[i] <= 0
+		var empty = i != 3 and player.magazines[i] + player.reserves[i] <= 0
 		var tone = Color(DoodlePen.RED if empty else DoodlePen.INK, 1.0 if active else 0.55)
 		var ammo = "" if i == 3 else "%d/%d" % [player.magazines[i], player.reserves[i]]
 		write(Vector2(right, y), ammo, 16, Color(tone, tone.a * 0.8), true)
 		var name_size = 24 if active else 20
-		var name_width = write(Vector2(right - 62, y), player.weapon_names[i].capitalize(), name_size, tone, true)
+		var name_width = write(Vector2(right - 62, y), DoodleTouchControls.NAMES[i], name_size, tone, true)
 		var number = Vector2(right - 62 - name_width - 26, y)
 		write(number + Vector2(5, -1), str(i + 1), 15, Color(tone, tone.a * 0.8))
 		DoodlePen.sketch_box(self, Rect2(number + Vector2(0, -16), Vector2(18, 19)), DoodlePen.CLEAR, Color(tone, tone.a * 0.8), 1.5)

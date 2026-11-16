@@ -18,10 +18,11 @@ var grapple_offset = Vector3.ZERO
 var stamina = 1.0
 var rope: MeshInstance3D
 var weapons: Dictionary
-var weapon_names = ["rifle", "shotgun", "sniper", "katana"]
+# Katana keeps slot 3; the revolver (in the original source but not its loadout) and the SMG (port addition) follow.
+var weapon_names = ["rifle", "shotgun", "sniper", "katana", "revolver", "smg"]
 var weapon_index = 0
-var magazines = [35, 6, 5, 0]
-var reserves = [175, 36, 25, 0]
+var magazines = [35, 6, 5, 0, 6, 30]
+var reserves = [175, 36, 25, 0, 36, 180]
 var fire_cd = 0.0
 var reload_time = 0.0
 var last_hurt = 10.0
@@ -94,7 +95,7 @@ func _ready() -> void:
 		model.rotation_order = EULER_ORDER_XYZ
 		models.append(model)
 		var found = {}
-		for part in ["muzzle", "mag", "fore_end", "bolt", "hand_left"]:
+		for part in ["muzzle", "mag", "fore_end", "bolt", "hand_left", "cylinder"]:
 			var node = model.find_child(part, true, false)
 			if node != null:
 				found[part] = node
@@ -116,8 +117,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		look(event.relative * 0.0024)
 	if event.is_action_pressed("next_weapon"):
-		switch_weapon((weapon_index + 1) % 4)
-	for i in 4:
+		switch_weapon((weapon_index + 1) % weapon_names.size())
+	for i in weapon_names.size():
 		if event.is_action_pressed("weapon_" + str(i)):
 			switch_weapon(i)
 
@@ -295,7 +296,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("reload"):
 		reload()
 	if Input.is_action_pressed("fire") and fire_cd <= 0:
-		if weapon_index in [0, 3] or Input.is_action_just_pressed("fire"):
+		if weapon_index in [0, 3, 5] or Input.is_action_just_pressed("fire"):
 			fire()
 	if Input.is_action_just_pressed("slash"):
 		slash()
@@ -336,6 +337,12 @@ func _physics_process(delta: float) -> void:
 			pose += Vector3(0.15, 0, 0.35) * s
 			offset.y -= 0.04 * s
 			hand = Vector3(0.1, -0.12, 0.55) * s
+		elif reload_time > 0 and weapon_index == 4:
+			# Revolver: swing the cylinder out, then snap it shut.
+			var open = 1.0 - pow(1.0 - t / 0.25, 2) if t < 0.25 else (pow(1.0 - (t - 0.8) / 0.2, 2) if t > 0.8 else 1.0)
+			pose += Vector3(0.3, 0, 0.9) * open
+			offset += Vector3(-0.05, 0.02, 0) * open
+			part.cylinder.rotation.z = -1.5 * open
 		elif reload_time > 0:
 			# Magazine: tilt the gun over, drop the magazine and swing it back, then rack.
 			var tilt = sin(clampf(t / 0.22, 0, 1) * PI * 0.5) * (1.0 if t < 0.82 else clampf(1.0 - (t - 0.82) / 0.18, 0, 1))
@@ -348,6 +355,8 @@ func _physics_process(delta: float) -> void:
 				recoil = 0.05
 		else:
 			racked = false
+		if part.has("cylinder") and reload_time <= 0:
+			part.cylinder.rotation.z = 0
 		if part.has("mag"):
 			part.mag.position.y = part.mag_rest.y - drop * 0.3
 			part.mag.rotation.z = drop * 0.6
@@ -377,7 +386,7 @@ func reload() -> void:
 	var config: Dictionary = weapons[weapon_names[weapon_index]]
 	if magazines[weapon_index] < int(config.magazine):
 		reload_time = config.reload
-		game.sound.play_effect("shell" if weapon_index == 1 else "reload")
+		game.sound.play_effect("shell" if weapon_index == 1 else "cylinder" if weapon_index == 4 else "reload")
 
 func fire() -> void:
 	if weapon_index == 3:
@@ -404,10 +413,10 @@ func fire() -> void:
 	magazines[weapon_index] -= 1
 	last_attack = weapon_names[weapon_index]
 	cycle_time = 0.85 if weapon_index == 2 else (0.45 if weapon_index == 1 else 0.0)
-	camera.rotation.x += [0.009, 0.05, 0.055][weapon_index] * 0.55
+	camera.rotation.x += [0.009, 0.05, 0.055, 0.0, 0.038, 0.007][weapon_index] * 0.55
 	fire_cd = maxf(float(config.interval), 0.85 if weapon_index == 2 else 0.0)
-	recoil = 0.045 if weapon_index == 0 else 0.09
-	game.sound.play_effect(["shot", "shotgunFire", "sniperFire"][weapon_index])
+	recoil = 0.045 if weapon_index in [0, 5] else 0.09
+	game.sound.play_effect(["shot", "shotgunFire", "sniperFire", "", "revolver", "shot"][weapon_index])
 	var remote_hits: Dictionary = {}
 	for i in int(config.pellets):
 		var spread: float = config.ads_spread if aiming else config.spread
@@ -417,9 +426,9 @@ func fire() -> void:
 		if not hit.is_empty():
 			end = hit.position
 			if hit.collider.has_method("take_damage"):
-				var amount: float = [19, 16, 150][weapon_index] if hit.collider.get_meta("remote", false) else float(config.damage)
+				var amount: float = [19, 16, 150, 0, 48, 12][weapon_index] if hit.collider.get_meta("remote", false) else float(config.damage)
 				if hit.collider.get_meta("part", "") == "head" or (not hit.collider is DoodleHitbox and hit.position.y > hit.collider.global_position.y + 1.45 * hit.collider.model_scale):
-					amount *= ([1.8, 1.6, 1.5][weapon_index] if hit.collider.get_meta("remote", false) else [2.6, 1.8, 3.0][weapon_index])
+					amount *= ([1.8, 1.6, 1.5, 1.0, 1.6, 1.6][weapon_index] if hit.collider.get_meta("remote", false) else [2.6, 1.8, 3.0, 1.0, 3.0, 2.0][weapon_index])
 				if weapon_index == 1:
 					amount *= clampf(1.0 - maxf(0, camera.global_position.distance_to(end) - 11) / 21, 0.22, 1)
 				if hit.collider.get_meta("remote", false):

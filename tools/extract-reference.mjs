@@ -70,12 +70,17 @@ await fs.writeFile(path.join(output, 'enemy_stats.json'), JSON.stringify(stats))
 const weaponsModule = await moduleFor(path.join(root, 'src/weapons.js'));
 await weaponsModule.evaluate();
 const weapons = {};
-for (const key of ['Rifle', 'Shotgun', 'Sniper', 'Katana']) {
+for (const key of ['Rifle', 'Shotgun', 'Sniper', 'Katana', 'Revolver']) {
   const w = new weaponsModule.namespace[key]({});
   w.root.visible = true;
   // Name the parts the native reload, pump and tracer code animates or reads.
-  for (const [part, name] of [['muzzle', 'muzzle'], ['magMesh', 'mag'], ['foreEnd', 'fore_end'], ['boltH', 'bolt'], ['handL', 'hand_left']]) if (w[part]) w[part].name = name;
+  for (const [part, name] of [['muzzle', 'muzzle'], ['magMesh', 'mag'], ['foreEnd', 'fore_end'], ['boltH', 'bolt'], ['handL', 'hand_left'], ['cylGroup', 'cylinder']]) if (w[part]) w[part].name = name;
   weapons[key.toLowerCase()] = { model: nodeData(w.root), position: w.basePos.toArray(), aim_position: w.aimPos.toArray(), damage: w.damage ?? 80, magazine: w.magSize ?? 0, reserve: w.reserve ?? 0, interval: w.interval ?? 0.4, reload: w.reloadDur ?? 0, pellets: w.pellets ?? 1, spread: w.spread ?? 0, ads_spread: w.adsSpread ?? 0, fov: w.adsFov ?? 65 };
 }
+// Port addition, not in the original: a short fast-firing variant built from the rifle model.
+weapons.smg = { ...structuredClone(weapons.rifle), damage: 15, magazine: 30, reserve: 180, interval: 1 / 15, reload: 1.2, spread: 0.03, ads_spread: 0.012, fov: 62 };
+weapons.smg.model.scale = [0.82, 0.82, 0.66];
+weapons.smg.position = [0.2, -0.17, -0.5];
+weapons.smg.aim_position = [0, -0.0453, -0.42];
 await fs.writeFile(path.join(output, 'weapons.json'), JSON.stringify(weapons));
 console.log('Enemy and weapon models converted.');

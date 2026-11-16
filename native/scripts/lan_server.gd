@@ -3,8 +3,8 @@ extends Node
 
 # One device hosts one room. Clients use the same protocol as online lobbies.
 const PORT = 8912
-const DAMAGE = {"rifle": [19.0, 1.8], "shotgun": [160.0, 1.6], "sniper": [150.0, 1.5], "katana": [55.0, 1.0], "deflect": [90.0, 1.0]}
-const INTERVAL = {"rifle": 1.0 / 11, "shotgun": 0.78, "sniper": 0.85, "katana": 0.33, "deflect": 0.19}
+const DAMAGE = {"rifle": [19.0, 1.8], "shotgun": [160.0, 1.6], "sniper": [150.0, 1.5], "katana": [55.0, 1.0], "revolver": [48.0, 1.6], "smg": [12.0, 1.6], "deflect": [90.0, 1.0]}
+const INTERVAL = {"rifle": 1.0 / 11, "shotgun": 0.78, "sniper": 0.85, "katana": 0.33, "revolver": 0.3, "smg": 1.0 / 15, "deflect": 0.19}
 var listener = TCPServer.new()
 var peers: Dictionary = {}
 var members: Dictionary = {}
@@ -227,7 +227,7 @@ func handle(id: String, packet: Dictionary) -> void:
 				broadcast({"type": "broken", "id": int(prop)}, id)
 
 func weapon_valid(value: Variant) -> bool:
-	return (value is float or value is int) and value >= 0 and value <= 3 and value == int(value)
+	return (value is float or value is int) and value >= 0 and value <= 5 and value == int(value)
 
 func hurt(id: String, amount: float, attacker: String, source: String) -> void:
 	if not members.has(id) or ended:

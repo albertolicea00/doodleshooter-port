@@ -105,7 +105,7 @@ func _ready() -> void:
 		run_capture.call_deferred()
 
 func _setup_inputs() -> void:
-	var keys = {"forward": KEY_W, "back": KEY_S, "left": KEY_A, "right": KEY_D, "jump": KEY_SPACE, "sprint": KEY_SHIFT, "dash": KEY_C, "grapple": KEY_Q, "reload": KEY_R, "slash": KEY_F, "grenade": KEY_G, "pause": KEY_ESCAPE, "scoreboard": KEY_TAB, "weapon_0": KEY_1, "weapon_1": KEY_2, "weapon_2": KEY_3, "weapon_3": KEY_4}
+	var keys = {"forward": KEY_W, "back": KEY_S, "left": KEY_A, "right": KEY_D, "jump": KEY_SPACE, "sprint": KEY_SHIFT, "dash": KEY_C, "grapple": KEY_Q, "reload": KEY_R, "slash": KEY_F, "grenade": KEY_G, "pause": KEY_ESCAPE, "scoreboard": KEY_TAB, "weapon_0": KEY_1, "weapon_1": KEY_2, "weapon_2": KEY_3, "weapon_3": KEY_4, "weapon_4": KEY_5, "weapon_5": KEY_6}
 	for action in keys:
 		InputMap.add_action(action)
 		var event = InputEventKey.new()
@@ -369,7 +369,7 @@ func apply_quality(level: int) -> void:
 	ReferenceAssets.set_detail(float(quality))
 
 func show_controls() -> void:
-	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause")
+	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–6 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause")
 	_credit_section("Touch", "The left thumb moves. Push fully forward to sprint and drag on up to RUN to keep running. Drag anywhere else to look, even while holding FIRE. SLIDE on the ground becomes DASH in the air. Tap a weapon chip to switch and tap the active one to reload. Every one of these can be changed under Touch & aiming.")
 	_button("BACK", show_settings, "AltButton")
 
@@ -821,7 +821,7 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("pause") and playing:
 			pause_menu()
 		if playing and Input.is_action_just_pressed("next_weapon"):
-			player.switch_weapon((player.weapon_index + 1) % 4)
+			player.switch_weapon((player.weapon_index + 1) % player.weapon_names.size())
 	if not playing:
 		for grenade in grenades:
 			grenade.node.freeze = true
@@ -1274,6 +1274,10 @@ func run_capture() -> void:
 	for i in 45:
 		await get_tree().process_frame
 	# Optional poses for checking weapon animation and tracer origin in stills.
+	for i in player.weapon_names.size():
+		if "--weapon%d" % i in OS.get_cmdline_user_args():
+			player.switch_weapon(i)
+			await get_tree().create_timer(0.2).timeout
 	if "--reload" in OS.get_cmdline_user_args():
 		player.magazines[player.weapon_index] = 1
 		player.reload()
@@ -1383,7 +1387,7 @@ func _network_packet(packet: Dictionary) -> void:
 			if remote_players.has(packet.id):
 				var remote = remote_players[packet.id]
 				tracer(remote.position + Vector3.UP * 1.4, ReferenceAssets.vector(packet.end), 0)
-				sound.play_effect(["enemyShot", "shotgun", "sniperShot", "katanaSwing"][clampi(int(packet.weapon), 0, 3)], remote.position)
+				sound.play_effect(["enemyShot", "shotgun", "sniperShot", "katanaSwing", "revolver", "enemyShot"][clampi(int(packet.weapon), 0, 5)], remote.position)
 		"grenade":
 			if not starting and network.in_match:
 				throw_grenade(ReferenceAssets.vector(packet.position), ReferenceAssets.vector(packet.velocity), false)
@@ -1459,8 +1463,8 @@ func reset_arena_player(index: int) -> void:
 	player.hp = 120
 	player.alive = true
 	player.grenades = 3
-	player.magazines = [35, 6, 5, 0]
-	player.reserves = [175, 36, 25, 0]
+	player.magazines = [35, 6, 5, 0, 6, 30]
+	player.reserves = [175, 36, 25, 0, 36, 180]
 	player.reload_time = 0
 	player.cycle_time = 0
 	player.fire_cd = 0

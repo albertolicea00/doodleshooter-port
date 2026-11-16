@@ -2,7 +2,7 @@ class_name DoodleTouchControls
 extends Control
 
 const STICK_RADIUS = 78.0
-const NAMES = ["Rifle", "Shotgun", "Sniper", "Katana"]
+const NAMES = ["Rifle", "Shotgun", "Sniper", "Katana", "Revolver", "SMG"]
 var player: DoodlePlayer
 var move_vector = Vector2.ZERO
 var move_finger = -1
@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
 	# Auto fire: shoot while something that can be hurt is under the crosshair.
 	var reach = 3.2 if player.weapon_index == 3 else 18.0 if player.weapon_index == 1 else 120.0
 	var target = options.auto_fire and player.ray(reach).get("collider") != null and player.ray(reach).collider.has_method("take_damage")
-	if target and player.weapon_index in [1, 2] and auto_firing:
+	if target and player.weapon_index in [1, 2, 4] and auto_firing:
 		# Single-shot weapons need a fresh press for every shot.
 		target = false
 	if target != auto_firing:
@@ -106,12 +106,12 @@ func layout() -> void:
 	stick_radius = STICK_RADIUS * _tweak("stick")[2]
 	stick_rest = _place("stick", Vector2(inset[0] + 150, b - 150), Vector2(stick_radius, stick_radius))
 	# One chip per weapon along the bottom centre replaces a blind cycle button.
-	var chip = Vector2(96, 46) * _tweak("weapons")[2]
+	var chip = Vector2(84, 46) * _tweak("weapons")[2]
 	var step = chip.x + 8
-	var first = _place("weapons", Vector2(size.x * 0.5 - step * 2 + 4, b - 12 - chip.y), Vector2.ZERO)
-	first = first.clamp(Vector2.ZERO, size - Vector2(step * 4, chip.y))
+	var first = _place("weapons", Vector2(size.x * 0.5 - step * NAMES.size() * 0.5 + 4, b - 12 - chip.y), Vector2.ZERO)
+	first = first.clamp(Vector2.ZERO, size - Vector2(step * NAMES.size(), chip.y))
 	slots.clear()
-	for i in 4:
+	for i in NAMES.size():
 		slots.append(Rect2(first + Vector2(step * i, 0), chip))
 	if is_instance_valid(player) and not editing:
 		buttons.dash[2] = "SLIDE" if player.is_on_floor() else "DASH"
@@ -216,7 +216,7 @@ func _control_at(point: Vector2) -> String:
 	for action in buttons:
 		if point.distance_to(buttons[action][0]) < buttons[action][1] + 8:
 			return action
-	if Rect2(slots[0].position, slots[3].end - slots[0].position).grow(6).has_point(point):
+	if Rect2(slots[0].position, slots[-1].end - slots[0].position).grow(6).has_point(point):
 		return "weapons"
 	if point.distance_to(stick_rest) < stick_radius:
 		return "stick"
@@ -291,7 +291,7 @@ func _draw() -> void:
 	var live = is_instance_valid(player)
 	for i in slots.size():
 		var active = live and i == player.weapon_index
-		var empty = live and i < 3 and player.magazines[i] + player.reserves[i] <= 0
+		var empty = live and i != 3 and player.magazines[i] + player.reserves[i] <= 0
 		var tone = DoodlePen.PAPER if active else Color(DoodlePen.RED if empty else DoodlePen.INK, 0.75)
 		DoodlePen.sketch_box(self, slots[i], DoodlePen.INK if active else Color(DoodlePen.PAPER, 0.55), mark if editing and selected == "weapons" else ink, 2.5, 0.6 if i % 2 == 0 else -0.6)
 		var ammo = "–"
@@ -299,7 +299,7 @@ func _draw() -> void:
 			ammo = "%d%%" % int(player.katana_charge * 100) if i == 3 else "%d / %d" % [player.magazines[i], player.reserves[i]]
 		var scale = slots[i].size.y / 46.0
 		_label(slots[i].position + slots[i].size * Vector2(0.5, 0.3), NAMES[i], int(18 * scale), tone)
-		_label(slots[i].position + slots[i].size * Vector2(0.5, 0.73), "reload" if active and player.magazines[i] <= 0 and i < 3 else ammo, int(14 * scale), tone)
+		_label(slots[i].position + slots[i].size * Vector2(0.5, 0.73), "reload" if active and player.magazines[i] <= 0 and i != 3 else ammo, int(14 * scale), tone)
 	var center = origin if move_finger >= 0 else stick_rest
 	var knob = thumb if move_finger >= 0 else center + move_vector * stick_radius
 	var stick_tone = mark if (editing and selected == "stick") or sprinting else ink
