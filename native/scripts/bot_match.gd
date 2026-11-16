@@ -120,20 +120,22 @@ func update(delta: float) -> void:
 		if player_respawn <= 0:
 			game.reset_arena_player(randi_range(0, 15))
 			player_shield = 2
-	game.hud.text = "HEALTH %d / 120     KILLS %d / 20     %02d:%02d\n%s · %d / %d     GRENADES %d" % [int(game.player.hp), scores.player.kills, int(remaining) / 60, int(remaining) % 60, game.player.weapon_names[game.player.weapon_index].to_upper(), game.player.magazines[game.player.weapon_index], game.player.reserves[game.player.weapon_index], game.player.grenades]
+	game.hud.score_text = "Kills %d / 20" % scores.player.kills
+	game.hud.combo_text = ""
+	game.hud.boss_name = ""
+	game.hud.info = [["%02d:%02d" % [int(remaining) / 60, int(remaining) % 60], true], ["%d bots · %s" % [bots.size(), ["Easy", "Normal", "Hard"][difficulty]], false]]
 	var standings = sorted_scores()
 	game.scoreboard.text = "OFFLINE FREE FOR ALL\n" + "\n".join(standings.map(func(entry): return "%s     %d K / %d D" % [entry.name, entry.kills, entry.deaths]))
 	game.scoreboard.visible = Input.is_action_pressed("scoreboard")
-	game.center_text.text = "Offline · %d bots · %s" % [bots.size(), ["Easy", "Normal", "Hard"][difficulty]]
+	game.center_text.text = ""
 	if not game.player.alive:
 		game.center_text.text = "You got erased · respawn in %d" % maxi(0, ceili(player_respawn))
 	elif player_shield > 0:
-		game.center_text.text += " · Spawn shield"
+		game.center_text.text = "Spawn shield"
 	game.scope.visible = game.player.weapon_index == 2 and game.player.aiming
 	game.hit_marker = maxf(0, game.hit_marker - delta)
 	game.hurt_flash = maxf(0, game.hurt_flash - delta)
 	game.hurt_overlay.color.a = game.hurt_flash
-	game.crosshair.text = "×" if game.hit_marker > 0 else "+"
 	for dot in game.trajectory_nodes:
 		dot.visible = game.player.charging
 	game._update_effects(delta)

@@ -22,10 +22,10 @@ var spawn_queue: Array[String] = []
 var spawn_timer = 2.0
 var intermission = 0.0
 var map_key = "district"
-var hud: Label
+var hud: DoodleHud
 var center_text: Label
 var scoreboard: Label
-var crosshair: Label
+var menu_backdrop: ColorRect
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
 var menu_items: VBoxContainer
@@ -136,12 +136,7 @@ func _setup_ui() -> void:
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(ui)
-	var theme = Theme.new()
-	theme.default_font_size = 22
-	theme.default_font = load("res://assets/fonts/PatrickHand-Regular.ttf")
-	theme.set_color("font_color", "Label", ReferenceAssets.COLORS[0])
-	theme.set_color("font_color", "Button", ReferenceAssets.COLORS[0])
-	ui.theme = theme
+	ui.theme = DoodlePen.theme(load("res://assets/fonts/PatrickHand-Regular.ttf"))
 	var paper = ColorRect.new()
 	paper.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -149,13 +144,16 @@ func _setup_ui() -> void:
 	paper_mat.shader = preload("res://shaders/paper.gdshader")
 	paper.material = paper_mat
 	ui.add_child(paper)
-	hud = Label.new()
-	hud.position = Vector2(92, 24)
+	hud = DoodleHud.new()
+	hud.game = self
+	hud.visible = false
 	ui.add_child(hud)
 	center_text = Label.new()
 	center_text.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	center_text.position.y = 50
+	center_text.position.y = 150
 	center_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	center_text.add_theme_font_size_override("font_size", 34)
+	center_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(center_text)
 	scoreboard = Label.new()
 	scoreboard.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -164,14 +162,9 @@ func _setup_ui() -> void:
 	scoreboard.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scoreboard.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	scoreboard.add_theme_font_size_override("font_size", 25)
+	scoreboard.add_theme_stylebox_override("normal", DoodlePen.box(Color(DoodlePen.PAPER, 0.94), DoodlePen.INK, 3.0, -0.5))
 	scoreboard.visible = false
 	ui.add_child(scoreboard)
-	crosshair = Label.new()
-	crosshair.text = "+"
-	crosshair.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	crosshair.position -= Vector2(9, 16)
-	crosshair.add_theme_font_size_override("font_size", 30)
-	ui.add_child(crosshair)
 	touch = DoodleTouchControls.new()
 	ui.add_child(touch)
 	touch.visible = false
@@ -180,24 +173,22 @@ func _setup_ui() -> void:
 	hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hurt_overlay.color = Color(0.86, 0.12, 0.2, 0)
 	ui.add_child(hurt_overlay)
+	# The original dims the scene with translucent paper behind every panel.
+	menu_backdrop = ColorRect.new()
+	menu_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	menu_backdrop.color = Color(DoodlePen.PAPER, 0.55)
+	ui.add_child(menu_backdrop)
 	menu = PanelContainer.new()
 	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	menu.position = Vector2(-285, -290)
-	menu.custom_minimum_size = Vector2(570, 0)
-	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.97, 0.96, 0.91, 0.98)
-	panel_style.border_color = ReferenceAssets.COLORS[0]
-	panel_style.set_border_width_all(2)
-	panel_style.content_margin_left = 30
-	panel_style.content_margin_right = 30
-	panel_style.content_margin_top = 25
-	panel_style.content_margin_bottom = 25
-	menu.add_theme_stylebox_override("panel", panel_style)
+	menu.position = Vector2(-340, -328)
+	menu.custom_minimum_size = Vector2(680, 0)
+	menu.visibility_changed.connect(func(): menu_backdrop.visible = menu.visible)
 	ui.add_child(menu)
 	menu_items = VBoxContainer.new()
 	menu_items.add_theme_constant_override("separation", 12)
 	menu_scroll = ScrollContainer.new()
-	menu_scroll.custom_minimum_size = Vector2(0, 520)
+	menu_scroll.custom_minimum_size = Vector2(0, 604)
 	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	menu_scroll.scroll_deadzone = 12
 	menu.add_child(menu_scroll)
@@ -220,7 +211,8 @@ func _clear_menu(title: String, subtitle: String) -> void:
 		child.free()
 	var heading = Label.new()
 	heading.text = title
-	heading.add_theme_font_size_override("font_size", 35)
+	heading.add_theme_font_size_override("font_size", 60)
+	heading.add_theme_constant_override("line_spacing", -10)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	menu_items.add_child(heading)
 	var sub = Label.new()
@@ -228,26 +220,54 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sub.custom_minimum_size.x = 480
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_font_size_override("font_size", 16)
+	sub.add_theme_font_size_override("font_size", 22)
 	menu_items.add_child(sub)
 	menu.visible = true
-	crosshair.visible = false
+	hud.visible = false
+	center_text.visible = false
 	if scope != null:
 		scope.visible = false
 	touch.visible = false
 	touch.reset()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-func _button(text: String, callback: Callable) -> Button:
+func _button(text: String, callback: Callable, variation: String = "") -> Button:
 	var button = Button.new()
 	button.text = text
-	button.custom_minimum_size.y = 46
+	button.theme_type_variation = variation
+	button.custom_minimum_size.y = 52
 	# Let the scroll container cancel the press when a tap becomes a swipe.
 	button.mouse_filter = Control.MOUSE_FILTER_PASS
 	# Menu callbacks rebuild controls after the button finishes its input event.
 	button.pressed.connect(callback, CONNECT_DEFERRED)
 	menu_items.add_child(button)
 	return button
+
+# Side-by-side outlined choices; the selected one is filled with ink (.mapbtn.on).
+func _choices(labels: Array, selected: int, callback: Callable) -> void:
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var group = ButtonGroup.new()
+	for i in labels.size():
+		var button = Button.new()
+		button.text = labels[i]
+		button.theme_type_variation = "AltButton"
+		button.toggle_mode = true
+		button.button_group = group
+		button.button_pressed = i == selected
+		button.custom_minimum_size.y = 48
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.mouse_filter = Control.MOUSE_FILTER_PASS
+		button.pressed.connect(callback.bind(i))
+		row.add_child(button)
+	menu_items.add_child(row)
+
+func _toggle(text: String, value: bool, callback: Callable) -> void:
+	var button = _button("", func(): pass, "AltButton")
+	button.toggle_mode = true
+	button.button_pressed = value
+	button.text = text + (": on" if value else ": off")
+	button.toggled.connect(func(on): button.text = text + (": on" if on else ": off"); callback.call(on))
 
 func show_main_menu() -> void:
 	if network != null:
@@ -262,44 +282,27 @@ func show_main_menu() -> void:
 	_clear_remote_players()
 	playing = false
 	paused = false
-	_clear_menu("doodleshooter-port", "NATIVE PORT · ANDROID + iOS\nBased on Doodle District")
-	var maps = OptionButton.new()
-	maps.add_item("Doodle District")
-	maps.add_item("Doodle Mexico · experimental in the original")
-	maps.selected = 0 if map_key == "district" else 1
-	maps.item_selected.connect(func(index): map_key = "district" if index == 0 else "mexico")
-	maps.custom_minimum_size.y = 44
-	menu_items.add_child(maps)
-	_button("PLAY OFFLINE", show_offline_menu)
+	_clear_menu("doodleshooter-port", "A doodle-style survival shooter · native port of Doodle District")
+	_button("PLAY OFFLINE", show_offline_menu, "StartButton")
 	if checkpoint >= 5:
 		_button("CONTINUE · WAVE " + str(checkpoint), func(): start_game(checkpoint))
-	_button("PLAY ONLINE", show_online_menu)
+	_button("PLAY ONLINE", show_online_menu, "RedButton")
 	_button("LOCAL NETWORK · LAN", show_lan_menu)
-	_button("CONTROLS & SETTINGS", show_settings)
-	_button("CREDITS", show_credits)
+	_choices(["Doodle District", "Doodle Mexico · experimental"], 0 if map_key == "district" else 1, func(index): map_key = "district" if index == 0 else "mexico")
+	_button("CONTROLS & SETTINGS", show_settings, "AltButton")
+	_button("CREDITS", show_credits, "AltButton")
 	var foot = Label.new()
-	foot.text = "Best score: %d\nDevelopment build · full parity in progress" % best
+	foot.text = "Best score: %d · development build" % best
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	foot.add_theme_font_size_override("font_size", 15)
+	foot.add_theme_font_size_override("font_size", 18)
+	foot.modulate.a = 0.8
 	menu_items.add_child(foot)
 
 func show_settings() -> void:
 	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause")
-	var toggle = CheckButton.new()
-	toggle.text = "Show touch controls"
-	toggle.button_pressed = use_touch
-	toggle.toggled.connect(func(value): use_touch = value)
-	menu_items.add_child(toggle)
-	var audio = CheckButton.new()
-	audio.text = "Sound effects"
-	audio.button_pressed = sound.enabled
-	audio.toggled.connect(func(value): sound.enabled = value; save_settings())
-	menu_items.add_child(audio)
-	var music_toggle = CheckButton.new()
-	music_toggle.text = "Original soundtrack"
-	music_toggle.button_pressed = sound.music_enabled
-	music_toggle.toggled.connect(func(value): sound.music_enabled = value; save_settings())
-	menu_items.add_child(music_toggle)
+	_toggle("Touch controls", use_touch, func(value): use_touch = value)
+	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
+	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
 	for item in [["Music volume", "music_volume"], ["Effects volume", "effects_volume"]]:
 		var label = Label.new()
 		label.text = item[0]
@@ -309,9 +312,10 @@ func show_settings() -> void:
 		slider.max_value = 1
 		slider.step = 0.05
 		slider.value = sound.get(item[1])
+		slider.custom_minimum_size.y = 36
 		slider.value_changed.connect(func(value): sound.set(item[1], value); save_settings())
 		menu_items.add_child(slider)
-	_button("BACK", pause_menu if paused else show_main_menu)
+	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
 
 func show_credits() -> void:
 	_clear_menu("Credits", "doodleshooter-port · unofficial native adaptation")
@@ -322,23 +326,31 @@ func show_credits() -> void:
 	_credit_section("Reference dependencies", "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause.")
 	_button("OPEN ORIGINAL GAME", func(): OS.shell_open("https://doodleshooter.vercel.app/"))
 	_button("OPEN REFERENCE SOURCE", func(): OS.shell_open("https://github.com/iifor/doodleshooter"))
-	_button("FULL CREDITS & NOTICES", show_credit_notices)
-	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()))
-	_button("BACK", show_main_menu)
+	_button("FULL CREDITS & NOTICES", show_credit_notices, "AltButton")
+	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()), "AltButton")
+	_button("BACK", show_main_menu, "AltButton")
 
 func _credit_section(title: String, body: String) -> void:
 	var heading = Label.new()
 	heading.text = title
-	heading.add_theme_font_size_override("font_size", 24)
+	heading.add_theme_font_size_override("font_size", 28)
 	menu_items.add_child(heading)
+	# .colhead: a ruled ink line under each section title.
+	var rule = ColorRect.new()
+	rule.color = DoodlePen.INK
+	rule.custom_minimum_size.y = 2
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rule.visible = title != ""
+	heading.visible = title != ""
+	menu_items.add_child(rule)
 	var text = RichTextLabel.new()
 	text.text = body
 	text.fit_content = true
 	text.scroll_active = false
 	text.selection_enabled = true
 	text.custom_minimum_size.x = 480
-	text.add_theme_color_override("default_color", ReferenceAssets.COLORS[0])
-	text.add_theme_font_size_override("normal_font_size", 18)
+	text.mouse_filter = Control.MOUSE_FILTER_PASS
+	text.add_theme_font_size_override("normal_font_size", 20)
 	menu_items.add_child(text)
 
 func show_credit_notices() -> void:
@@ -347,7 +359,7 @@ func show_credit_notices() -> void:
 func show_license(title: String, text: String) -> void:
 	_clear_menu(title, "Attribution and license notices")
 	_credit_section("", text)
-	_button("BACK TO CREDITS", show_credits)
+	_button("BACK TO CREDITS", show_credits, "AltButton")
 
 func start_game(first_wave: int) -> void:
 	if starting:
@@ -424,7 +436,10 @@ func resume_game() -> void:
 	paused = false
 	playing = true
 	menu.visible = false
-	crosshair.visible = true
+	hud.visible = true
+	hud.touch_mode = use_touch
+	center_text.visible = true
+	touch.show_score = network.in_match or match_mode == "bots"
 	touch.visible = use_touch
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if use_touch or capture_mode else Input.MOUSE_MODE_CAPTURED
 
@@ -439,9 +454,9 @@ func pause_menu() -> void:
 	elif network.in_match:
 		summary = "Free for all · the match continues while this menu is open"
 	_clear_menu("Paused", summary)
-	_button("RESUME", resume_game)
-	_button("CONTROLS & SETTINGS", show_settings)
-	_button("MAIN MENU", show_main_menu)
+	_button("RESUME", resume_game, "StartButton")
+	_button("CONTROLS & SETTINGS", show_settings, "AltButton")
+	_button("MAIN MENU", show_main_menu, "AltButton")
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and playing:
@@ -504,17 +519,18 @@ func _process(delta: float) -> void:
 	hit_marker = maxf(0, hit_marker - delta)
 	hurt_flash = maxf(0, hurt_flash - delta)
 	hurt_overlay.color.a = hurt_flash
-	crosshair.text = "×" if hit_marker > 0 else "+"
-	var ammo = "KATANA · %d%%" % int(player.katana_charge * 100) if player.weapon_index == 3 else "%s · %d / %d" % [player.weapon_names[player.weapon_index].to_upper(), player.magazines[player.weapon_index], player.reserves[player.weapon_index]]
-	hud.text = "HEALTH %d / 120     WAVE %d     SCORE %d\n%s     GRENADES %d     GRAPPLE %d%%" % [int(player.hp), wave, score, ammo, player.grenades, int(player.stamina * 100)]
-	if player.reload_time > 0:
-		hud.text += " · RELOADING"
-	center_text.text = "Next wave in %d" % ceili(intermission) if intermission > 0 else "%d remaining" % (enemies.size() + spawn_queue.size())
+	hud.score_text = "Score %d" % score
+	hud.combo_text = "Combo x%d" % combo if combo > 1 else ""
+	hud.info = [["Wave %d" % wave, false]]
+	if modifier != "":
+		hud.info.append([modifier, true])
+	hud.info.append(["%d enemies left" % (enemies.size() + spawn_queue.size()), false])
+	center_text.text = "Next wave in %d" % ceili(intermission) if intermission > 0 else ""
+	hud.boss_name = ""
 	for enemy in enemies:
 		if enemy.stats.get("boss", false):
-			center_text.text += "\n%s · %d / %d" % [enemy.stats.name, int(enemy.hp), int(enemy.max_hp)]
-	if modifier != "":
-		center_text.text += "\n" + modifier
+			hud.boss_name = enemy.stats.name
+			hud.boss_fraction = enemy.hp / enemy.max_hp
 	if intermission > 0:
 		intermission -= delta
 		if intermission <= 0:
@@ -846,12 +862,13 @@ func run_smoke() -> void:
 	touch._input(finger)
 	var drag = InputEventScreenDrag.new()
 	drag.index = 4
-	drag.position = finger.position + Vector2(60, 0)
+	drag.position = finger.position + Vector2(touch.STICK_RADIUS * 0.9, 0)
 	touch._input(drag)
 	assert(touch.move_vector.x > 0.8, "Touch joystick must generate movement")
 	var fire_finger = InputEventScreenTouch.new()
 	fire_finger.index = 5
-	fire_finger.position = Vector2(touch.size.x - 108, touch.size.y - 180)
+	touch.layout()
+	fire_finger.position = touch.buttons.fire[0]
 	fire_finger.pressed = true
 	touch._input(fire_finger)
 	assert(Input.is_action_pressed("fire") and touch.move_finger == 4, "A second finger must fire without stealing the joystick")
@@ -1117,21 +1134,24 @@ Connect to a native lobby server")
 	name_input = LineEdit.new()
 	name_input.placeholder_text = "Your name"
 	name_input.text = player_name
+	name_input.custom_minimum_size.y = 48
 	menu_items.add_child(name_input)
 	server_input = LineEdit.new()
 	server_input.placeholder_text = "wss://your-lobby-server"
 	server_input.text = server_url
+	server_input.custom_minimum_size.y = 48
 	menu_items.add_child(server_input)
-	_button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}))
+	_button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}), "StartButton")
 	_button("CREATE PUBLIC LOBBY", func(): connect_online({"type": "host", "public": true, "map": map_key}))
-	_button("CREATE PRIVATE LOBBY", func(): connect_online({"type": "host", "public": false, "map": map_key}))
+	_button("CREATE PRIVATE LOBBY", func(): connect_online({"type": "host", "public": false, "map": map_key}), "AltButton")
 	code_input = LineEdit.new()
 	code_input.placeholder_text = "Five-character lobby code"
 	code_input.max_length = 5
+	code_input.custom_minimum_size.y = 48
 	menu_items.add_child(code_input)
 	_button("JOIN CODE", func(): connect_online({"type": "join", "code": code_input.text.to_upper()}))
-	_button("BROWSE PUBLIC LOBBIES", func(): connect_online({"type": "list"}))
-	_button("BACK", show_main_menu)
+	_button("BROWSE PUBLIC LOBBIES", func(): connect_online({"type": "list"}), "AltButton")
+	_button("BACK", show_main_menu, "AltButton")
 
 func connect_online(request: Dictionary) -> void:
 	player_name = name_input.text.strip_edges().left(24)
@@ -1141,7 +1161,7 @@ func connect_online(request: Dictionary) -> void:
 	preferences.save(save_path)
 	network.connect_lobby(server_url, request)
 	_clear_menu("Connecting…", "Contacting the lobby server")
-	_button("CANCEL", show_main_menu)
+	_button("CANCEL", show_main_menu, "AltButton")
 
 func show_lobby() -> void:
 	if network.in_match or starting:
@@ -1152,14 +1172,9 @@ func show_lobby() -> void:
 		names += entry.name + (" · host" if entry.id == network.host_id else "") + "\n"
 	_clear_menu("Lobby " + network.code, names + "\nFree for all · first to 20 · 10 minute limit" + lan_host_note)
 	if network.peer_id == network.host_id:
-		var maps = OptionButton.new()
-		maps.add_item("Doodle District")
-		maps.add_item("Doodle Mexico")
-		maps.selected = 0 if map_key == "district" else 1
-		maps.item_selected.connect(func(index): network.send_packet({"type": "map", "map": "district" if index == 0 else "mexico"}))
-		menu_items.add_child(maps)
-		_button("START MATCH", func(): network.send_packet({"type": "start"}))
-	_button("LEAVE LOBBY", show_main_menu)
+		_choices(["Doodle District", "Doodle Mexico"], 0 if map_key == "district" else 1, func(index): network.send_packet({"type": "map", "map": "district" if index == 0 else "mexico"}))
+		_button("START MATCH", func(): network.send_packet({"type": "start"}), "StartButton")
+	_button("LEAVE LOBBY", show_main_menu, "AltButton")
 
 func _network_packet(packet: Dictionary) -> void:
 	match packet.get("type", ""):
@@ -1253,17 +1268,19 @@ func update_online(delta: float) -> void:
 	for entry in network.roster:
 		if entry.id == network.peer_id:
 			own_kills = int(entry.kills)
-	hud.text = "HEALTH %d / 120     KILLS %d / 20     %02d:%02d\n%s · %d / %d     GRENADES %d" % [int(player.hp), own_kills, network.remaining / 60, network.remaining % 60, player.weapon_names[player.weapon_index].to_upper(), player.magazines[player.weapon_index], player.reserves[player.weapon_index], player.grenades]
+	hud.score_text = "Kills %d / 20" % own_kills
+	hud.combo_text = ""
+	hud.boss_name = ""
+	hud.info = [["%02d:%02d" % [network.remaining / 60, network.remaining % 60], true], ["Lobby " + network.code, false]]
 	var standings = network.roster.duplicate()
 	standings.sort_custom(func(a, b): return int(a.kills) > int(b.kills))
 	scoreboard.text = "FREE FOR ALL\n" + "\n".join(standings.map(func(entry): return "%s     %d K / %d D" % [entry.name, entry.kills, entry.deaths]))
 	scoreboard.visible = Input.is_action_pressed("scoreboard")
-	center_text.text = "Lobby " + network.code
+	center_text.text = ""
 	scope.visible = player.weapon_index == 2 and player.aiming
 	hit_marker = maxf(0, hit_marker - delta)
 	hurt_flash = maxf(0, hurt_flash - delta)
 	hurt_overlay.color.a = hurt_flash
-	crosshair.text = "×" if hit_marker > 0 else "+"
 	if not player.alive:
 		death_timer -= delta
 		center_text.text = "You got erased · respawn in %d" % maxi(0, ceili(death_timer))
@@ -1295,7 +1312,7 @@ func reset_arena_player(index: int) -> void:
 
 func show_offline_menu() -> void:
 	_clear_menu("Play offline", "No Internet connection or server needed")
-	_button("SURVIVAL · ENEMY WAVES", func(): match_mode = "survival"; start_game(1))
+	_button("SURVIVAL · ENEMY WAVES", func(): match_mode = "survival"; start_game(1), "StartButton")
 	_credit_section("Free for all with bots", "Fight other doodlers in the arena. Bots fight you and each other. First to 20 kills, or the highest score after 10 minutes. Respawns are automatic.")
 	var count = OptionButton.new()
 	for i in range(1, 10):
@@ -1304,15 +1321,9 @@ func show_offline_menu() -> void:
 	count.custom_minimum_size.y = 46
 	count.item_selected.connect(func(index): bot_count = index + 1)
 	menu_items.add_child(count)
-	var skill = OptionButton.new()
-	for label in ["Easy bots", "Normal bots", "Hard bots"]:
-		skill.add_item(label)
-	skill.selected = bot_difficulty
-	skill.custom_minimum_size.y = 46
-	skill.item_selected.connect(func(index): bot_difficulty = index)
-	menu_items.add_child(skill)
-	_button("START BOT MATCH", func(): match_mode = "bots"; start_game(0))
-	_button("BACK", show_main_menu)
+	_choices(["Easy bots", "Normal bots", "Hard bots"], bot_difficulty, func(index): bot_difficulty = index)
+	_button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "RedButton")
+	_button("BACK", show_main_menu, "AltButton")
 
 func show_lan_menu() -> void:
 	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed. The hosting device must keep the game open.")
@@ -1329,7 +1340,7 @@ func show_lan_menu() -> void:
 	menu_items.add_child(server_input)
 	_button("JOIN LAN GAME", join_lan_game)
 	_credit_section("Joining a room", "Ask the host for the IP address shown in their lobby. Enter it above, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other.")
-	_button("BACK", show_main_menu)
+	_button("BACK", show_main_menu, "AltButton")
 
 func save_player_name() -> void:
 	player_name = name_input.text.strip_edges().left(24)
