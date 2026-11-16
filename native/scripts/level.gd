@@ -28,11 +28,18 @@ func load_map(key: String, arena: bool = false) -> void:
 	for box in data.boxes:
 		var body = StaticBody3D.new()
 		var shape = CollisionShape3D.new()
-		var bounds = BoxShape3D.new()
 		var low = ReferenceAssets.vector(box.min)
 		var high = ReferenceAssets.vector(box.max)
-		bounds.size = high - low
-		shape.shape = bounds
+		# Round props on the port maps collide as upright cylinders; everything else is a box.
+		if box.get("shape", "box") == "cylinder":
+			var round = CylinderShape3D.new()
+			round.radius = float(box.radius)
+			round.height = high.y - low.y
+			shape.shape = round
+		else:
+			var bounds = BoxShape3D.new()
+			bounds.size = high - low
+			shape.shape = bounds
 		body.position = (low + high) * 0.5
 		body.set_meta("no_grapple", box.no_grapple)
 		body.set_meta("no_shoot", box.no_shoot)
