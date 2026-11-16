@@ -6,6 +6,18 @@ The project provides offline survival, offline free-for-all with bots, built-in 
 
 All port UI and project documentation are in English. The original game's attribution appears in the game and in [CREDITS.md](CREDITS.md). The historical upstream source snapshot is preserved unchanged for provenance and contains its own localized strings; it is not shipped in the native application.
 
+## Maps
+
+Doodle District and Doodle Mexico come from the original game. The other seven are port additions and are not part of the original. All are shown in the port's coloured-pencil shading; the original hatching is available in Settings.
+
+| | | |
+| --- | --- | --- |
+| ![Doodle District](docs/screenshots/district.jpg) Doodle District (original) | ![Doodle Mexico](docs/screenshots/mexico.jpg) Doodle Mexico (original) | ![Doodle Castle](docs/screenshots/castle.jpg) Doodle Castle (port) |
+| ![Doodle Harbor](docs/screenshots/harbor.jpg) Doodle Harbor (port) | ![Doodle Pyramid](docs/screenshots/pyramid.jpg) Doodle Pyramid (port) | ![Doodle Station](docs/screenshots/station.jpg) Doodle Station (port) |
+| ![Doodle Forest](docs/screenshots/forest.jpg) Doodle Forest (port) | ![Doodle School](docs/screenshots/school.jpg) Doodle School (port) | ![Doodle Base](docs/screenshots/military.jpg) Doodle Base (port) |
+
+Regenerate them with `make screenshots` (desktop renders, converted with macOS `sips`).
+
 ## Run
 
 Install standard Godot 4.6.3. Open `native/project.godot` and press Run, or use the Makefile from the repository root.

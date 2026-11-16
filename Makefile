@@ -13,7 +13,7 @@ IOS_ZIP := builds/ios/doodleshooter-port.zip
 SERVER_PYTHON := .venv/bin/python
 
 .PHONY: help import run touch check build android android-release ios \
-	install-android server-deps server test-server capture-menus maps map-previews \
+	install-android server-deps server test-server capture-menus maps map-previews screenshots \
 	assets-reference audio-deps assets-audio clean
 
 help:
@@ -33,6 +33,7 @@ help:
 	  'make capture-menus    Save screenshots of the desktop menus' \
 	  'make maps             Regenerate the port maps' \
 	  'make map-previews     Render the animated map previews' \
+	  'make screenshots      Render the README map screenshots (macOS sips)' \
 	  'make assets-reference Regenerate maps and models' \
 	  'make audio-deps       Install the audio extraction dependencies' \
 	  'make assets-audio     Regenerate the audio assets' \
@@ -84,6 +85,14 @@ maps:
 map-previews: import
 	for map in district mexico castle harbor pyramid station forest school military; do \
 	  DOODLE_CAPTURE="$(CURDIR)/$(PROJECT)/assets/previews/$$map.png" "$(GODOT_BIN)" --path "$(PROJECT)" --resolution 720x720 -- --capture --preview --map=$$map; \
+	done
+
+screenshots: import
+	mkdir -p docs/screenshots
+	for map in district mexico castle harbor pyramid station forest school military; do \
+	  DOODLE_CAPTURE="$(CURDIR)/docs/screenshots/$$map.png" "$(GODOT_BIN)" --path "$(PROJECT)" --resolution 1280x720 -- --capture --scenic --map=$$map; \
+	  sips -s format jpeg -s formatOptions 82 "docs/screenshots/$$map.png" --out "docs/screenshots/$$map.jpg" >/dev/null; \
+	  rm -f "docs/screenshots/$$map.png"; \
 	done
 
 capture-menus: import
