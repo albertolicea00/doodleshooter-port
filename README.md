@@ -20,7 +20,7 @@ To display touch controls on desktop:
 make touch
 ```
 
-Touch controls appear automatically on mobile. Menus accept touch through mouse emulation; gameplay uses separate multitouch input. Touch buttons include quick slash and the scoreboard. Online mode requires the separate lobby server described below; offline and LAN modes do not.
+Touch controls appear automatically on mobile. Menus accept touch through mouse emulation; gameplay uses separate multitouch input. The right-thumb cluster has fire, jump, dash, aim (tap to latch), grapple, reload, quick slash, and grenade; weapon chips along the bottom switch weapons; dragging any finger that is not on the joystick turns the camera, including the one holding fire. Arena modes add a scoreboard button. Online mode requires the separate lobby server described below; offline and LAN modes do not.
 
 Run `make help` for all targets. Set `GODOT_BIN`, `PYTHON`, `ADB`, `NODE`, or `NPM` on the command line to use a specific executable.
 
@@ -94,7 +94,7 @@ make test-server
 
 The Godot check verifies reference hashes, imports the project, rejects engine/script errors, and runs headless gameplay, bot-match, menu-routing, native LAN protocol, and two-process LAN game checks. Coverage includes weapons, parries, grappling, multitouch, enemy hitboxes, boss projectile emission, bot-versus-bot fire, player melee damage, respawns, and the bot match kill limit. Run `make server-deps` before `make test-server` to install the dependencies for the WebSocket lobby tests.
 
-Desktop menu rendering has been captured and inspected. Device/emulator play, physical touch, and gameplay visual parity remain unverified. See [docs/VALIDATION.md](docs/VALIDATION.md).
+Desktop and Android-emulator still frames of the menus, HUD, and touch layout have been captured and inspected. Physical-device play, physical touch, and gameplay visual parity against the original remain unverified. See [docs/VALIDATION.md](docs/VALIDATION.md).
 
 To capture the four menu screens with a graphical desktop session:
 

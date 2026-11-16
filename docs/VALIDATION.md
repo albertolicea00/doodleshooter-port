@@ -1,6 +1,6 @@
 # Validation record
 
-Date: November 11, 2026. Engine: Godot 4.6.3 stable. This records automated checks and desktop menu screenshots, not full original-game parity.
+Date: November 15, 2026. Engine: Godot 4.6.3 stable. This records automated checks and desktop menu screenshots, not full original-game parity.
 
 ## Automated coverage
 
@@ -10,12 +10,12 @@ Run the native checks:
 python3 tools/check.py
 ```
 
-The November 11 run passes. The checker verifies the original source SHA-256 hashes, imports the native project, rejects engine/script errors, and requires both smoke completion markers, the native LAN protocol marker, and completion markers from two separate Godot game processes. Logs are written to the system temporary directory as `doodleshooter-check-import.log` and `doodleshooter-check-smoke.log`.
+The November 15 run passes. The checker verifies the original source SHA-256 hashes, imports the native project, rejects engine/script errors, and requires both smoke completion markers, the native LAN protocol marker, and completion markers from two separate Godot game processes. Logs are written to the system temporary directory as `doodleshooter-check-import.log` and `doodleshooter-check-smoke.log`.
 
 Headless gameplay coverage includes:
 
 - District's 517 colliders, raycasts, rifle ammunition, reserve transfer during reload, movement, jump/double jump, grapple acquisition, persistent swing, and second-press release.
-- Simultaneous touch movement/fire, scoring, player damage, pause/resume, and grenade creation.
+- Simultaneous touch movement/fire using the fire position reported by the touch layout, scoring, player damage, pause/resume, and grenade creation. Weapon chips, latching aim, and look-while-firing have no automated coverage.
 - Synthetic screen-touch events pass through Godot's Input parser to navigate Credits → full notices → Credits → main menu → offline setup. Tests cover swipes starting on buttons, cancellation of button activation during a swipe, taps with four pixels of finger drift, scroll reset on screen changes, and touch pause/resume. Menu buttons pass pointer events to the scroll container, which uses a 12-pixel drag deadzone. Touch-to-mouse emulation is enabled in menus and disabled during gameplay. Physical touchscreen behavior remains unverified.
 - Shell-by-shell shotgun reload and firing interruption; frontal perfect parry, cooldown, and rejection of rear projectiles.
 - Mexico's 321 colliders, destructible removal, wave-five boss scheduling, and all ten enemy/boss models with damage hitboxes.
@@ -38,21 +38,23 @@ Six tests pass over real local WebSocket connections. They cover private lobby v
 
 ## Android build status
 
-The November 11 current-source debug APK export succeeds. Independent `apksigner verify --verbose` passes with v2 and v3 signatures. Package inspection confirms application ID `com.doodleshooter.port`, version `0.1.0`, minimum SDK 24, and target SDK 36. Archive inspection confirms ARM64 and x86_64 native libraries, bundled credits, the font license, audio manifest, and enemy data.
+The November 15 current-source debug APK export succeeds and Godot's own signing verification step passes. The independent `apksigner verify --verbose` run, package inspection, and archive inspection below were last performed on the November 11 build and were not repeated. Package inspection confirms application ID `com.doodleshooter.port`, version `0.1.0`, minimum SDK 24, and target SDK 36. Archive inspection confirms ARM64 and x86_64 native libraries, bundled credits, the font license, audio manifest, and enemy data.
 
 The initial attempt failed with `A valid Java SDK path is required in Editor Settings`. Configuring Godot's local `export/android/java_sdk_path` to the installed Temurin 17 JDK resolved the failure; setting `JAVA_HOME` alone did not. No signing credentials were added to the repository. The artifact is `builds/android/doodleshooter-port-debug.apk`.
 
-## Desktop menu rendering
+## Menu, HUD, and touch layout rendering
 
-Graphical capture now succeeds on macOS using OpenGL 4.1 Compatibility on Apple M4. The main, Credits, offline setup, and LAN setup screens were rendered at 1280×720 and inspected. The text fits the scrollable menu and the main/offline buttons are visible. Long credits and LAN content require scrolling. Screenshots are in `builds/validation/doodleshooter-menu-*.png`; reproduce them with `godot --path native --script "$PWD/tools/capture-menus.gd"`.
+Graphical capture succeeds on macOS using OpenGL 4.1 Compatibility on Apple M4. After the November 15 pen-style restyle, the main, Credits, offline setup, and LAN setup screens were rendered at 1280×720 and inspected: the main, offline, and LAN screens fit without scrolling and Credits scrolls. One survival frame was captured at 1280×720 with the desktop HUD and one at 1600×720 with touch controls. Screenshots are in `builds/validation/doodleshooter-menu-*.png` and `doodleshooter-game-*.png`; reproduce the menus with `godot --path native --script "$PWD/tools/capture-menus.gd"` and gameplay with `godot --path native -- --capture [--touch]`.
 
-This is desktop menu verification only. Gameplay rendering, shader fidelity, mobile layouts, physical touch and text entry, and safe areas have not been visually verified.
+The same build was installed on an Android emulator (1080×2400, landscape). The main menu, offline setup, a survival frame with touch controls, and the pause menu were captured (`builds/validation/android-main.png`, `android-offline.png`, `android-survival-touch.png`, `android-paused.png`). Injected `adb shell input tap` events switched to the shotgun through its weapon chip, latched AIM, and opened the pause menu. The other `android-*.png` files predate the restyle.
+
+These are still-frame and single-tap checks. They were inspected for layout and style, not compared against the running original. Multitouch, drag-to-look feel, thumb reach on a physical phone, notch/safe-area insets (the emulator reported none), online/lobby/settings screens, the katana tube, boss bar, and scoreboard panel have not been visually verified.
 
 ## Unverified behavior and environment limitations
 
-No reference gameplay comparison, listening comparison, physical multitouch test, or device/emulator play session has been completed. Headless execution does not verify GPU shaders, final layouts, frame rates, safe areas, audio mixing, or touchscreen feel.
+No reference gameplay comparison, listening comparison, physical multitouch test, or device play session has been completed; emulator use is limited to the screenshots and taps described above. Headless execution does not verify GPU shaders, final layouts, frame rates, safe areas, audio mixing, or touchscreen feel.
 
-Earlier ADB and graphical launch attempts were blocked by the environment; desktop graphical capture now works. The current export attempt also reported that it could not connect to the ADB daemon. An Android install and play session remains outstanding.
+Earlier ADB and graphical launch attempts were blocked by the environment; desktop graphical capture and emulator installation now work. The export step restarts the ADB daemon, so the emulator briefly reports offline afterwards. A play session on a physical Android device remains outstanding.
 
 Original audio assets include 59 rendered effects and six OGG music variants. Resource loading is exercised headlessly; audible fidelity and music loop transitions require listening tests.
 
