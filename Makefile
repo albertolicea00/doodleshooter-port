@@ -13,7 +13,7 @@ IOS_ZIP := builds/ios/doodleshooter-port.zip
 SERVER_PYTHON := .venv/bin/python
 
 .PHONY: help import run touch check build android android-release ios \
-	install-android server-deps server test-server capture-menus \
+	install-android server-deps server test-server capture-menus maps map-previews \
 	assets-reference audio-deps assets-audio clean
 
 help:
@@ -31,6 +31,8 @@ help:
 	  'make server           Run the online lobby server' \
 	  'make test-server      Run the Python lobby tests' \
 	  'make capture-menus    Save screenshots of the desktop menus' \
+	  'make maps             Regenerate the port maps' \
+	  'make map-previews     Render the animated map previews' \
 	  'make assets-reference Regenerate maps and models' \
 	  'make audio-deps       Install the audio extraction dependencies' \
 	  'make assets-audio     Regenerate the audio assets' \
@@ -75,6 +77,14 @@ server:
 
 test-server:
 	"$(SERVER_PYTHON)" -m unittest discover -s tests -v
+
+maps:
+	"$(PYTHON)" tools/make-maps.py
+
+map-previews: import
+	for map in district mexico castle harbor pyramid station forest school military; do \
+	  DOODLE_CAPTURE="$(CURDIR)/$(PROJECT)/assets/previews/$$map.png" "$(GODOT_BIN)" --path "$(PROJECT)" --resolution 720x720 -- --capture --preview --map=$$map; \
+	done
 
 capture-menus: import
 	"$(GODOT_BIN)" --path "$(PROJECT)" --script "$(CURDIR)/tools/capture-menus.gd"

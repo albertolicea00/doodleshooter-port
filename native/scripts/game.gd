@@ -28,14 +28,19 @@ var scoreboard: Label
 var menu_backdrop: ColorRect
 var editor_bar: PanelContainer
 var quality = 1
-# District and Mexico come from the original game; the other four are port additions built by tools/make-maps.py.
+# District and Mexico come from the original game; the others are port additions built by tools/make-maps.py.
 const MAPS = [
 	{"key": "district", "name": "Doodle District", "music": "district"},
 	{"key": "mexico", "name": "Doodle Mexico", "music": "mexico"},
 	{"key": "castle", "name": "Doodle Castle", "music": "district"},
 	{"key": "harbor", "name": "Doodle Harbor", "music": "mexico"},
 	{"key": "pyramid", "name": "Doodle Pyramid", "music": "mexico"},
-	{"key": "station", "name": "Doodle Station", "music": "district"}]
+	{"key": "station", "name": "Doodle Station", "music": "district"},
+	{"key": "forest", "name": "Doodle Forest", "music": "district"},
+	{"key": "school", "name": "Doodle School", "music": "district"},
+	{"key": "military", "name": "Doodle Base", "music": "mexico"}]
+const PREVIEW_FRAMES = 10
+const PREVIEW_SIZE = 192
 var show_fps = true
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
@@ -364,6 +369,16 @@ func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
 	_clear_menu("Choose a map", "District and Mexico are original · the rest are new in this port")
 	var grid = GridContainer.new()
 	grid.columns = 3
+	var frames: Array[AtlasTexture] = []
+	var reel = Timer.new()
+	reel.wait_time = 0.16
+	reel.autostart = true
+	var shown = [0]
+	reel.timeout.connect(func():
+		shown[0] = (shown[0] + 1) % PREVIEW_FRAMES
+		for frame in frames:
+			frame.region.position.x = shown[0] * PREVIEW_SIZE)
+	grid.add_child(reel)
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	for info in MAPS:
@@ -382,7 +397,12 @@ func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
 		var picture = TextureRect.new()
 		var preview = "res://assets/previews/%s.png" % info.key
 		if ResourceLoader.exists(preview):
-			picture.texture = load(preview)
+			# The preview is a strip of frames circling the map; the timer below plays it.
+			var frame = AtlasTexture.new()
+			frame.atlas = load(preview)
+			frame.region = Rect2(0, 0, PREVIEW_SIZE, PREVIEW_SIZE)
+			picture.texture = frame
+			frames.append(frame)
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		picture.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1237,7 +1257,7 @@ func run_smoke() -> void:
 	bot_match.damage(first.peer_id, 999, "player")
 	assert(not bot_match.active and not playing, "Twenty offline kills must end the match")
 	# Port maps: every enemy spawn must reach the player start on the baked navigation mesh.
-	for key in ["castle", "harbor", "pyramid", "station"]:
+	for key in ["castle", "harbor", "pyramid", "station", "forest", "school", "military"]:
 		show_main_menu()
 		map_key = key
 		match_mode = "survival"
@@ -1360,12 +1380,17 @@ func run_capture() -> void:
 		player.set_physics_process(false)
 		player.rig.visible = false
 		player.camera.fov = 62
-		player.camera.global_transform = Transform3D(Basis(), Vector3(34, 40, 50)).looking_at(Vector3(0, 2, -4))
-		for i in 12:
-			await get_tree().process_frame
-		await RenderingServer.frame_post_draw
-		var overview = get_viewport().get_texture().get_image()
-		overview.resize(384, 384, Image.INTERPOLATE_LANCZOS)
+		var overview = Image.create(PREVIEW_SIZE * PREVIEW_FRAMES, PREVIEW_SIZE, false, Image.FORMAT_RGB8)
+		for shot in PREVIEW_FRAMES:
+			var angle = TAU * shot / PREVIEW_FRAMES + 0.6
+			player.camera.global_transform = Transform3D(Basis(), Vector3(sin(angle) * 60, 40, cos(angle) * 60 - 4)).looking_at(Vector3(0, 2, -4))
+			for i in 4:
+				await get_tree().process_frame
+			await RenderingServer.frame_post_draw
+			var view = get_viewport().get_texture().get_image()
+			view.convert(Image.FORMAT_RGB8)
+			view.resize(PREVIEW_SIZE, PREVIEW_SIZE, Image.INTERPOLATE_LANCZOS)
+			overview.blit_rect(view, Rect2i(0, 0, PREVIEW_SIZE, PREVIEW_SIZE), Vector2i(shot * PREVIEW_SIZE, 0))
 		overview.save_png(OS.get_environment("DOODLE_CAPTURE"))
 		print("CAPTURE: ", OS.get_environment("DOODLE_CAPTURE"))
 		get_tree().quit()
