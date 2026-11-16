@@ -78,4 +78,10 @@ Desktop still frames (macOS, OpenGL Compatibility, 1280×720) were inspected for
 
 Not verified: any of this in motion (cloud billow and fade, sway, double image, rolling horizon, pickup bob), enemies actually choosing to throw smoke during a wave, Hard-difficulty shot leading, frame rate with the extra props and the full-screen blur on a phone GPU, and whether the sway is comfortable on a handheld screen. Nothing in this pass was playtested.
 
+## Port additions, third pass (November 15)
+
+`python3 tools/check.py` passes with cylinder colliders on the port maps' round props and the new shading style. Desktop still frames (1280×720) were inspected for District, Harbor, and School in the coloured-pencil style, and all nine preview strips were re-rendered in it.
+
+Not verified: collision against the cylinder colliders in play (walking around trees, shooting past barrels, standing on canopies), the new props from every angle, the original-hatching option after the shader change beyond one District still, and the frame-rate cost of the pencil shader on a phone GPU (it samples noise about ten more times per pixel than the hatching).
+
 See `PARITY.md` for the remaining comparison and implementation work.
