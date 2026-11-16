@@ -223,6 +223,7 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	sub.add_theme_font_size_override("font_size", 22)
 	menu_items.add_child(sub)
 	menu.visible = true
+	_fit_menu.call_deferred()
 	hud.visible = false
 	center_text.visible = false
 	if scope != null:
@@ -230,6 +231,16 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	touch.visible = false
 	touch.reset()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+# Short screens shrink the sheet to their content; long ones scroll.
+func _fit_menu() -> void:
+	# Wrapped text reports its final height one frame after it is added.
+	for pass_index in 2:
+		var height = minf(menu_items.get_combined_minimum_size().y, 604)
+		menu_scroll.custom_minimum_size.y = height
+		menu.offset_top = -(height + 52) * 0.5
+		menu.offset_bottom = (height + 52) * 0.5
+		await get_tree().process_frame
 
 func _button(text: String, callback: Callable, variation: String = "") -> Button:
 	var button = Button.new()
@@ -299,7 +310,7 @@ func show_main_menu() -> void:
 	menu_items.add_child(foot)
 
 func show_settings() -> void:
-	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause")
+	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–4 / mouse wheel / Y: switch weapon\nTab: scoreboard · Esc / Start: pause\nTouch: left thumb moves, drag anywhere else to look, AIM latches, tap a weapon chip to switch")
 	_toggle("Touch controls", use_touch, func(value): use_touch = value)
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
