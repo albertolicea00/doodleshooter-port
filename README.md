@@ -38,7 +38,7 @@ make android
 
 ## Offline play
 
-Port additions (not in the original game): seven extra maps chosen from animated preview cards, the SMG and bazooka, smoke grenades (H), Easy/Normal/Hard and wave-size choices for survival, a graphics detail setting, and a frame rate counter. The revolver is taken from the original source.
+Port additions (not in the original game): seven extra maps chosen from animated preview cards, the SMG and bazooka, smoke grenades (H) that blur the view of anyone inside the cloud, a woozy view at low health (the sway can be switched off in Settings), Easy/Normal/Hard and wave-size choices for survival, a graphics detail setting, and a frame rate counter. The revolver is taken from the original source.
 
 Choose **Play offline** from the main menu:
 

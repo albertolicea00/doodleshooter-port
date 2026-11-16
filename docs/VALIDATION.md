@@ -70,4 +70,12 @@ Automated checks added: every enemy spawn on the seven port maps reaches the pla
 
 Not verified: the animated previews in motion, tracers leaving the muzzle (too brief for the still), shell/bolt/cylinder reload motion, smoke clouds on screen, the hurt vignette and score pop-ups, difficulty and wave-size balance, the graphics detail levels' frame rates, any port map in play, and all of this on Android — the final build was installed on the emulator but not exercised. The Python lobby tests were not rerun because the `.venv` is absent on this machine; `server/lobby.py` changed (new weapon ids, damage entries, and map keys).
 
+## Port additions, second pass (November 15)
+
+Automated checks added: standing in a smoke cloud raises the blur, haze, and sway values and shows the overlay; switching the sway off keeps the blur; the view clears when the cloud is removed; an enemy smoke grenade is created on an upward arc and is not the player's. The port-map navigation check now waits for the navigation server to publish the baked mesh (it arrives a few frames late on the busier maps) before requiring every enemy spawn to reach the player start; all seven maps pass with the added props.
+
+Desktop still frames (macOS, OpenGL Compatibility, 1280×720) were inspected for: Forest, School, Base, and Castle in first person with the round props and tinted pen-colour hatching; the regenerated preview strips of all seven port maps; a smoke cloud seen from 13 m; the view from inside a cloud (grey, blurred world with a sharp HUD); the low-health view; and the round bazooka view model.
+
+Not verified: any of this in motion (cloud billow and fade, sway, double image, rolling horizon, pickup bob), enemies actually choosing to throw smoke during a wave, Hard-difficulty shot leading, frame rate with the extra props and the full-screen blur on a phone GPU, and whether the sway is comfortable on a handheld screen. Nothing in this pass was playtested.
+
 See `PARITY.md` for the remaining comparison and implementation work.
