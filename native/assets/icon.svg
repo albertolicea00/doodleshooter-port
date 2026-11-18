@@ -1,12 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-<rect width="512" height="512" rx="104" fill="#f7f5e8"/>
-<path d="M48 129h416M48 193h416M48 257h416M48 321h416M48 385h416" stroke="#8ba8d5" stroke-width="3" opacity=".55"/>
-<path d="M105 40v432" stroke="#db3b51" stroke-width="5" opacity=".55"/>
-<g fill="none" stroke="#1a31c2" stroke-linecap="round" stroke-linejoin="round">
-<path d="M170 149c144-17 175 51 175 109s-33 112-175 107V149Z" stroke-width="19"/>
-<path d="M177 155c138-15 162 47 163 101s-23 107-163 102" stroke-width="3"/>
-<circle cx="284" cy="258" r="54" stroke-width="7"/>
-<path d="M284 181v43m0 68v43m-77-77h43m68 0h43" stroke-width="7"/>
-</g>
-<path d="m366 366 43 43m-4-45 6 47-47-6" fill="none" stroke="#eb8c14" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Notebook paper background -->
+  <rect width="512" height="512" rx="104" fill="#f7f5e8"/>
+  <path d="M40 129h432M40 193h432M40 257h432M40 321h432M40 385h432" stroke="#8ba8d5" stroke-width="3" opacity=".55"/>
+  <path d="M105 36v440" stroke="#db3b51" stroke-width="5" opacity=".55"/>
+
+  <!-- Option 3: No big D — Iconic hand-drawn crosshair target + orange hitmarker & tiny doodle -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer hand-drawn target ring (double pen pass) -->
+    <circle cx="272" cy="256" r="118" stroke="#1a31c2" stroke-width="14"/>
+    <circle cx="274" cy="254" r="112" stroke="#1a31c2" stroke-width="3.5" opacity=".65"/>
+
+    <!-- Inner ring -->
+    <circle cx="272" cy="256" r="64" stroke="#1a31c2" stroke-width="8"/>
+
+    <!-- Crosshair lines extending past outer ring -->
+    <path d="M272 106v58m0 184v58M122 256h58m184 0h58" stroke="#1a31c2" stroke-width="11"/>
+
+    <!-- Orange hitmarker X + center dot -->
+    <path d="M250 234l14 14m16 16l14 14m0-44l-14 14m-16 16l-14 14" stroke="#eb8c14" stroke-width="9"/>
+    <circle cx="272" cy="256" r="6" fill="#eb8c14" stroke="none"/>
+  </g>
+
+  <!-- Subtle orange doodle arrow pointing to bullseye -->
+  <path d="M376 364l34 34m-3-36l5 38-38-5" fill="none" stroke="#eb8c14" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
