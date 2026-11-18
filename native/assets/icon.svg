@@ -1,26 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <!-- Notebook paper background -->
-  <rect width="512" height="512" rx="104" fill="#f7f5e8"/>
-  <path d="M40 129h432M40 193h432M40 257h432M40 321h432M40 385h432" stroke="#8ba8d5" stroke-width="3" opacity=".55"/>
-  <path d="M105 36v440" stroke="#db3b51" stroke-width="5" opacity=".55"/>
+  <!-- Notebook paper background (full-bleed for Android adaptive icons) -->
+  <rect width="512" height="512" fill="#f7f5e8"/>
+  <path d="M0 129h512M0 193h512M0 257h512M0 321h512M0 385h512" stroke="#8ba8d5" stroke-width="3" opacity=".55"/>
+  <path d="M138 0v512" stroke="#db3b51" stroke-width="5" opacity=".55"/>
 
-  <!-- Option 3: No big D — Iconic hand-drawn crosshair target + orange hitmarker & tiny doodle -->
+  <!-- Centered inside Android adaptive safe zone (r <= 156px from 256,256) -->
   <g fill="none" stroke-linecap="round" stroke-linejoin="round">
     <!-- Outer hand-drawn target ring (double pen pass) -->
-    <circle cx="272" cy="256" r="118" stroke="#1a31c2" stroke-width="14"/>
-    <circle cx="274" cy="254" r="112" stroke="#1a31c2" stroke-width="3.5" opacity=".65"/>
+    <circle cx="264" cy="256" r="88" stroke="#1a31c2" stroke-width="12"/>
+    <circle cx="265.5" cy="254.5" r="83" stroke="#1a31c2" stroke-width="3" opacity=".65"/>
 
     <!-- Inner ring -->
-    <circle cx="272" cy="256" r="64" stroke="#1a31c2" stroke-width="8"/>
+    <circle cx="264" cy="256" r="48" stroke="#1a31c2" stroke-width="7"/>
 
-    <!-- Crosshair lines extending past outer ring -->
-    <path d="M272 106v58m0 184v58M122 256h58m184 0h58" stroke="#1a31c2" stroke-width="11"/>
+    <!-- Crosshair lines -->
+    <path d="M264 142v44m0 140v44M150 256h44m140 0h44" stroke="#1a31c2" stroke-width="9.5"/>
 
     <!-- Orange hitmarker X + center dot -->
-    <path d="M250 234l14 14m16 16l14 14m0-44l-14 14m-16 16l-14 14" stroke="#eb8c14" stroke-width="9"/>
-    <circle cx="272" cy="256" r="6" fill="#eb8c14" stroke="none"/>
+    <path d="M246 238l11 11m14 14l11 11m0-36l-11 11m-14 14l-11 11" stroke="#eb8c14" stroke-width="8"/>
+    <circle cx="264" cy="256" r="5" fill="#eb8c14" stroke="none"/>
   </g>
 
-  <!-- Subtle orange doodle arrow pointing to bullseye -->
-  <path d="M376 364l34 34m-3-36l5 38-38-5" fill="none" stroke="#eb8c14" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Orange doodle arrow inside safe zone -->
+  <path d="M334 326l26 26m-2-28l4 30-30-4" fill="none" stroke="#eb8c14" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
