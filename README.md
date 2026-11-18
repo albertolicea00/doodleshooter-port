@@ -87,6 +87,14 @@ The server binds to `127.0.0.1:8911` by default. To expose this separate online 
 
 The implementation includes public/private lobbies, codes, quick play, ten-player rooms, late joining, a 20-kill/10-minute limit, respawning, and host migration. Server protocol tests pass; a complete match between Godot clients has not been verified. The server caps reported damage but trusts client hit reports and movement.
 
+### How the original connects, and the planned native version
+
+The original game has no game server of its own. It uses the public PeerJS signalling service (`0.peerjs.com`) only to introduce players, then connects them directly over WebRTC data channels; the host player's device is the authority. Lobby codes are PeerJS ids, and quick play knocks on sixteen well-known public slots (`PUB0`–`PUB15`).
+
+The port plans the same approach: first a port-only mode with its own id prefix, then a separate cross-play mode that joins the original's web lobbies with only its maps and weapons. **Not implemented yet.** It needs the official Godot WebRTC extension (`godotengine/webrtc-native`, MIT) bundled in the app, which is waiting for approval.
+
+**Known limitation, shared with the original:** connections use public STUN servers only (Google and Cloudflare), with no TURN relay. When both players sit behind strict NAT, such as some mobile carrier networks or corporate Wi-Fi, they may fail to connect at all. Switching one player to a different network usually helps. Adding a TURN relay would fix it but needs a paid or self-hosted service.
+
 ## iOS
 
 **Deferred at the user's request.** The `iOS` preset uses the same scene and controls, with bundle identifier `com.doodleshooter.port`.
