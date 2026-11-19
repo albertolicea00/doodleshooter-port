@@ -70,6 +70,7 @@ var pulsed_control: Control = null
 var auto_scroll = false
 var auto_scroll_wait = 0.0
 var auto_scroll_pos = 0.0
+var replay := DoodleReplay.new()
 var hit_marker = 0.0
 var hurt_flash = 0.0
 var hurt_overlay: ColorRect
@@ -144,11 +145,30 @@ func _ready() -> void:
 	player_name = preferences.get_value("online", "name", "Doodler")
 	server_url = preferences.get_value("online", "url", "ws://10.0.2.2:8911" if OS.has_feature("android") else "ws://127.0.0.1:8911")
 	_setup_ui()
+	replay.attach(self)
 	show_main_menu()
 	if "--smoke" in OS.get_cmdline_user_args():
 		run_smoke.call_deferred()
 	elif capture_mode:
 		run_capture.call_deferred()
+	else:
+		_load_menu_replay()
+
+func _load_menu_replay() -> void:
+	if is_instance_valid(region):
+		return
+	var map_keys: Array[String] = []
+	for info in MAPS:
+		map_keys.append(info.key)
+	region = NavigationRegion3D.new()
+	add_child(region)
+	level = DoodleLevel.new()
+	region.add_child(level)
+	replay.load_or_default(null, "district")
+	var bg_map = replay.playback_map if replay.playback_map in map_keys else "district"
+	level.load_map(bg_map, false)
+	if not FileAccess.file_exists(DoodleReplay.REPLAY_PATH):
+		replay.build_default(level, bg_map)
 
 func _setup_inputs() -> void:
 	var keys = {"forward": KEY_W, "back": KEY_S, "left": KEY_A, "right": KEY_D, "jump": KEY_SPACE, "sprint": KEY_SHIFT, "dash": KEY_C, "grapple": KEY_Q, "reload": KEY_R, "slash": KEY_F, "grenade": KEY_G, "pause": KEY_ESCAPE, "scoreboard": KEY_TAB, "weapon_0": KEY_1, "weapon_1": KEY_2, "weapon_2": KEY_3, "weapon_3": KEY_4, "weapon_4": KEY_5, "weapon_5": KEY_6, "weapon_6": KEY_7, "smoke": KEY_H}
@@ -517,6 +537,9 @@ func _menu_gap(height: float) -> void:
 	menu_items.add_child(gap)
 
 func show_main_menu() -> void:
+	if not "--smoke" in OS.get_cmdline_user_args():
+		replay.save_recording(map_key)
+		replay.start_recording()
 	_close_network()
 	bot_match.stop()
 	match_mode = "survival"
@@ -665,7 +688,7 @@ func show_map_menu(back: Callable, pick: Callable = Callable(), excluded_key: St
 		back.call(), excluded_key, selected_key)
 	menu_items.add_child(grid)
 	if excluded_key == "":
-		_button("BACK", back, "AltButton")
+		_back_button(back, "BACK TO LOBBY")
 
 func _card_wrap(start: int, split: int = -1, align_bottom: bool = false) -> void:
 	if split >= 0:
@@ -695,10 +718,22 @@ func _make_card(content: Array[Node], align_bottom: bool = false) -> PanelContai
 		child.reparent(items)
 	return card
 
-func _back_button(callback: Callable, label: String = "BACK") -> void:
+func _back_button(callback: Callable, label: String = "BACK TO MAIN MENU") -> void:
+	if callback == show_main_menu and label == "BACK TO MAIN MENU":
+		var back = _button(label, callback, "RedOutlineButton")
+		back.custom_minimum_size.x = 240
+		back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		return
+	var row = HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 16)
+	menu_items.add_child(row)
 	var back = _button(label, callback, "RedOutlineButton")
 	back.custom_minimum_size.x = 240
-	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	back.reparent(row)
+	var main_btn = _button("BACK TO MAIN MENU", show_main_menu, "AltButton")
+	main_btn.custom_minimum_size.x = 240
+	main_btn.reparent(row)
 
 func show_settings() -> void:
 	_clear_menu("Settings", "Choose how you want to play")
@@ -713,7 +748,7 @@ func show_settings() -> void:
 	var touch_button = _button("TOUCH & AIMING", show_touch_settings)
 	touch_button.custom_minimum_size.x = 260
 	touch_button.reparent(top_row)
-	var controls_button = _button("CONTROLS", func(): show_controls(show_settings), "RedOutlineButton")
+	var controls_button = _button("CONTROLS", func(): show_controls(show_settings, "BACK TO SETTINGS"), "RedOutlineButton")
 	controls_button.custom_minimum_size.x = 220
 	controls_button.reparent(top_row)
 	var start = menu_items.get_child_count()
@@ -730,7 +765,10 @@ func show_settings() -> void:
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
 	_card_wrap(start, split)
-	_back_button(pause_menu if paused else show_main_menu)
+	if paused:
+		_back_button(pause_menu, "BACK TO PAUSE")
+	else:
+		_back_button(show_main_menu)
 
 # Low renders the scene at 70% size with straight pen strokes and no edge
 # smoothing; Medium adds the hand-drawn stroke waver and 2x smoothing; High
@@ -741,7 +779,7 @@ func apply_quality(level: int) -> void:
 	get_viewport().scaling_3d_scale = [0.7, 1.0, 1.0][quality]
 	ReferenceAssets.set_detail(float(quality))
 
-func show_controls(return_to: Callable = Callable()) -> void:
+func show_controls(return_to: Callable = Callable(), return_label: String = "") -> void:
 	_clear_menu("Controls", "")
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
@@ -759,10 +797,10 @@ func show_controls(return_to: Callable = Callable()) -> void:
 	touch_card.add_child(touch_header)
 	touch_card.move_child(touch_header, 0)
 	touch_heading.reparent(touch_header)
-	var touch_settings_button = _button("TOUCH & AIMING", func(): show_touch_settings(func(): show_controls(return_to)))
+	var touch_settings_button = _button("TOUCH & AIMING", func(): show_touch_settings(func(): show_controls(return_to, return_label), "BACK TO CONTROLS"))
 	touch_settings_button.custom_minimum_size = Vector2(220, 42)
 	touch_settings_button.reparent(touch_header)
-	var customize_touch = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(func(): show_controls(return_to)), "RedOutlineButton")
+	var customize_touch = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(func(): show_controls(return_to, return_label)), "RedOutlineButton")
 	customize_touch.custom_minimum_size = Vector2(220, 42)
 	customize_touch.reparent(touch_header)
 	var cards = HBoxContainer.new()
@@ -797,7 +835,12 @@ func show_controls(return_to: Callable = Callable()) -> void:
 	]
 	var controller = _controls_column(cards, "", ps5_lines)
 	_controller_picker(controller, ps5_lines)
-	_back_button(return_to if return_to.is_valid() else (pause_menu if paused else show_main_menu))
+	if return_to.is_valid():
+		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
+	elif paused:
+		_back_button(pause_menu, "BACK TO PAUSE")
+	else:
+		_back_button(show_main_menu)
 
 func _controls_column(parent: Container, title: String, lines: Array[String]) -> VBoxContainer:
 	var card = PanelContainer.new()
@@ -884,7 +927,7 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 	legend.text = _controls_text(xbox_lines if controls_xbox else ps5_lines)
 
 # Every merged or assisted behaviour is optional, as in large mobile shooters.
-func show_touch_settings(return_to: Callable = Callable()) -> void:
+func show_touch_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
 	_clear_menu("Touch & aiming", "Changes apply immediately and are saved on this device")
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
@@ -898,7 +941,7 @@ func show_touch_settings(return_to: Callable = Callable()) -> void:
 	var touch_toggle = menu_items.get_child(-1) as Button
 	touch_toggle.custom_minimum_size.x = 280
 	touch_toggle.reparent(top_row)
-	var layout_button = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(show_touch_settings), "RedOutlineButton")
+	var layout_button = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(func(): show_touch_settings(return_to, return_label)), "RedOutlineButton")
 	layout_button.custom_minimum_size.x = 260
 	layout_button.reparent(top_row)
 	var start = menu_items.get_child_count()
@@ -921,7 +964,10 @@ func show_touch_settings(return_to: Callable = Callable()) -> void:
 	_toggle("Second fire button on the left", touch.options.left_fire, option.call("left_fire"))
 	_toggle("Reload button", touch.options.reload_button, option.call("reload_button"))
 	_card_wrap(start, split)
-	_back_button(return_to if return_to.is_valid() else show_settings)
+	if return_to.is_valid():
+		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
+	else:
+		_back_button(show_settings, "BACK TO SETTINGS")
 
 func _slider(text: String, value: float, low: float, high: float, callback: Callable) -> void:
 	var label = Label.new()
@@ -975,7 +1021,10 @@ func show_credits() -> void:
 	_button("FULL CREDITS & NOTICES", show_credit_notices, "AltButton")
 	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()), "AltButton")
 	_card_wrap(start)
-	_back_button(pause_menu if paused else show_main_menu)
+	if paused:
+		_back_button(pause_menu, "BACK TO PAUSE")
+	else:
+		_back_button(show_main_menu)
 
 func _credit_section(title: String, body: String) -> RichTextLabel:
 	var heading = Label.new()
@@ -1050,6 +1099,7 @@ func start_game(first_wave: int) -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	starting = false
+	replay.start_recording()
 	resume_game()
 	if network.in_match:
 		apply_online_spawn(online_spawn)
@@ -1065,6 +1115,8 @@ func start_game(first_wave: int) -> void:
 		start_wave(first_wave)
 
 func _clear_world() -> void:
+	replay.step_playback(0.0, false)
+	replay.clear_puppets()
 	playing = false
 	bot_match.stop()
 	scoreboard.visible = false
@@ -1131,7 +1183,7 @@ func _notification(what: int) -> void:
 
 func _find_back_button(node: Node) -> Button:
 	if node is Button and node.is_visible_in_tree() and not node.disabled:
-		if node.text in ["BACK", "BACK TO CREDITS", "BACK TO GAME", "RESUME"]:
+		if node.text == "RESUME" or node.text.begins_with("BACK"):
 			return node
 	for child in node.get_children():
 		var found = _find_back_button(child)
@@ -1225,7 +1277,11 @@ func _process(delta: float) -> void:
 			if auto_scroll_pos >= max_scroll:
 				auto_scroll = false
 	if not playing:
+		if menu.visible and not paused and not starting:
+			replay.step_playback(delta, true)
 		return
+	replay.step_playback(0.0, false)
+	replay.record_step(delta, player, enemies, bot_match.bots, remote_players)
 	update_feel(delta)
 	if network.in_match:
 		update_online(delta)
@@ -1334,6 +1390,9 @@ func game_over() -> void:
 		death_timer = 2.5
 		return
 	playing = false
+	if not "--smoke" in OS.get_cmdline_user_args():
+		replay.save_recording(map_key)
+		replay.start_recording()
 	save_progress()
 	_clear_menu("You got erased", "%d waves · %d kills · %d points\nBest score: %d" % [wave, kills, score, best])
 	_button("DRAW AGAIN", func(): start_game(1))
@@ -1657,7 +1716,7 @@ func run_smoke() -> void:
 	assert(menu_items.get_child(0).get_child(0).text == "Full credits & notices", "Swiping over a button must not activate it")
 	assert(menu_scroll.scroll_vertical < previous_scroll, "A swipe starting on a button must scroll the menu")
 	await smoke_tap_button("BACK TO CREDITS")
-	await smoke_tap_button("BACK")
+	await smoke_tap_button("BACK TO MAIN MENU")
 	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
 	await smoke_tap_button("START SOLO")
 	assert(menu_items.get_child(0).get_child(0).text == "Play offline", "A menu tap must open offline play")
@@ -2421,7 +2480,7 @@ func _network_packet(packet: Dictionary) -> void:
 			for room in packet.rooms:
 				var code: String = room.code
 				_button("%s · %s · %d/10" % [code, room.host, int(room.players)], func(): network.send_packet({"type": "join", "code": code}))
-			_button("BACK", show_online_menu)
+			_back_button(show_online_menu, "BACK TO ONLINE")
 		"start":
 			network.in_match = true
 			match_mode = "survival"
@@ -2495,15 +2554,7 @@ func _network_packet(packet: Dictionary) -> void:
 func _network_failure(message: String) -> void:
 	playing = false
 	_clear_menu("Connection", message)
-	var row = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 16)
-	menu_items.add_child(row)
-	var back_online = _button("BACK TO ONLINE", show_online_menu, "AltButton")
-	back_online.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	back_online.reparent(row)
-	var main_btn = _button("MAIN MENU", show_main_menu)
-	main_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_btn.reparent(row)
+	_back_button(show_online_menu, "BACK TO ONLINE")
 
 func _clear_remote_players() -> void:
 	for remote in remote_players.values():
@@ -2618,9 +2669,7 @@ func show_offline_menu() -> void:
 	menu_items.add_child(cards)
 	_offline_card(cards, content.slice(survival_start, bots_start))
 	_offline_card(cards, content.slice(bots_start))
-	var back = _button("BACK", show_main_menu, "RedOutlineButton")
-	back.custom_minimum_size.x = 240
-	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_back_button(show_main_menu)
 
 func _offline_card(cards: HBoxContainer, content: Array[Node]) -> void:
 	var card = PanelContainer.new()
@@ -2760,7 +2809,7 @@ func host_lan_game() -> void:
 		lan_server.queue_free()
 		lan_server = null
 		_clear_menu("LAN hosting unavailable", "Could not open the local game port. Close another hosted room and try again.")
-		_button("BACK", show_lan_menu)
+		_back_button(show_lan_menu, "BACK TO LAN")
 		return
 	lobby_return = show_lan_menu
 	lan_host_note = "\n\nHost IP: " + _local_ip_text() + "\nKeep this device in the game to host the room."

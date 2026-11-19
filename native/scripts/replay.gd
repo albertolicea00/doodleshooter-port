@@ -91,11 +91,11 @@ func build_default(level: Node3D, map_key: String = "district") -> void:
 	playback_frames.clear()
 	var center = Vector3(0, 4.5, 0)
 	if is_instance_valid(level):
-		center = level.player_start + Vector3(0, 3.0, 0)
+		center = level.start + Vector3(0, 3.0, 0)
 	var spawn_points: Array = []
-	if is_instance_valid(level) and level.enemy_spawns.size() > 0:
-		for i in mini(4, level.enemy_spawns.size()):
-			spawn_points.append(level.enemy_spawns[i])
+	if is_instance_valid(level) and level.spawns.size() > 0:
+		for i in mini(4, level.spawns.size()):
+			spawn_points.append(level.spawns[i])
 	else:
 		spawn_points = [center + Vector3(6, -1.5, -8), center + Vector3(-7, -1.5, -6), center + Vector3(4, -1.5, 7)]
 	var count = 180
