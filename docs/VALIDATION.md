@@ -95,3 +95,7 @@ Headless smoke checks exercise all four tiers through actual wave-one starts: da
 ## Bot difficulty rebalance (November 19)
 
 The follow-up applies the same four-tier scale to offline bots: Normal retains former Easy tuning, Hard retains former Normal tuning, and Insane retains former Hard tuning. New Easy bots wait 0.75 seconds between shots and use 0.2 random aim spread (Normal: 0.48 seconds and 0.12; Hard: 0.3 and 0.065; Insane: 0.19 and 0.028). The selector and match HUD use all four names. The bot integration smoke scenario now requests Insane and asserts that the match accepts tier 3 before exercising bot combat. `python3 tools/check.py` passed in full after this follow-up, including both gameplay smoke markers and all LAN checks. No visual, device, or hands-on balance verification was performed for this follow-up.
+
+## Bot count selector (November 19)
+
+Replaced the offline bot count dropdown with a centered count between minus and plus buttons. The decrement button is disabled at 1 and increment at 9. `python3 tools/check.py` passed in full. A temporary graphical harness emitted button signals to increase from 1 to 9 and decrease back to 1, verifying the count, singular/plural labels, and disabled limits. Desktop screenshots of both endpoints were inspected at 1280×720 using macOS OpenGL Compatibility; captures are `/private/tmp/doodleshooter-bot-selector/bot-count-1.png` and `bot-count-9.png`. This verifies desktop layout and callbacks, not physical touch input or Android behavior.
