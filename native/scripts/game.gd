@@ -460,11 +460,7 @@ func map_info(key: String) -> Dictionary:
 			return info
 	return MAPS[0]
 
-# Square cards with a rendered preview of each map.
-func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
-	_clear_menu("Choose a map", "District and Mexico are original · the rest are new in this port")
-	var grid = GridContainer.new()
-	grid.columns = 3
+func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) -> void:
 	var frames: Array[AtlasTexture] = []
 	var reel = Timer.new()
 	reel.wait_time = 0.16
@@ -474,20 +470,18 @@ func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
 		shown[0] = (shown[0] + 1) % PREVIEW_FRAMES
 		for frame in frames:
 			frame.region.position.x = shown[0] * PREVIEW_SIZE)
-	grid.add_child(reel)
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
+	container.add_child(reel)
 	for info in MAPS:
 		var chosen: bool = info.key == map_key
 		var card = Button.new()
 		card.theme_type_variation = "AltButton"
 		card.toggle_mode = true
 		card.button_pressed = chosen
-		card.custom_minimum_size = Vector2(194, 212)
+		card.custom_minimum_size = Vector2(0, 116) if mini else Vector2(194, 212)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.mouse_filter = Control.MOUSE_FILTER_PASS
 		var column = VBoxContainer.new()
-		column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 10)
+		column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6 if mini else 10)
 		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(column)
 		var picture = TextureRect.new()
@@ -507,17 +501,26 @@ func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
 		var label = Label.new()
 		label.text = info.name
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.add_theme_font_size_override("font_size", 20)
+		label.add_theme_font_size_override("font_size", 16 if mini else 20)
 		label.add_theme_color_override("font_color", DoodlePen.PAPER if chosen else DoodlePen.INK)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		column.add_child(label)
 		var key: String = info.key
-		card.pressed.connect(func():
-			map_key = key
-			if pick.is_valid():
-				pick.call(key)
-			back.call(), CONNECT_DEFERRED)
-		grid.add_child(card)
+		card.pressed.connect(func(): on_pick.call(key), CONNECT_DEFERRED)
+		container.add_child(card)
+
+# Square cards with a rendered preview of each map.
+func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
+	_clear_menu("Choose a map", "District and Mexico are original · the rest are new in this port")
+	var grid = GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	_populate_map_cards(grid, false, func(key: String):
+		map_key = key
+		if pick.is_valid():
+			pick.call(key)
+		back.call())
 	menu_items.add_child(grid)
 	_button("BACK", back, "AltButton")
 
@@ -2064,19 +2067,24 @@ func show_lobby() -> void:
 	if network.in_match or starting:
 		return
 	last_room_code = network.code
-	var names = ""
-	for entry in network.roster:
-		names += entry.name + (" · host" if entry.id == network.host_id else "") + "\n"
 	var bot_note = " · %d bots" % network.lobby_bots if network.lobby_bots > 0 else ""
-	_clear_menu("Lobby " + network.code, "Free for all · first to %d · %d minute limit%s" % [network.kill_limit, network.match_minutes, bot_note])
+	var rules_text = "Free for all · first to %d · %d minute limit%s" % [network.kill_limit, network.match_minutes, bot_note]
+	_clear_menu("Lobby " + network.code, "")
+	menu_items.get_child(1).hide()
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
+	if network.peer_id == network.host_id and is_instance_valid(lan_server):
+		var map_row = HBoxContainer.new()
+		map_row.add_theme_constant_override("separation", 8)
+		menu_items.add_child(map_row)
+		_populate_map_cards(map_row, true, func(key: String):
+			map_key = key
+			network.send_packet({"type": "map", "map": key}))
 	var start = menu_items.get_child_count()
 	if network.peer_id == network.host_id:
-		_credit_section("Match setup", "Choose the map and room rules, then start when everyone is ready.")
-		_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_lobby, func(key): network.send_packet({"type": "map", "map": key})), "AltButton")
+		var match_rules = _credit_section("Match setup", rules_text)
 		if is_instance_valid(lan_server):
 			var send_config = func(): network.send_packet({"type": "config", "minutes": lan_minutes, "bots": lan_bot_count, "difficulty": lan_bot_difficulty})
 			_choices(["Easy", "Normal", "Hard", "Insane"], lan_bot_difficulty, func(index): lan_bot_difficulty = index; send_config.call())
@@ -2086,19 +2094,49 @@ func show_lobby() -> void:
 			var selectors = HBoxContainer.new()
 			selectors.add_theme_constant_override("separation", 24)
 			menu_items.add_child(selectors)
-			_duration_selector(menu_items.get_child(1), lan_minutes, func(m): lan_minutes = m; send_config.call(), func(_m): return menu_items.get_child(1).text).reparent(selectors)
+			_duration_selector(match_rules, lan_minutes, func(m): lan_minutes = m; send_config.call(), func(_m): return rules_text).reparent(selectors)
 			_count_selector(lan_bot_count, 0, func(c): lan_bot_count = c; send_config.call()).reparent(selectors)
+		else:
+			_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_lobby, func(key): network.send_packet({"type": "map", "map": key})), "AltButton")
 	else:
-		_credit_section("Match setup", "Map: %s\nWaiting for the host to start the match." % map_info(map_key).name)
+		_credit_section("Match setup", "%s\nMap: %s\nWaiting for the host to start the match." % [rules_text, map_info(map_key).name])
 	var split = menu_items.get_child_count()
-	_credit_section("Players (%d/10)" % network.roster.size(), names.strip_edges())
-	if lan_host_note != "":
-		_credit_section("Host info", lan_host_note.strip_edges())
-	if network.peer_id == network.host_id:
-		_button("START MATCH", func(): network.send_packet({"type": "start"}), "StartButton")
-	_button("LEAVE LOBBY", lobby_return if lobby_return.is_valid() else show_main_menu, "RedOutlineButton")
+	var entries: Array[String] = []
+	for entry in network.roster:
+		entries.append("• %s%s" % [entry.name, " (host)" if entry.id == network.host_id else ""])
+	if network.lobby_bots > 0:
+		entries.append("• 1 bot" if network.lobby_bots == 1 else "• %d bots" % network.lobby_bots)
+	_credit_section("Players (%d/12)" % entries.size(), lan_host_note.strip_edges())
+	if lan_host_note == "":
+		menu_items.get_child(-1).hide()
+	var players_grid = HBoxContainer.new()
+	players_grid.add_theme_constant_override("separation", 16)
+	menu_items.add_child(players_grid)
+	for col_index in 4:
+		var slice = entries.slice(col_index * 3, (col_index + 1) * 3)
+		if slice.is_empty():
+			continue
+		var col = VBoxContainer.new()
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 4)
+		players_grid.add_child(col)
+		for item in slice:
+			var label = Label.new()
+			label.text = item
+			label.add_theme_font_size_override("font_size", 20)
+			col.add_child(label)
 	_card_wrap(start, split)
-	_back_button(lobby_return if lobby_return.is_valid() else show_main_menu)
+	var actions = HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	actions.add_theme_constant_override("separation", 16)
+	menu_items.add_child(actions)
+	if network.peer_id == network.host_id:
+		var start_btn = _button("START MATCH", func(): network.send_packet({"type": "start"}), "StartButton")
+		start_btn.custom_minimum_size.x = 240
+		start_btn.reparent(actions)
+	var leave_btn = _button("LEAVE LOBBY", lobby_return if lobby_return.is_valid() else show_main_menu, "RedOutlineButton")
+	leave_btn.custom_minimum_size.x = 240
+	leave_btn.reparent(actions)
 
 func _network_packet(packet: Dictionary) -> void:
 	match packet.get("type", ""):

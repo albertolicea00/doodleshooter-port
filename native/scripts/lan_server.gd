@@ -148,7 +148,8 @@ func handle(id: String, packet: Dictionary) -> void:
 			peers[id].name = "Doodler"
 		return
 	if type in ["host", "join"]:
-		if ended or members.size() >= 10 or members.has(id) or (type == "host" and not host.is_empty()) or (type == "join" and host.is_empty()):
+		var slots = members.size() + (1 if bot_count > 0 else 0)
+		if ended or slots >= 12 or members.has(id) or (type == "host" and not host.is_empty()) or (type == "join" and host.is_empty()):
 			send_to(id, {"type": "error", "message": "This LAN room is full, unavailable, or finished."})
 			return
 		if type == "host":
