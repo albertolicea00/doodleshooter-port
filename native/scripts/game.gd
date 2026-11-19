@@ -2010,6 +2010,9 @@ func show_online_menu() -> void:
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
+	var quick = _button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}), "StartButton")
+	quick.custom_minimum_size.x = 340
+	quick.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var top_inputs = HBoxContainer.new()
 	top_inputs.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_inputs.add_theme_constant_override("separation", 16)
@@ -2026,11 +2029,10 @@ func show_online_menu() -> void:
 	top_inputs.add_child(server_input)
 	var start = menu_items.get_child_count()
 	_credit_section("Create a lobby", "Open a new room on the lobby server and share its code with friends, or list it publicly.")
-	_button("CREATE PUBLIC LOBBY", func(): connect_online({"type": "host", "public": true, "map": map_key}))
 	_button("CREATE PRIVATE LOBBY", func(): connect_online({"type": "host", "public": false, "map": map_key}), "AltButton")
+	_button("CREATE PUBLIC LOBBY", func(): connect_online({"type": "host", "public": true, "map": map_key}))
 	var split = menu_items.get_child_count()
-	_credit_section("Join a lobby", "Jump into an open match, enter a 5-character room code, or browse public rooms.")
-	_button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}), "StartButton")
+	_credit_section("Join a lobby", "Enter a five-character room code from a friend, or browse open public rooms to jump into a match.")
 	var code_row = HBoxContainer.new()
 	code_row.add_theme_constant_override("separation", 12)
 	menu_items.add_child(code_row)
