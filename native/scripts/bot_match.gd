@@ -1,7 +1,7 @@
 class_name DoodleBotMatch
 extends Node
 
-const MAX_BOTS = 19
+const MAX_BOTS = 30
 
 var game: Node3D
 var active = false
