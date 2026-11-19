@@ -1095,6 +1095,7 @@ func start_game(first_wave: int) -> void:
 	player.game = self
 	add_child(player)
 	player.position = level.start + Vector3.UP * 0.05
+	player.camera.make_current()
 	touch.player = player
 	await get_tree().physics_frame
 	await get_tree().physics_frame
@@ -1154,6 +1155,9 @@ func resume_game() -> void:
 	Input.emulate_mouse_from_touch = false
 	paused = false
 	playing = true
+	if is_instance_valid(player) and is_instance_valid(player.camera):
+		player.camera.make_current()
+	apply_quality(quality)
 	menu.visible = false
 	hud.visible = true
 	hud.touch_mode = use_touch
@@ -1277,9 +1281,19 @@ func _process(delta: float) -> void:
 			if auto_scroll_pos >= max_scroll:
 				auto_scroll = false
 	if not playing:
-		if menu.visible and not paused and not starting:
+		var has_map_strip = menu_items.find_child("OnlineMaps", true, false) == null and (menu_items.get_child_count() > 1 and menu_items.get_child(1) is HBoxContainer and menu_items.get_child(1).get_child_count() >= 9)
+		if menu.visible and not paused and not starting and not has_map_strip:
+			if is_instance_valid(region):
+				region.visible = true
+			get_viewport().scaling_3d_scale = 0.65
 			replay.step_playback(delta, true)
+		else:
+			if is_instance_valid(region) and not paused and not starting:
+				region.visible = false
+			replay.step_playback(0.0, false)
 		return
+	if is_instance_valid(region):
+		region.visible = true
 	replay.step_playback(0.0, false)
 	replay.record_step(delta, player, enemies, bot_match.bots, remote_players)
 	update_feel(delta)
