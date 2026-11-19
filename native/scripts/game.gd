@@ -497,6 +497,10 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) ->
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		picture.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var preview_material = ShaderMaterial.new()
+		preview_material.shader = preload("res://shaders/map_preview.gdshader")
+		picture.material = preview_material
+		picture.resized.connect(func(): preview_material.set_shader_parameter("preview_size", picture.size))
 		column.add_child(picture)
 		var label = Label.new()
 		label.text = info.name
@@ -2069,8 +2073,10 @@ func show_lobby() -> void:
 	last_room_code = network.code
 	var bot_note = " · %d bots" % network.lobby_bots if network.lobby_bots > 0 else ""
 	var rules_text = "Free for all · first to %d · %d minute limit%s" % [network.kill_limit, network.match_minutes, bot_note]
-	_clear_menu("Lobby " + network.code, "")
-	menu_items.get_child(1).hide()
+	var lobby_hint = "Choose a map, adjust the match settings, and start when everyone is ready."
+	if network.peer_id != network.host_id:
+		lobby_hint = "Review the match settings and players while the host prepares the match."
+	_clear_menu("Lobby " + network.code, lobby_hint)
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580

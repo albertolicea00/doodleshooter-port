@@ -155,3 +155,13 @@ The PS5/Xbox picker now uses plain text headings with transparent button styles 
 Controls, Settings, Touch & aiming, Credits, Full credits & notices, Godot Engine license, Play online, Local network · LAN, and Lobby now use card-based layouts with outer titles/subtitles and red outlined Back/Leave buttons (Main menu Exit also uses the compact 240 px red outline style, and Local network uses the blue outline style). LAN hosting now supports host-configurable match duration (5–30 minutes, `2 * min` kill target), 0–30 host-simulated LAN bots (default 1; difficulty disabled at 0 bots), a 12-slot lobby capacity (counting the host, connected human guests, and 1 slot for bots when bots > 0, shown in four 3-row bulleted columns under the host IP note), and a full-width 9-map selector strip for the LAN host.
 
 Headless `python3 tools/check.py` (with `tests/lan_game_peer.gd` setting `lan_bot_count = 0` for its two-player loopback run) is used to verify imports, smoke gameplay, and 2-player LAN protocol/game flow; LAN bot matches (`lan_bot_count > 0`), multi-device Wi-Fi play, 12-slot lobby capacity, and visual rendering of the updated card layouts have not been verified on devices or visually inspected.
+
+### Lobby subtitle and map selection (November 19)
+
+Added host setup guidance and guest waiting guidance below the lobby title. Map cards now keep a subtle outline in all button states and put the selected blue fill only behind the map title. This presentation change has not been visually or device verified. `python3 tools/check.py` passed reference hashes, import, both gameplay smoke markers, and native LAN protocol checks; the two-process LAN game check failed waiting for the two-player lobby/arena load, followed by a null-player error. The full checker therefore did not pass. The first sandboxed attempt also failed on macOS certificate/editor-settings access; the reported checks are from the subsequent unrestricted run.
+
+### Map card styling revision (November 19)
+
+Restored the previous blue selection/border styling and original title spacing, retaining the lobby subtitle. A preview shader rounds only the upper image corners, using local coordinates so animated atlas frames and covered image scaling retain the same corner radius. This revision has not been visually or device verified.
+
+Godot headless editor import passed for this presentation revision. No gameplay checks were rerun because gameplay was unchanged; headless import does not verify shader rendering.
