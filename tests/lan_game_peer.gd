@@ -24,6 +24,7 @@ func run() -> void:
 	game.show_lan_menu()
 	game.name_input.text = "Host tester" if host else "Guest tester"
 	if host:
+		game.lan_bot_count = 0
 		game.host_lan_game()
 		print("LAN HOST READY")
 	else:

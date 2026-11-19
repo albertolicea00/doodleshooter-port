@@ -99,7 +99,7 @@ var match_mode = "survival"
 var bot_count = 5
 var bot_difficulty = 1
 var bot_minutes = 10
-var lan_bot_count = 0
+var lan_bot_count = 1
 var lan_bot_difficulty = 1
 var lan_minutes = 10
 var controls_xbox = false
@@ -2068,8 +2068,14 @@ func show_lobby() -> void:
 	for entry in network.roster:
 		names += entry.name + (" · host" if entry.id == network.host_id else "") + "\n"
 	var bot_note = " · %d bots" % network.lobby_bots if network.lobby_bots > 0 else ""
-	_clear_menu("Lobby " + network.code, names + "\nFree for all · first to %d · %d minute limit%s" % [network.kill_limit, network.match_minutes, bot_note] + lan_host_note)
+	_clear_menu("Lobby " + network.code, "Free for all · first to %d · %d minute limit%s" % [network.kill_limit, network.match_minutes, bot_note])
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var start = menu_items.get_child_count()
 	if network.peer_id == network.host_id:
+		_credit_section("Match setup", "Choose the map and room rules, then start when everyone is ready.")
 		_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_lobby, func(key): network.send_packet({"type": "map", "map": key})), "AltButton")
 		if is_instance_valid(lan_server):
 			var send_config = func(): network.send_packet({"type": "config", "minutes": lan_minutes, "bots": lan_bot_count, "difficulty": lan_bot_difficulty})
@@ -2082,8 +2088,16 @@ func show_lobby() -> void:
 			menu_items.add_child(selectors)
 			_duration_selector(menu_items.get_child(1), lan_minutes, func(m): lan_minutes = m; send_config.call(), func(_m): return menu_items.get_child(1).text).reparent(selectors)
 			_count_selector(lan_bot_count, 0, func(c): lan_bot_count = c; send_config.call()).reparent(selectors)
+	else:
+		_credit_section("Match setup", "Map: %s\nWaiting for the host to start the match." % map_info(map_key).name)
+	var split = menu_items.get_child_count()
+	_credit_section("Players (%d/10)" % network.roster.size(), names.strip_edges())
+	if lan_host_note != "":
+		_credit_section("Host info", lan_host_note.strip_edges())
+	if network.peer_id == network.host_id:
 		_button("START MATCH", func(): network.send_packet({"type": "start"}), "StartButton")
-	_button("LEAVE LOBBY", lobby_return if lobby_return.is_valid() else show_main_menu, "AltButton")
+	_button("LEAVE LOBBY", lobby_return if lobby_return.is_valid() else show_main_menu, "RedOutlineButton")
+	_card_wrap(start, split)
 
 func _network_packet(packet: Dictionary) -> void:
 	match packet.get("type", ""):
