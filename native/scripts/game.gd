@@ -55,7 +55,7 @@ var screen_effects = true
 # 0: the original's crossed hatching, 1: the port's coloured-pencil shading.
 var shading = 1
 var enemy_smoke = 20.0
-# Survival tuning chosen in the offline menu; Normal matches the original numbers.
+# Port-only survival tuning; Hard keeps the former Normal numbers.
 var difficulty = 1
 var wave_size = 0
 var health_modifier = 1.0
@@ -226,7 +226,7 @@ func _setup_ui() -> void:
 	screen_effects = preferences.get_value("video", "screen_effects", true)
 	shading = clampi(int(preferences.get_value("video", "shading", 1)), 0, 1)
 	ReferenceAssets.set_style(float(shading))
-	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 2)
+	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 3)
 	wave_size = clampi(int(preferences.get_value("survival", "wave_size", 0)), 0, 2)
 	hurt_overlay = ColorRect.new()
 	hurt_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -364,6 +364,16 @@ func _button(text: String, callback: Callable, variation: String = "") -> Button
 	menu_items.add_child(button)
 	return button
 
+# Controls, Settings and Credits side by side, in the main and pause menus.
+func _info_row() -> void:
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	menu_items.add_child(row)
+	for entry in [["CONTROLS", show_controls], ["SETTINGS", show_settings], ["CREDITS", show_credits]]:
+		var button = _button(entry[0], entry[1], "AltButton")
+		button.reparent(row)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 # Side-by-side outlined choices; the selected one is filled with ink (.mapbtn.on).
 func _choices(labels: Array, selected: int, callback: Callable) -> void:
 	var row = HBoxContainer.new()
@@ -410,8 +420,7 @@ func show_main_menu() -> void:
 	_button("PLAY ONLINE", show_online_menu, "RedButton")
 	_button("LOCAL NETWORK · LAN", show_lan_menu)
 	_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_main_menu), "AltButton")
-	_button("CONTROLS & SETTINGS", show_settings, "AltButton")
-	_button("CREDITS", show_credits, "AltButton")
+	_info_row()
 	var foot = Label.new()
 	foot.text = "Best score: %d · development build" % best
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -500,7 +509,6 @@ func show_settings() -> void:
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
 	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
 	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
-	_button("CONTROLS REFERENCE", show_controls, "AltButton")
 	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
 
 # Low renders the scene at 70% size with straight pen strokes and no edge
@@ -514,8 +522,8 @@ func apply_quality(level: int) -> void:
 
 func show_controls() -> void:
 	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–7 / mouse wheel / Y: switch weapon · H: smoke grenade\nTab: scoreboard · Esc / Start: pause")
-	_credit_section("Touch", "The left thumb moves. Push fully forward to sprint and drag on up to RUN to keep running. Drag anywhere else to look, even while holding FIRE. SLIDE on the ground becomes DASH in the air. Tap a weapon chip to switch and tap the active one to reload. Every one of these can be changed under Touch & aiming.")
-	_button("BACK", show_settings, "AltButton")
+	_credit_section("Touch", "The left thumb moves. Push fully forward to sprint and drag on up to the runner marker to keep running. Drag anywhere else to look, even while holding FIRE. SLIDE on the ground becomes DASH in the air. Tap a weapon in the bottom bar to switch and tap the active one, or the reload button, to reload. Every one of these can be changed in Settings under Touch & aiming, and every button can be moved, resized, faded or copied in the layout editor.")
+	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
 
 # Every merged or assisted behaviour is optional, as in large mobile shooters.
 func show_touch_settings() -> void:
@@ -583,7 +591,7 @@ func show_credits() -> void:
 	_button("OPEN REFERENCE SOURCE", func(): OS.shell_open("https://github.com/iifor/doodleshooter"))
 	_button("FULL CREDITS & NOTICES", show_credit_notices, "AltButton")
 	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()), "AltButton")
-	_button("BACK", show_main_menu, "AltButton")
+	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
 
 func _credit_section(title: String, body: String) -> void:
 	var heading = Label.new()
@@ -720,7 +728,7 @@ func pause_menu() -> void:
 		summary = "Free for all · the match continues while this menu is open"
 	_clear_menu("Paused", summary)
 	_button("RESUME", resume_game, "StartButton")
-	_button("CONTROLS & SETTINGS", show_settings, "AltButton")
+	_info_row()
 	_button("MAIN MENU", show_main_menu, "AltButton")
 
 func _notification(what: int) -> void:
@@ -751,13 +759,13 @@ func start_wave(number: int) -> void:
 	var selection = randi_range(0, allowed - 1)
 	modifier = ["", "Caffeine · faster enemies", "Heavy Ink · harder hits", "Swarm · more enemies, less health"][selection]
 	speed_modifier = [1.0, 1.35, 0.9, 1.15][selection]
-	damage_modifier = [1.0, 0.85, 1.4, 0.9][selection] * 1.2 * [0.6, 1.0, 1.35][difficulty]
-	health_modifier = [0.75, 1.0, 1.3][difficulty]
+	damage_modifier = [1.0, 0.85, 1.4, 0.9][selection] * 1.2 * [0.35, 0.6, 1.0, 1.35][difficulty]
+	health_modifier = [0.5, 0.75, 1.0, 1.3][difficulty]
 	swarm = selection == 3
-	var count = roundi(mini(5 + wave * 2, 32 + wave) * (1.35 if swarm else 1.0) * [0.75, 1.0, 1.3][difficulty] * [1.0, 1.6, 2.4][wave_size])
+	var count = roundi(mini(5 + wave * 2, 32 + wave) * (1.35 if swarm else 1.0) * [0.5, 0.75, 1.0, 1.3][difficulty] * [1.0, 1.6, 2.4][wave_size])
 	if wave % 5 == 0:
 		spawn_queue.append(["boss", "eraser", "inkblot"][int((wave - 5) / 5) % 3])
-		count = 7 + wave
+		count = maxi(1, roundi((7 + wave) * 0.5)) if difficulty == 0 else 7 + wave
 		checkpoint = maxi(checkpoint, wave)
 		save_progress()
 	for i in count:
@@ -816,15 +824,15 @@ func _process(delta: float) -> void:
 		player.hp = minf(120, player.hp + 40)
 		sound.play_effect("waveClear")
 	sound.intensity = clampf(float(enemies.size()) / 15.0 + (0.25 if player.hp < 35 else 0.0), 0, 1)
-	# Port addition: from wave 3 on Normal and Hard, a gunner who sees the player now and then lobs smoke at them.
+	# Port addition: from wave 3 on Hard and Insane, a gunner who sees the player now and then lobs smoke at them.
 	enemy_smoke -= delta
-	if enemy_smoke <= 0 and wave >= 3 and difficulty > 0:
+	if enemy_smoke <= 0 and wave >= 3 and difficulty >= 2:
 		enemy_smoke = 2.0
 		for enemy in enemies:
 			var gap = enemy.global_position.distance_to(player.global_position)
 			if enemy.alive and enemy.target_los and enemy.kind in ["grunt", "heavy", "shield"] and gap > 9 and gap < 34:
 				lob_smoke(enemy.global_position + Vector3.UP * 1.5 * enemy.model_scale)
-				enemy_smoke = randf_range(24, 36) if difficulty == 1 else randf_range(14, 22)
+				enemy_smoke = randf_range(24, 36) if difficulty == 2 else randf_range(14, 22)
 				break
 	for dot in trajectory_nodes:
 		dot.visible = player.charging
@@ -1209,6 +1217,14 @@ func run_smoke() -> void:
 	await smoke_tap_button("PLAY OFFLINE")
 	assert(menu_items.get_child(0).text == "Play offline", "A menu tap must open offline play")
 	Input.emulate_touch_from_mouse = false
+	var saved_difficulty = difficulty
+	for tuning in [[0, 0.42, 0.5, 4], [1, 0.72, 0.75, 5], [2, 1.2, 1.0, 7], [3, 1.62, 1.3, 9]]:
+		difficulty = tuning[0]
+		await start_game(1)
+		assert(is_equal_approx(damage_modifier, tuning[1]), "Survival tiers must preserve the previous damage tuning above Easy")
+		assert(is_equal_approx(health_modifier, tuning[2]), "Survival tiers must scale enemy health")
+		assert(spawn_queue.size() == tuning[3], "Survival tiers must scale the first wave")
+	difficulty = saved_difficulty
 	await start_game(1)
 	assert(not Input.emulate_mouse_from_touch, "Gameplay touch must not also press mouse-bound fire")
 	assert(level.data.boxes.size() == 517)
@@ -1553,8 +1569,8 @@ func run_smoke() -> void:
 
 func smoke_menu_button(label: String) -> Button:
 	var target: Button
-	for child in menu_items.get_children():
-		if child is Button and child.text == label:
+	for child in menu_items.find_children("*", "Button", true, false):
+		if child.text == label:
 			target = child
 	assert(target != null, "Missing menu button: " + label)
 	await get_tree().process_frame
@@ -1909,7 +1925,8 @@ func reset_arena_player(index: int) -> void:
 func show_offline_menu() -> void:
 	_clear_menu("Play offline", "No Internet connection or server needed")
 	_button("SURVIVAL · ENEMY WAVES", func(): match_mode = "survival"; start_game(1), "StartButton")
-	_choices(["Easy", "Normal", "Hard"], difficulty, func(index): difficulty = index; save_settings())
+	_credit_section("Survival difficulty", "Port addition · not part of the original game. Normal is the former Easy; Hard is the former Normal; Insane is the former Hard.")
+	_choices(["Easy", "Normal", "Hard", "Insane"], difficulty, func(index): difficulty = index; save_settings())
 	_choices(["Normal waves", "Large waves", "Huge waves"], wave_size, func(index): wave_size = index; save_settings())
 	_credit_section("Free for all with bots", "Fight other doodlers in the arena. Bots fight you and each other. First to 20 kills, or the highest score after 10 minutes. Respawns are automatic.")
 	var count = OptionButton.new()

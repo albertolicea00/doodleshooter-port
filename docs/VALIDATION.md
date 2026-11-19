@@ -85,3 +85,9 @@ Not verified: any of this in motion (cloud billow and fade, sway, double image, 
 Not verified: collision against the cylinder colliders in play (walking around trees, shooting past barrels, standing on canopies), the new props from every angle, the original-hatching option after the shader change beyond one District still, and the frame-rate cost of the pencil shader on a phone GPU (it samples noise about ten more times per pixel than the hatching).
 
 See `PARITY.md` for the remaining comparison and implementation work.
+
+## Survival difficulty rebalance (November 19)
+
+Survival now offers four port-only tiers: Easy, Normal (former Easy), Hard (former Normal), and Insane (former Hard). Normal remains the default. Easy uses 0.35× base enemy damage, 0.5× enemy health, and 0.5× ordinary wave counts, and halves boss-wave escorts; the existing global 1.2 damage multiplier still applies. Enemy smoke remains exclusive to the two highest tiers, and predictive gunner aiming to Insane. The separate bot difficulty settings are unchanged.
+
+Headless smoke checks exercise all four tiers through actual wave-one starts: damage multipliers of 0.42/0.72/1.2/1.62, health multipliers of 0.5/0.75/1.0/1.3, and queues of 4/5/7/9 enemies at the default wave size. Import, both gameplay smoke markers, native LAN protocol checks, and both LAN game behavior markers passed. The first full checker run nevertheless failed because the guest process reported six resources still in use at exit; an immediate repeat of `python3 tools/check.py` passed in full. No visual, Android, or hands-on difficulty-balance verification was performed for this change.
