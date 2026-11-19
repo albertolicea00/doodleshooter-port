@@ -1,6 +1,6 @@
 # doodleshooter-port
 
-An unofficial native port of [Doodle District](https://doodleshooter.vercel.app/) for Android and iOS, built with Godot 4.6.3 and GDScript. The name combines **port** and **portable**. Reproduce the original game first; create new maps afterward.
+An unofficial native port of [Doodle District](https://doodleshooter.vercel.app/) for Android, iOS, and Desktop (Windows, Linux, macOS), built with Godot 4.6.3 and GDScript. The name combines **port** and **portable**. Reproduce the original game first; create new maps afterward.
 
 The project provides offline survival, offline free-for-all with bots, built-in LAN hosting, and an experimental online lobby mode. **It is not yet a complete clone**: reference comparison, complete multiplayer validation, and device verification remain unfinished. See [docs/PARITY.md](docs/PARITY.md) for the full status.
 

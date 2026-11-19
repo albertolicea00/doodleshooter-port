@@ -8,7 +8,7 @@ The public code reference used is https://github.com/iifor/doodleshooter, revisi
 
 Doodle Jungle is converted from the original game deployed at https://doodleshooter.vercel.app/ on November 19, 2026 (bundle `game.7LCERBLR.js`). That map is absent from the historical repository revision. The separately archived assets and their SHA-256 manifest are in `reference/web-2026-11-19/`; `tools/extract-jungle.mjs` converts its original geometry, spawn points, palette, liana, bird, and flame animations. Jungle is an original-game map, not a port addition. The deployed source is build-time reference only and is not shipped in the native application.
 
-The received snapshot remains unchanged in `reference/upstream/`. Per-file SHA-256 hashes are recorded in `reference/manifest.json`. The converter at `tools/extract-reference.mjs` translates procedural maps and models into Godot geometry data. The native application runs GDScript; neither the website nor JavaScript is part of its mobile runtime. Port UI, extracted display names, and project documentation are in English.
+The received snapshot remains unchanged in `reference/upstream/`. Per-file SHA-256 hashes are recorded in `reference/manifest.json`. The converter at `tools/extract-reference.mjs` translates procedural maps and models into Godot geometry data. The native application runs GDScript; neither the website nor JavaScript is part of its native runtime. Port UI, extracted display names, and project documentation are in English.
 
 No game-code license file was found in the reference revision. This project does not infer or assign an MIT license or any other license to that code. Attribution and provenance notices are preserved independently.
 
@@ -16,7 +16,7 @@ Original web dependencies: **Three.js** and **PeerJS**. Their embedded copyright
 
 Native engine: **Godot Engine**, https://godotengine.org/, under the MIT license. Engine license and component notices: https://godotengine.org/license/ and https://godotengine.org/license/thirdparty/. Attribution is available in the game's Credits menu, and this document is bundled as `CREDITS.txt`.
 
-The original procedural soundtrack and sound effects are rendered from the unchanged reference audio generator for native playback. Both map compositions, their arrangements, and effect designs remain credited to the original game creators. The build-only audio renderer uses node-web-audio-api (IRCAM, BSD-3-Clause); it is not part of the mobile runtime.
+The original procedural soundtrack and sound effects are rendered from the unchanged reference audio generator for native playback. Both map compositions, their arrangements, and effect designs remain credited to the original game creators. The build-only audio renderer uses node-web-audio-api (IRCAM, BSD-3-Clause); it is not part of the native runtime.
 
 UI font: **Patrick Hand**, copyright the Patrick Hand authors, distributed under the SIL Open Font License 1.1. The font and its original license are bundled in `native/assets/fonts/`.
 
