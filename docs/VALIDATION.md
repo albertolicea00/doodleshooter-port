@@ -121,3 +121,23 @@ The bot card now has a centered minus/plus duration selector: 5–30 minutes in 
 The desktop layout with 30 bots, the performance warning, and the new duration selector was rendered and inspected at 1280×720. Card spacing was tightened so both start buttons and Back fit. The final capture remains `/private/tmp/doodleshooter-bot-selector/bot-count-30-warning.png`. No full timed match, Android/device layout, or physical touch input was verified for this change.
 
 The duration/count row refinement was verified with the graphical harness: the time label shows only minutes, changing to 30 minutes updates the description to 60 kills, and changing to 5 updates it to 10 kills. Count limits and warning transitions still pass. The final desktop capture at 1280×720 was inspected with both selectors side by side, the 30-bot warning, both blue start buttons, and the red outlined Back button visible. This follow-up changes menu presentation only; the full gameplay checker was not rerun after it.
+
+## Main menu network row (November 19)
+
+Play Online and Local Network now share a horizontal row in the main menu; the Local Network button no longer includes the LAN suffix. The existing callbacks are retained. Desktop menu captures were rendered and the main menu was inspected at 1280×720 using macOS OpenGL Compatibility (`/private/tmp/doodleshooter-main-network-row/doodleshooter-menu-main.png`). Both labels fit, and the complete menu remains visible. This presentation-only change was not verified on Android; the full gameplay checker was not rerun.
+
+## Main menu Exit button (November 19)
+
+Added Exit below the Controls/Settings/Credits row, using the red outline button style. It calls `SceneTree.quit()` when activated. A temporary headless harness verified the label, style variation, placement, and successful process termination through the button signal. The graphical capture attempt stalled before reaching the main menu and was stopped; this new button has not been visually or device verified. No gameplay logic changed, and the full gameplay checker was not rerun.
+
+The main-menu footer now displays `v0.1.0 · development build` beneath Exit, with no best-score text. It reads the version from `application/config/version`, matching the existing export presets. This text-only footer change was checked in source; it was not rendered or device verified.
+
+## Controls reference layout (November 19)
+
+Controls now uses a wide two-column reference: Mouse + Keyboard and PS5 Controller, with red input labels, blue action text, and ruled headings. The reference reflects the native input map rather than copying unsupported bindings from the supplied visual reference: Q grapples, C slides/dashes, R3 throws grenades, and unbound controller scoreboard/smoke shortcuts are omitted. Wall jump, double jump, rope release, charged katana execution in survival, and the seven-weapon loadout are documented. Touch instructions remain below the columns, followed by a red outlined Back button. Gameplay inputs and sensitivity were not changed.
+
+A temporary graphical harness rendered and captured the top and bottom at 1280×720 using macOS OpenGL Compatibility (`/private/tmp/doodleshooter-controls.png` and `/private/tmp/doodleshooter-controls-bottom.png`). Both captures were inspected, including the PlayStation symbols. The harness scrolled to the touch reference, activated Back, and verified return to the main menu with its standard 680-pixel panel width. No physical controller, touch, or Android verification was performed; the full gameplay checker was not rerun for this presentation-only change.
+
+The controls follow-up integrates revolver, SMG, and bazooka into the normal weapon-switching list and removes the separate port-loadout annotation from this reference. Existing port-addition attribution remains in credits and parity documentation. Square and triangle now use bundled 24×24 SVG icons rendered inline at 22×22, avoiding the tiny fallback font glyphs. Godot asset import passed; the graphical controls harness passed again, and the updated desktop capture was inspected for readable symbols and the wrapped weapon list. Android rendering remains unverified.
+
+Circle and cross now use matching bundled SVG icons too, with the same 22×22 inline size, red stroke, and weight as square and triangle. Asset import and the graphical controls harness passed; the refreshed desktop capture was inspected for all four shapes. Device rendering remains unverified.

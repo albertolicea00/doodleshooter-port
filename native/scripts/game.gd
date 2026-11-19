@@ -424,12 +424,20 @@ func show_main_menu() -> void:
 	_button("PLAY OFFLINE", show_offline_menu, "StartButton")
 	if checkpoint >= 5:
 		_button("CONTINUE · WAVE " + str(checkpoint), func(): start_game(checkpoint))
-	_button("PLAY ONLINE", show_online_menu, "RedButton")
-	_button("LOCAL NETWORK · LAN", show_lan_menu)
+	var network_row = HBoxContainer.new()
+	network_row.add_theme_constant_override("separation", 10)
+	menu_items.add_child(network_row)
+	var online = _button("PLAY ONLINE", show_online_menu, "RedButton")
+	online.reparent(network_row)
+	online.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var local = _button("LOCAL NETWORK", show_lan_menu)
+	local.reparent(network_row)
+	local.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_main_menu), "AltButton")
 	_info_row()
+	_button("EXIT", func(): get_tree().quit(), "RedOutlineButton")
 	var foot = Label.new()
-	foot.text = "Best score: %d · development build" % best
+	foot.text = "v%s · development build" % ProjectSettings.get_setting("application/config/version")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	foot.add_theme_font_size_override("font_size", 18)
 	foot.modulate.a = 0.8
@@ -528,9 +536,71 @@ func apply_quality(level: int) -> void:
 	ReferenceAssets.set_detail(float(quality))
 
 func show_controls() -> void:
-	_clear_menu("Controls", "WASD / left stick: move · mouse / right stick: look\nFire / R2 · aim / L2 · jump / A\nQ / L1: grapple · C / B: slide or air dash\nR / X: reload · F / R1: quick katana slash\nG / R3: grenade (hold to charge)\n1–7 / mouse wheel / Y: switch weapon · H: smoke grenade\nTab: scoreboard · Esc / Start: pause")
-	_credit_section("Touch", "The left thumb moves. Push fully forward to sprint and drag on up to the runner marker to keep running. Drag anywhere else to look, even while holding FIRE. SLIDE on the ground becomes DASH in the air. Tap a weapon in the bottom bar to switch and tap the active one, or the reload button, to reload. Every one of these can be changed in Settings under Touch & aiming, and every button can be moved, resized, faded or copied in the layout editor.")
-	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
+	_clear_menu("Controls", "")
+	menu_items.get_child(1).hide()
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var columns = HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 36)
+	menu_items.add_child(columns)
+	_controls_column(columns, "MOUSE + KEYBOARD", [
+		"{WASD} move   {Mouse} look   {Shift} sprint",
+		"{LMB} fire / slash   {RMB} aim / block",
+		"{Space} jump · press against a wall to wall jump",
+		"{Space} again in the air: double jump",
+		"{C} slide on the ground · air dash in the air",
+		"{Q} grapple: tap to swing, hold to reel",
+		"{Space} launch from the rope   {Q} again: release",
+		"{F} quick katana slash   {R} reload",
+		"{G} grenade · hold to throw further   {H} smoke",
+		"{Tab} scoreboard (bot / network matches)   {Esc} pause",
+		"{LMB + RMB} charged katana execution in survival",
+		"{1–7 / Wheel} switch weapon: rifle · shotgun · sniper · katana · revolver · SMG · bazooka"
+	])
+	_controls_column(columns, "PS5 CONTROLLER", [
+		"{L stick} move   {R stick} look   {L3} sprint",
+		"{R2} fire / slash   {L2} aim / block",
+		"{×} jump / wall jump / double jump",
+		"{○} slide on the ground · air dash in the air",
+		"{L1} grapple: tap to swing, hold to reel",
+		"{×} launch from the rope   {L1} again: release",
+		"{L2 + R2} charged katana execution in survival",
+		"{R1} quick katana slash, then back to your gun",
+		"{□} reload   {△} next weapon",
+		"{R3} grenade · hold to throw further",
+		"{Options} pause"
+	])
+	_credit_section("Touch", "Left thumb: move and sprint; drag up to the runner marker to keep running. Drag elsewhere to look, even while firing. SLIDE becomes DASH in the air. Tap a weapon to switch; tap it again or use reload to reload. Customize aiming and button layout in Settings under Touch & aiming.")
+	_button("BACK", pause_menu if paused else show_main_menu, "RedOutlineButton")
+
+func _controls_column(columns: HBoxContainer, title: String, lines: Array[String]) -> void:
+	var column = VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 8)
+	columns.add_child(column)
+	var heading = Label.new()
+	heading.text = title
+	heading.add_theme_font_size_override("font_size", 26)
+	column.add_child(heading)
+	var rule = ColorRect.new()
+	rule.color = DoodlePen.INK
+	rule.custom_minimum_size.y = 2
+	column.add_child(rule)
+	var legend = RichTextLabel.new()
+	legend.bbcode_enabled = true
+	legend.fit_content = true
+	legend.scroll_active = false
+	legend.custom_minimum_size.x = 480
+	legend.mouse_filter = Control.MOUSE_FILTER_PASS
+	legend.add_theme_font_size_override("normal_font_size", 22)
+	legend.add_theme_constant_override("line_separation", 2)
+	# Braces mark inputs, keeping the actions in the default blue ink.
+	legend.text = "\n".join(lines).replace("{", "[color=#%s]" % DoodlePen.RED.to_html(false)).replace("}", "[/color]")
+	var symbols = {"□": "square", "△": "triangle", "○": "circle", "×": "cross"}
+	for symbol in symbols:
+		legend.text = legend.text.replace(symbol, "[img=22x22]res://assets/ui/controller-%s.svg[/img]" % symbols[symbol])
+	column.add_child(legend)
 
 # Every merged or assisted behaviour is optional, as in large mobile shooters.
 func show_touch_settings() -> void:
@@ -600,7 +670,7 @@ func show_credits() -> void:
 	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()), "AltButton")
 	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
 
-func _credit_section(title: String, body: String) -> void:
+func _credit_section(title: String, body: String) -> RichTextLabel:
 	var heading = Label.new()
 	heading.text = title
 	heading.add_theme_font_size_override("font_size", 28)
@@ -622,6 +692,7 @@ func _credit_section(title: String, body: String) -> void:
 	text.mouse_filter = Control.MOUSE_FILTER_PASS
 	text.add_theme_font_size_override("normal_font_size", 20)
 	menu_items.add_child(text)
+	return text
 
 func show_credit_notices() -> void:
 	show_license("Full credits & notices", FileAccess.get_file_as_string("res://CREDITS.txt") + "\n\n" + FileAccess.get_file_as_string("res://assets/fonts/PatrickHand-OFL.txt"))
@@ -1962,10 +2033,13 @@ func show_offline_menu() -> void:
 	survival.add_theme_font_size_override("font_size", 40)
 	survival.custom_minimum_size.y = 76
 	var bots_start = menu_items.get_child_count()
-	_credit_section("Free for all with bots", "Respawn and fight everyone. Choose the time limit below; the kill target scales with it. Port addition · not part of the original game.")
+	var bot_rules = _credit_section("Free for all with bots", "")
 	_choices(["Easy", "Normal", "Hard", "Insane"], bot_difficulty, func(index): bot_difficulty = index)
-	_bot_duration_selector()
-	_bot_count_selector()
+	var selectors = HBoxContainer.new()
+	selectors.add_theme_constant_override("separation", 24)
+	menu_items.add_child(selectors)
+	_bot_duration_selector(bot_rules).reparent(selectors)
+	_bot_count_selector().reparent(selectors)
 	var bots = _button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "StartButton")
 	bots.add_theme_font_size_override("font_size", 40)
 	bots.custom_minimum_size.y = 76
@@ -1995,15 +2069,16 @@ func _offline_card(cards: HBoxContainer, content: Array[Node]) -> void:
 			items.add_child(spacer)
 		child.reparent(items)
 
-func _bot_duration_selector() -> void:
+func _bot_duration_selector(rules: RichTextLabel) -> HBoxContainer:
 	var row = HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 10)
 	menu_items.add_child(row)
 	var duration = Label.new()
 	duration.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	duration.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	duration.custom_minimum_size.x = 220
+	duration.custom_minimum_size.x = 80
 	var decrease = _button("−", func(): pass, "AltButton")
 	decrease.tooltip_text = "Shorter match"
 	decrease.custom_minimum_size.x = 64
@@ -2014,22 +2089,26 @@ func _bot_duration_selector() -> void:
 	increase.custom_minimum_size.x = 64
 	increase.reparent(row)
 	var update_duration = func():
-		duration.text = "%d min · %d kills" % [bot_minutes, bot_minutes * DoodleBotMatch.KILLS_PER_MINUTE]
+		duration.text = "%d min" % bot_minutes
+		rules.text = "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game." % [bot_minutes * DoodleBotMatch.KILLS_PER_MINUTE, bot_minutes]
+		_fit_menu.call_deferred()
 		decrease.disabled = bot_minutes <= DoodleBotMatch.MIN_MINUTES
 		increase.disabled = bot_minutes >= DoodleBotMatch.MAX_MINUTES
 	decrease.pressed.connect(func(): bot_minutes = maxi(DoodleBotMatch.MIN_MINUTES, bot_minutes - 5); update_duration.call(); save_settings())
 	increase.pressed.connect(func(): bot_minutes = mini(DoodleBotMatch.MAX_MINUTES, bot_minutes + 5); update_duration.call(); save_settings())
 	update_duration.call()
+	return row
 
-func _bot_count_selector() -> void:
+func _bot_count_selector() -> HBoxContainer:
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	menu_items.add_child(row)
 	var count = Label.new()
 	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	count.custom_minimum_size.x = 120
+	count.custom_minimum_size.x = 100
 	var decrease = _button("−", func(): pass, "AltButton")
 	decrease.tooltip_text = "Fewer bots"
 	decrease.custom_minimum_size.x = 64
@@ -2055,6 +2134,7 @@ func _bot_count_selector() -> void:
 	decrease.pressed.connect(func(): bot_count = maxi(1, bot_count - 1); update_count.call())
 	increase.pressed.connect(func(): bot_count = mini(DoodleBotMatch.MAX_BOTS, bot_count + 1); update_count.call())
 	update_count.call()
+	return row
 
 func show_lan_menu() -> void:
 	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed. The hosting device must keep the game open.")
