@@ -70,23 +70,20 @@ void fragment() {
         } else {
             vec3 an = abs(n);
             hp = an.y > max(an.x, an.z) ? world_position.xz : (an.x > an.z ? world_position.zy : world_position.xy);
-            float lod = exp2(floor(log2(max(1e-4, (0.0165 * d) / 0.16))));
-            sp = 0.16 * lod;
-            w = sp * 0.17;
+            float lod = exp2(floor(log2(max(1e-4, (0.025 * d) / 0.28))));
+            sp = 0.28 * lod;
+            w = sp * 0.13;
             if (detail > 0.5) {
-                hp += (vnoise(hp * (2.5 / sp)) - 0.5) * sp * 0.4;
+                hp += (vnoise(hp * (1.2 / sp)) - 0.5) * sp * 0.15;
             }
         }
         if (style > 0.5) {
-            float h1 = strokes(hp, vec2(0.7071, 0.7071), sp, w * 1.5);
-            float h2 = strokes(hp + vec2(3.7 * sp), vec2(0.8660, 0.5), sp * 0.8, w * 1.5);
-            float h3 = strokes(hp + vec2(9.1 * sp), vec2(0.5, 0.8660), sp * 0.62, w * 1.5);
-            hatch = h1 * smoothstep(0.7, 0.52, shade);
-            hatch = max(hatch, h2 * smoothstep(0.46, 0.32, shade));
-            hatch = max(hatch, h3 * smoothstep(0.26, 0.12, shade));
+            float h1 = strokes(hp, vec2(0.7071, 0.7071), sp * 1.25, w * 1.2);
+            float h2 = strokes(hp + vec2(3.7 * sp), vec2(0.8660, 0.5), sp * 0.95, w * 1.2);
+            hatch = h1 * smoothstep(0.62, 0.42, shade);
+            hatch = max(hatch, h2 * smoothstep(0.36, 0.20, shade));
             // Lit faces stay clean paper; the wash deepens as a face turns from the light.
-            float grain = 0.72 + 0.56 * vnoise(hp * (0.9 / sp));
-            float wash = 0.34 * smoothstep(0.86, 0.15, shade) * grain;
+            float wash = 0.22 * smoothstep(0.82, 0.15, shade);
             hatch = wash + hatch * (1.0 - wash);
         } else {
             float h1 = stripes(hp, vec2(0.7071, 0.7071), sp, w);

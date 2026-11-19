@@ -170,6 +170,7 @@ func _load_menu_replay() -> void:
 	level.load_map(bg_map, false)
 	if not FileAccess.file_exists(DoodleReplay.REPLAY_PATH):
 		replay.build_default(level, bg_map)
+	replay.step_playback(0.0, true)
 
 func _setup_inputs() -> void:
 	var keys = {"forward": KEY_W, "back": KEY_S, "left": KEY_A, "right": KEY_D, "jump": KEY_SPACE, "sprint": KEY_SHIFT, "dash": KEY_C, "grapple": KEY_Q, "reload": KEY_R, "slash": KEY_F, "grenade": KEY_G, "pause": KEY_ESCAPE, "scoreboard": KEY_TAB, "weapon_0": KEY_1, "weapon_1": KEY_2, "weapon_2": KEY_3, "weapon_3": KEY_4, "weapon_4": KEY_5, "weapon_5": KEY_6, "weapon_6": KEY_7, "smoke": KEY_H}
