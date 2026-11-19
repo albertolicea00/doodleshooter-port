@@ -720,7 +720,7 @@ func _make_card(content: Array[Node], align_bottom: bool = false) -> PanelContai
 
 func _back_button(callback: Callable, label: String = "BACK TO MAIN MENU") -> void:
 	if callback == show_main_menu and label == "BACK TO MAIN MENU":
-		var back = _button(label, callback, "RedOutlineButton")
+		var back = _button(label, callback, "RedButton")
 		back.custom_minimum_size.x = 240
 		back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		return
@@ -731,7 +731,7 @@ func _back_button(callback: Callable, label: String = "BACK TO MAIN MENU") -> vo
 	var back = _button(label, callback, "RedOutlineButton")
 	back.custom_minimum_size.x = 240
 	back.reparent(row)
-	var main_btn = _button("BACK TO MAIN MENU", show_main_menu, "AltButton")
+	var main_btn = _button("BACK TO MAIN MENU", show_main_menu, "RedButton")
 	main_btn.custom_minimum_size.x = 240
 	main_btn.reparent(row)
 
