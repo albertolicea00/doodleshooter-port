@@ -756,6 +756,11 @@ func show_settings() -> void:
 	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_row.add_theme_constant_override("separation", 16)
 	menu_items.add_child(top_row)
+	if not OS.has_feature("mobile"):
+		_toggle("Fullscreen", fullscreen, func(value): apply_fullscreen(value); save_settings())
+		var fs_button = menu_items.get_child(-1) as Button
+		fs_button.custom_minimum_size.x = 220
+		fs_button.reparent(top_row)
 	var touch_button = _button("TOUCH & AIMING", show_touch_settings)
 	touch_button.custom_minimum_size.x = 260
 	touch_button.reparent(top_row)
@@ -775,8 +780,6 @@ func show_settings() -> void:
 	_choices(["Original hatching", "Coloured pencil"], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
-	if not OS.has_feature("mobile"):
-		_toggle("Fullscreen", fullscreen, func(value): apply_fullscreen(value); save_settings())
 	_card_wrap(start, split)
 	if paused:
 		_back_button(pause_menu, "BACK TO PAUSE")
