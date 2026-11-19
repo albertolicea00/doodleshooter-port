@@ -276,13 +276,6 @@ func _setup_ui() -> void:
 	menu_hint.add_theme_font_size_override("normal_font_size", 18)
 	menu_hint.add_theme_color_override("default_color", Color(DoodlePen.INK, 0.8))
 	menu_hint.text = "[center][color=#%s]A / X[/color] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B / O[/color] Back[/center]" % [red_hex, red_hex]
-	var update_hint = func(_val = 0.0):
-		menu_hint.visible = menu.visible and (menu_scroll == null or menu_scroll.scroll_vertical <= 2)
-	menu.visibility_changed.connect(func():
-		menu_backdrop.visible = menu.visible
-		update_hint.call())
-	ui.add_child(menu)
-	ui.add_child(menu_hint)
 	menu_items = VBoxContainer.new()
 	menu_items.add_theme_constant_override("separation", 12)
 	menu_scroll = ScrollContainer.new()
@@ -290,8 +283,16 @@ func _setup_ui() -> void:
 	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	menu_scroll.follow_focus = true
 	menu_scroll.scroll_deadzone = 12
-	menu_scroll.get_v_scroll_bar().value_changed.connect(update_hint)
 	menu.add_child(menu_scroll)
+	var update_hint = func(_val = 0.0):
+		var at_top = true if menu_scroll == null else menu_scroll.scroll_vertical <= 2
+		menu_hint.visible = menu.visible and at_top
+	menu_scroll.get_v_scroll_bar().value_changed.connect(update_hint)
+	menu.visibility_changed.connect(func():
+		menu_backdrop.visible = menu.visible
+		update_hint.call())
+	ui.add_child(menu)
+	ui.add_child(menu_hint)
 	var menu_pad = MarginContainer.new()
 	menu_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for side in ["margin_left", "margin_right", "margin_bottom"]:
@@ -551,7 +552,7 @@ func show_main_menu() -> void:
 	foot.modulate.a = 0.8
 	header.add_child(foot)
 	_menu_gap(6)
-	var play_offline = _button("START", show_offline_menu, "StartButton")
+	var play_offline = _button("START SOLO", show_offline_menu, "StartButton")
 	play_offline.custom_minimum_size.x = 420
 	play_offline.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	play_offline.rotation_degrees = -1.0
@@ -573,7 +574,7 @@ func show_main_menu() -> void:
 		info_btn.custom_minimum_size = Vector2(420, 44)
 		info_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_menu_gap(6)
-	var exit = _button("EXIT", func(): get_tree().quit(), "RedOutlineButton")
+	var exit = _button("QUIT GAME", func(): get_tree().quit(), "RedOutlineButton")
 	exit.custom_minimum_size.x = 240
 	exit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
@@ -1643,18 +1644,18 @@ func run_smoke() -> void:
 	Input.emulate_touch_from_mouse = true
 	await smoke_tap_button("CREDITS")
 	assert(menu_items.get_child(0).get_child(0).text == "Credits", "A menu tap must open the credits screen")
-	var notices = await smoke_menu_button("FULL CREDITS & NOTICES")
-	var swipe_start = notices.get_global_rect().get_center()
+	await smoke_tap_button("FULL CREDITS & NOTICES", Vector2(0, 4))
+	assert(menu_items.get_child(0).get_child(0).text == "Full credits & notices")
+	assert(menu_scroll.scroll_vertical == 0, "Each menu screen must open at the top")
+	var back_notices = await smoke_menu_button("BACK TO CREDITS")
+	var swipe_start = back_notices.get_global_rect().get_center()
 	var previous_scroll = menu_scroll.scroll_vertical
 	smoke_touch(swipe_start, true)
 	smoke_touch_drag(swipe_start, Vector2(0, 100))
 	smoke_touch(swipe_start + Vector2(0, 100), false)
 	await get_tree().process_frame
-	assert(menu_items.get_child(0).get_child(0).text == "Credits", "Swiping over a button must not activate it")
+	assert(menu_items.get_child(0).get_child(0).text == "Full credits & notices", "Swiping over a button must not activate it")
 	assert(menu_scroll.scroll_vertical < previous_scroll, "A swipe starting on a button must scroll the menu")
-	await smoke_tap_button("FULL CREDITS & NOTICES", Vector2(0, 4))
-	assert(menu_items.get_child(0).get_child(0).text == "Full credits & notices")
-	assert(menu_scroll.scroll_vertical == 0, "Each menu screen must open at the top")
 	await smoke_tap_button("BACK TO CREDITS")
 	await smoke_tap_button("BACK")
 	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
