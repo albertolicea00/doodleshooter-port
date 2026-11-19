@@ -2407,6 +2407,21 @@ func show_offline_menu() -> void:
 		map_key = key)
 	var survival_start = menu_items.get_child_count()
 	_credit_section("Survival · Enemy waves", "Survive growing waves of enemies and bosses. Difficulty and wave-size choices are port additions, not part of the original game.")
+	if checkpoint >= 5:
+		var heading = menu_items.get_child(survival_start)
+		var heading_row = HBoxContainer.new()
+		heading_row.add_theme_constant_override("separation", 12)
+		heading_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		menu_items.add_child(heading_row)
+		menu_items.move_child(heading_row, survival_start)
+		heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		heading.reparent(heading_row)
+		var resume = _button("CHECKPOINT · WAVE " + str(checkpoint), func(): match_mode = "survival"; start_game(checkpoint), "RedOutlineButton")
+		resume.name = "OfflineCheckpointButton"
+		resume.custom_minimum_size = Vector2(0, 34)
+		resume.add_theme_font_size_override("font_size", 18)
+		resume.tooltip_text = "Continue Survival from wave %d" % checkpoint
+		resume.reparent(heading_row)
 	_choices(["Easy", "Normal", "Hard", "Insane"], difficulty, func(index): difficulty = index; save_settings())
 	_choices(["Normal waves", "Large waves", "Huge waves"], wave_size, func(index): wave_size = index; save_settings())
 	var survival = _button("START SURVIVAL", func(): match_mode = "survival"; start_game(1), "StartButton")
