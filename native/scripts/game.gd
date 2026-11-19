@@ -432,7 +432,7 @@ func show_main_menu() -> void:
 	var online = _button("PLAY ONLINE", show_online_menu, "RedButton")
 	online.reparent(network_row)
 	online.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var local = _button("LOCAL NETWORK", show_lan_menu)
+	var local = _button("LOCAL NETWORK", show_lan_menu, "AltButton")
 	local.reparent(network_row)
 	local.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_main_menu), "AltButton")
