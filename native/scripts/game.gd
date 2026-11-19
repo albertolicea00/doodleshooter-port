@@ -572,11 +572,17 @@ func show_main_menu() -> void:
 	port_label.add_theme_constant_override("outline_size", 3)
 	port_label.add_theme_color_override("font_outline_color", DoodlePen.RED)
 	title_row.add_child(port_label)
-	var foot = Label.new()
-	foot.text = "v%s · development build" % ProjectSettings.get_setting("application/config/version")
-	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	foot.add_theme_font_size_override("font_size", 18)
-	foot.modulate.a = 0.8
+	var foot = RichTextLabel.new()
+	foot.bbcode_enabled = true
+	foot.fit_content = true
+	foot.scroll_active = false
+	foot.selection_enabled = false
+	foot.focus_mode = Control.FOCUS_NONE
+	foot.custom_minimum_size.x = 480
+	foot.add_theme_font_size_override("normal_font_size", 18)
+	foot.modulate.a = 0.85
+	foot.text = "[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]" % ProjectSettings.get_setting("application/config/version")
+	foot.meta_clicked.connect(func(meta): OS.shell_open(str(meta)))
 	header.add_child(foot)
 	_menu_gap(6)
 	var play_offline = _button("START SOLO", show_offline_menu, "StartButton")
@@ -1025,7 +1031,8 @@ func show_credits() -> void:
 	ref.bbcode_enabled = true
 	ref.text = "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
 	ref.meta_clicked.connect(func(meta): OS.shell_open(str(meta)))
-	_credit_section("Native adaptation", "Shared Android and iOS project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator.")
+	_credit_section("Native adaptation", "Ported by @albertolicea00. Shared Android, iOS, and desktop project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator.")
+	_button("PORT REPOSITORY", func(): OS.shell_open("https://github.com/albertolicea00/doodleshooter-port"))
 	_credit_section("Engine and font", "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1")
 	_credit_section("Reference dependencies", "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause.")
 	_button("FULL CREDITS & NOTICES", show_credit_notices, "AltButton")
