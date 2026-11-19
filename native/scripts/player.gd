@@ -28,6 +28,7 @@ var weapon_index = 0
 var magazines = [35, 6, 5, 0, 6, 30, 1]
 var reserves = [175, 36, 25, 0, 36, 180, 6]
 var fire_cd = 0.0
+var flash_time = 0.0
 var reload_time = 0.0
 var last_hurt = 10.0
 var grenades = 3
@@ -105,6 +106,10 @@ func _ready() -> void:
 			if node != null:
 				found[part] = node
 				found[part + "_rest"] = node.position
+		if found.has("muzzle"):
+			var flash_node = _make_muzzle_flash()
+			found.muzzle.add_child(flash_node)
+			found["flash"] = flash_node
 		parts.append(found)
 	rope = MeshInstance3D.new()
 	var rope_mesh = CylinderMesh.new()
@@ -173,6 +178,10 @@ func _physics_process(delta: float) -> void:
 	if aiming:
 		speed = 4.2
 	fire_cd -= delta
+	if flash_time > 0.0:
+		flash_time -= delta
+		if flash_time <= 0.0 and parts[weapon_index].has("flash"):
+			parts[weapon_index].flash.visible = false
 	dash_cd -= delta
 	mantle_cd -= delta
 	cycle_time -= delta
@@ -426,6 +435,7 @@ func fire() -> void:
 	camera.rotation.x += [0.009, 0.05, 0.055, 0.0, 0.038, 0.007, 0.07][weapon_index] * 0.55
 	fire_cd = maxf(float(config.interval), 0.85 if weapon_index == 2 else 0.0)
 	recoil = 0.045 if weapon_index in [0, 5] else 0.09
+	_trigger_muzzle_fx(config)
 	game.sound.play_effect(["shot", "shotgunFire", "sniperFire", "", "revolver", "shot", "shotgunFire"][weapon_index])
 	if weapon_index == 6:
 		# The rocket is a friendly projectile that explodes on the first thing it touches.
@@ -460,6 +470,31 @@ func fire() -> void:
 			game.network.send_packet({"type": "shot", "weapon": weapon_index, "end": [end.x, end.y, end.z]})
 	for entry in remote_hits.values():
 		entry.target.take_damage(entry.amount)
+
+func _make_muzzle_flash() -> Node3D:
+	var root = Node3D.new()
+	root.visible = false
+	var ray_mesh = BoxMesh.new()
+	ray_mesh.size = Vector3(0.016, 0.24, 0.016)
+	var mat = ReferenceAssets.material(3, true)
+	for i in 6:
+		var spike = MeshInstance3D.new()
+		spike.mesh = ray_mesh
+		spike.material_override = mat
+		spike.rotation.z = TAU * float(i) / 6.0
+		root.add_child(spike)
+	return root
+
+func _trigger_muzzle_fx(config: Dictionary) -> void:
+	var flash_scale = [1.0, 1.9, 1.7, 1.0, 1.35, 0.85, 1.5][weapon_index]
+	if parts[weapon_index].has("flash"):
+		var f: Node3D = parts[weapon_index].flash
+		f.visible = true
+		f.rotation.z = randf() * TAU
+		f.scale = Vector3.ONE * flash_scale * randf_range(0.8, 1.4)
+		flash_time = 0.045
+	var muzzle_pos = parts[weapon_index].muzzle.global_position if parts[weapon_index].has("muzzle") and models[weapon_index].visible else camera.global_position - camera.global_basis.y * 0.12
+	game.muzzle_fx(muzzle_pos, -camera.global_basis.z, int(config.pellets), flash_scale, 5 if weapon_index == 1 else 2)
 
 func slash() -> void:
 	if fire_cd > 0:
