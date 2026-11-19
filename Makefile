@@ -7,12 +7,13 @@ NODE ?= node
 NPM ?= npm
 
 PROJECT := native
-ANDROID_APK := builds/android/doodleshooter-port-debug.apk
-ANDROID_RELEASE_APK := builds/android/doodleshooter-port-release.apk
-IOS_ZIP := builds/ios/doodleshooter-port.zip
-WINDOWS_EXE := builds/windows/doodleshooter-port.exe
-LINUX_BIN := builds/linux/doodleshooter-port.x86_64
-MACOS_ZIP := builds/macos/doodleshooter-port.zip
+VERSION := $(shell "$(PYTHON)" tools/bump_version.py --version)
+ANDROID_APK := builds/android/doodleshooter-port-v$(VERSION)-debug.apk
+ANDROID_RELEASE_APK := builds/android/doodleshooter-port-v$(VERSION)-release.apk
+IOS_ZIP := builds/ios/doodleshooter-port-v$(VERSION).zip
+WINDOWS_EXE := builds/windows/doodleshooter-port-v$(VERSION).exe
+LINUX_BIN := builds/linux/doodleshooter-port-v$(VERSION).x86_64
+MACOS_ZIP := builds/macos/doodleshooter-port-v$(VERSION).zip
 SERVER_PYTHON := .venv/bin/python
 
 .PHONY: help import run touch check build android android-release ios windows linux macos \
@@ -145,5 +146,5 @@ assets-audio:
 
 clean:
 	rm -rf "$(PROJECT)/.godot"
-	rm -f "$(ANDROID_APK)" "$(ANDROID_APK).idsig" \
-	  "$(ANDROID_RELEASE_APK)" "$(ANDROID_RELEASE_APK).idsig" "$(IOS_ZIP)"
+	rm -f builds/android/*.apk builds/android/*.idsig \
+	  builds/ios/*.zip builds/windows/*.exe builds/linux/*.x86_64 builds/macos/*.zip

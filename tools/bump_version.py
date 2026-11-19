@@ -68,6 +68,8 @@ def update_files(new_version: str, new_code: int) -> None:
                 line = f'application/version="{new_code}"\n'
             else:
                 line = f'application/version="{new_version}"\n'
+        elif line.startswith("export_path="):
+            line = re.sub(r'(-v\d+\.\d+\.\d+)?(?=(?:-debug|-release-arm64|-release)?\.[a-zA-Z0-9_]+")', f"-v{new_version}", line, count=1)
         updated.append(line)
 
     EXPORT_PRESETS.write_text("".join(updated))
@@ -77,10 +79,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Bump project version and version code.")
     parser.add_argument("kind", nargs="?", choices=["major", "minor", "patch"], help="Version component to bump")
     parser.add_argument("--show", action="store_true", help="Print the current version and version code")
+    parser.add_argument("--version", action="store_true", help="Print only the current X.Y.Z version")
     args = parser.parse_args()
 
     current, code = read_current()
     current_str = ".".join(str(part) for part in current)
+    if args.version:
+        print(current_str)
+        return
     if args.show or not args.kind:
         print(f"version={current_str} version_code={code}")
         return
