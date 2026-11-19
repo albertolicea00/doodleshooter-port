@@ -437,7 +437,9 @@ func show_main_menu() -> void:
 	local.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_main_menu), "AltButton")
 	_info_row()
-	_button("EXIT", func(): get_tree().quit(), "RedOutlineButton")
+	var exit = _button("EXIT", func(): get_tree().quit(), "RedOutlineButton")
+	exit.custom_minimum_size.x = 240
+	exit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var foot = Label.new()
 	foot.text = "v%s · development build" % ProjectSettings.get_setting("application/config/version")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -527,6 +529,7 @@ func _card_wrap(start: int, split: int = -1) -> void:
 
 func _make_card(content: Array[Node]) -> PanelContainer:
 	var card = PanelContainer.new()
+	card.mouse_filter = Control.MOUSE_FILTER_PASS
 	card.add_theme_stylebox_override("panel", DoodlePen.box(Color(0.98, 0.972, 0.933, 0.95), DoodlePen.INK, 3.0, -0.35, Vector2(24, 16)))
 	var items = VBoxContainer.new()
 	items.add_theme_constant_override("separation", 12)
@@ -802,16 +805,21 @@ func close_layout_editor() -> void:
 
 func show_credits() -> void:
 	_clear_menu("Credits", "doodleshooter-port · unofficial native adaptation")
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var start = menu_items.get_child_count()
 	_credit_section("Original game · Doodle District", "The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation.")
-	_credit_section("Reference source", "iifor/doodleshooter on GitHub. This is the source reference, without claiming that the repository owner is the sole original author.")
+	_button("OPEN ORIGINAL GAME", func(): OS.shell_open("https://doodleshooter.vercel.app/"))
+	var ref = _credit_section("Reference source", "")
+	ref.bbcode_enabled = true
+	ref.text = "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
+	ref.meta_clicked.connect(func(meta): OS.shell_open(str(meta)))
 	_credit_section("Native adaptation", "Shared Android and iOS project built with Godot Engine. Original maps and models are converted for native playback; the original procedural music and effects are rendered from the reference audio generator.")
 	_credit_section("Engine and font", "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1")
 	_credit_section("Reference dependencies", "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause.")
-	_button("OPEN ORIGINAL GAME", func(): OS.shell_open("https://doodleshooter.vercel.app/"))
-	_button("OPEN REFERENCE SOURCE", func(): OS.shell_open("https://github.com/iifor/doodleshooter"))
 	_button("FULL CREDITS & NOTICES", show_credit_notices, "AltButton")
 	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()), "AltButton")
-	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
+	_card_wrap(start)
+	_back_button(pause_menu if paused else show_main_menu)
 
 func _credit_section(title: String, body: String) -> RichTextLabel:
 	var heading = Label.new()
