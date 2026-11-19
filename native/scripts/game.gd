@@ -313,6 +313,10 @@ func _setup_ui() -> void:
 	ui.move_child(scope, 1)
 
 func _clear_menu(title: String, subtitle: String) -> void:
+	menu.remove_theme_stylebox_override("panel")
+	menu.custom_minimum_size.x = 680
+	menu.offset_left = -340
+	menu.offset_right = 340
 	Input.emulate_mouse_from_touch = true
 	menu_scroll.scroll_vertical = 0
 	for child in menu_items.get_children():
@@ -346,10 +350,11 @@ func _clear_menu(title: String, subtitle: String) -> void:
 func _fit_menu() -> void:
 	# Wrapped text reports its final height one frame after it is added.
 	for pass_index in 2:
-		var height = minf(menu_items.get_combined_minimum_size().y, 604)
+		var padding = menu.get_theme_stylebox("panel").get_minimum_size().y
+		var height = minf(menu_items.get_combined_minimum_size().y, 656 - padding)
 		menu_scroll.custom_minimum_size.y = height
-		menu.offset_top = -(height + 52) * 0.5
-		menu.offset_bottom = (height + 52) * 0.5
+		menu.offset_top = -(height + padding) * 0.5
+		menu.offset_bottom = (height + padding) * 0.5
 		await get_tree().process_frame
 
 func _button(text: String, callback: Callable, variation: String = "") -> Button:
@@ -1928,15 +1933,49 @@ func reset_arena_player(index: int) -> void:
 
 func show_offline_menu() -> void:
 	_clear_menu("Play offline", "No Internet connection or server needed")
-	_button("SURVIVAL · ENEMY WAVES", func(): match_mode = "survival"; start_game(1), "StartButton")
-	_credit_section("Survival difficulty", "Port addition · not part of the original game. Normal is the former Easy; Hard is the former Normal; Insane is the former Hard.")
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var survival_start = menu_items.get_child_count()
+	_credit_section("Survival · Enemy waves", "Survive growing waves of enemies and bosses. Difficulty and wave-size choices are port additions, not part of the original game.")
 	_choices(["Easy", "Normal", "Hard", "Insane"], difficulty, func(index): difficulty = index; save_settings())
 	_choices(["Normal waves", "Large waves", "Huge waves"], wave_size, func(index): wave_size = index; save_settings())
-	_credit_section("Free for all with bots", "Fight other doodlers in the arena. Bots fight you and each other. First to 20 kills, or the highest score after 10 minutes. Respawns are automatic. Bot difficulty is a port addition, not part of the original game.")
-	_bot_count_selector()
+	var survival = _button("START SURVIVAL", func(): match_mode = "survival"; start_game(1), "StartButton")
+	survival.add_theme_font_size_override("font_size", 40)
+	survival.custom_minimum_size.y = 76
+	var bots_start = menu_items.get_child_count()
+	_credit_section("Free for all with bots", "Fight bots that fight each other. Reach 20 kills or lead after 10 minutes. Respawn after every death. Port addition · not part of the original game.")
 	_choices(["Easy", "Normal", "Hard", "Insane"], bot_difficulty, func(index): bot_difficulty = index)
-	_button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "RedButton")
-	_button("BACK", show_main_menu, "AltButton")
+	_bot_count_selector()
+	var bots = _button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "StartButton")
+	bots.add_theme_font_size_override("font_size", 40)
+	bots.custom_minimum_size.y = 76
+	var content = menu_items.get_children()
+	var cards = HBoxContainer.new()
+	cards.add_theme_constant_override("separation", 24)
+	menu_items.add_child(cards)
+	_offline_card(cards, content.slice(survival_start, bots_start))
+	_offline_card(cards, content.slice(bots_start))
+	var back = _button("BACK", show_main_menu, "RedOutlineButton")
+	back.custom_minimum_size.x = 240
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+func _offline_card(cards: HBoxContainer, content: Array[Node]) -> void:
+	var card = PanelContainer.new()
+	card.add_theme_stylebox_override("panel", DoodlePen.box(Color(0.98, 0.972, 0.933, 0.95), DoodlePen.INK, 3.0, -0.35, Vector2(24, 20)))
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cards.add_child(card)
+	var items = VBoxContainer.new()
+	items.add_theme_constant_override("separation", 12)
+	card.add_child(items)
+	for child in content:
+		# Align the start buttons at the bottom of both cards.
+		if child == content.back():
+			var spacer = Control.new()
+			spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			items.add_child(spacer)
+		child.reparent(items)
 
 func _bot_count_selector() -> void:
 	var row = HBoxContainer.new()
@@ -1964,10 +2003,11 @@ func _bot_count_selector() -> void:
 	menu_items.add_child(warning)
 	var update_count = func():
 		warning.visible = bot_count >= 20
-		warning.text = "You're crazy! This many bots may make the game unplayable. Play at your own risk!" if bot_count >= 30 else "20+ bots may reduce performance, especially on mobile devices."
+		warning.text = "You're crazy! With 30 bots, the game might barely run!" if bot_count >= 30 else "20+ bots may reduce performance, especially on mobile devices."
 		count.text = "1 bot" if bot_count == 1 else "%d bots" % bot_count
 		decrease.disabled = bot_count <= 1
 		increase.disabled = bot_count >= DoodleBotMatch.MAX_BOTS
+		_fit_menu.call_deferred()
 	decrease.pressed.connect(func(): bot_count = maxi(1, bot_count - 1); update_count.call())
 	increase.pressed.connect(func(): bot_count = mini(DoodleBotMatch.MAX_BOTS, bot_count + 1); update_count.call())
 	update_count.call()

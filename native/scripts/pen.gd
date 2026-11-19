@@ -136,10 +136,11 @@ static func theme(font: Font) -> Theme:
 	theme.set_color("default_color", "RichTextLabel", INK)
 	# Filled ink buttons (.bigbtn), outlined buttons (.alt / .mapbtn), the red second button and the big start button.
 	_button_styles(theme, "Button", INK, PAPER, -0.6)
-	for variation in ["AltButton", "BlackButton", "RedButton", "GreenButton", "StartButton"]:
+	for variation in ["AltButton", "BlackButton", "RedButton", "RedOutlineButton", "GreenButton", "StartButton"]:
 		theme.set_type_variation(variation, "Button")
 	_button_styles(theme, "AltButton", CLEAR, INK, 0.5)
 	_button_styles(theme, "RedButton", RED, PAPER, 0.7)
+	_button_styles(theme, "RedOutlineButton", CLEAR, RED, 0.5)
 	_button_styles(theme, "GreenButton", GREEN, PAPER, -0.5)
 	_button_styles(theme, "BlackButton", CLEAR, BLACK, 0.5)
 	_button_styles(theme, "StartButton", INK, PAPER, -1.0)
