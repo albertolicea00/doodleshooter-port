@@ -514,7 +514,6 @@ func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
 func show_settings() -> void:
 	_clear_menu("Settings", "Choose how you want to play")
 	_button("TOUCH & AIMING", show_touch_settings)
-	_button("CUSTOMIZE TOUCH LAYOUT", show_layout_editor)
 	_credit_section("Graphics detail", "")
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
 	_credit_section("Shading", "")
@@ -543,10 +542,21 @@ func show_controls() -> void:
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
-	_controls_column(menu_items, "TOUCH", [
-		"{Left thumb} move and sprint; drag up to the runner marker to keep running. {Drag elsewhere} look, even while firing.",
-		"{SLIDE} becomes {DASH} in the air. {Weapon bar} tap to switch, tap again or use reload. Customize in Settings under {Touch & aiming}."
+	var touch_card = _controls_column(menu_items, "TOUCH", [
+		"{Left thumb} move and sprint · drag up to runner marker to lock   {Drag elsewhere} look, even while firing",
+		"{SLIDE} becomes {DASH} in air   {Weapon bar} tap to switch / reload   Customize in Settings → {Touch & aiming}"
 	])
+	var touch_header = HBoxContainer.new()
+	touch_header.add_theme_constant_override("separation", 16)
+	var touch_heading = touch_card.get_child(0) as Label
+	touch_heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	touch_heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	touch_card.add_child(touch_header)
+	touch_card.move_child(touch_header, 0)
+	touch_heading.reparent(touch_header)
+	var customize_touch = _button("CUSTOMIZE LAYOUT", show_layout_editor)
+	customize_touch.custom_minimum_size = Vector2(220, 42)
+	customize_touch.reparent(touch_header)
 	var cards = HBoxContainer.new()
 	cards.add_theme_constant_override("separation", 24)
 	menu_items.add_child(cards)
@@ -720,7 +730,7 @@ func close_layout_editor() -> void:
 	preferences.set_value("touch", "layout", touch.custom)
 	preferences.set_value("touch", "opacity", touch.opacity)
 	preferences.save(save_path)
-	show_settings()
+	show_controls()
 
 func show_credits() -> void:
 	_clear_menu("Credits", "doodleshooter-port · unofficial native adaptation")
