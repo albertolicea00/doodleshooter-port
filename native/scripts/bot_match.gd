@@ -2,21 +2,27 @@ class_name DoodleBotMatch
 extends Node
 
 const MAX_BOTS = 30
+const MIN_MINUTES = 5
+const MAX_MINUTES = 30
+const KILLS_PER_MINUTE = 2
 
 var game: Node3D
 var active = false
 var difficulty = 1
 var remaining = 600.0
+var kill_limit = 20
 var scores: Dictionary = {}
 var bots: Array[DoodleArenaBot] = []
 var player_respawn = 0.0
 var player_shield = 2.0
 
-func begin(count: int, skill: int) -> void:
+func begin(count: int, skill: int, minutes: int = 10) -> void:
 	stop()
 	active = true
 	difficulty = clampi(skill, 0, 3)
-	remaining = 600
+	var duration = clampi(minutes, MIN_MINUTES, MAX_MINUTES)
+	remaining = duration * 60.0
+	kill_limit = duration * KILLS_PER_MINUTE
 	scores["player"] = {"name": game.player_name, "kills": 0, "deaths": 0}
 	player_shield = 2
 	for i in clampi(count, 1, MAX_BOTS):
@@ -97,7 +103,7 @@ func damage(id: String, amount: float, attacker: String) -> void:
 	scores[id].deaths += 1
 	if attacker != id:
 		scores[attacker].kills += 1
-	if scores[attacker].kills >= 20:
+	if scores[attacker].kills >= kill_limit:
 		finish()
 
 func blast(at: Vector3) -> void:
@@ -122,7 +128,7 @@ func update(delta: float) -> void:
 		if player_respawn <= 0:
 			game.reset_arena_player(randi_range(0, 15))
 			player_shield = 2
-	game.hud.score_text = "Kills %d / 20" % scores.player.kills
+	game.hud.score_text = "Kills %d / %d" % [scores.player.kills, kill_limit]
 	game.hud.combo_text = ""
 	game.hud.boss_name = ""
 	game.hud.info = [["%02d:%02d" % [int(remaining) / 60, int(remaining) % 60], true], ["%d bots · %s" % [bots.size(), ["Easy", "Normal", "Hard", "Insane"][difficulty]], false]]

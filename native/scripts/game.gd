@@ -98,6 +98,7 @@ var last_room_code = ""
 var match_mode = "survival"
 var bot_count = 5
 var bot_difficulty = 1
+var bot_minutes = 10
 var bot_match: DoodleBotMatch
 var lan_server: DoodleLanServer
 var lan_address = ""
@@ -228,6 +229,7 @@ func _setup_ui() -> void:
 	ReferenceAssets.set_style(float(shading))
 	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 3)
 	wave_size = clampi(int(preferences.get_value("survival", "wave_size", 0)), 0, 2)
+	bot_minutes = clampi(int(preferences.get_value("bots", "minutes", 10)), DoodleBotMatch.MIN_MINUTES, DoodleBotMatch.MAX_MINUTES)
 	hurt_overlay = ColorRect.new()
 	hurt_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -671,7 +673,7 @@ func start_game(first_wave: int) -> void:
 				level.hit_prop(level.breakables[int(id)].body, 9999, false)
 		pending_broken.clear()
 	elif match_mode == "bots":
-		bot_match.begin(bot_count, bot_difficulty)
+		bot_match.begin(bot_count, bot_difficulty, bot_minutes)
 	else:
 		start_wave(first_wave)
 
@@ -728,7 +730,7 @@ func pause_menu() -> void:
 	playing = false
 	var summary = "Wave %d · %d points" % [wave, score]
 	if match_mode == "bots":
-		summary = "Offline free for all · %d / 20 kills" % bot_match.scores.player.kills
+		summary = "Offline free for all · %d / %d kills" % [bot_match.scores.player.kills, bot_match.kill_limit]
 	elif network.in_match:
 		summary = "Free for all · the match continues while this menu is open"
 	_clear_menu("Paused", summary)
@@ -1490,7 +1492,9 @@ func run_smoke() -> void:
 	assert(bot_match.bots.size() == 30 and bot_match.scores.size() == 31, "Offline matches must support 30 bots plus the player")
 	bot_count = 3
 	bot_difficulty = 3
+	bot_minutes = 15
 	await start_game(0)
+	assert(bot_match.kill_limit == 30 and bot_match.remaining == 900, "Fifteen-minute matches must use a 30-kill target and a 900-second clock")
 	assert(bot_match.difficulty == 3, "Bot matches must accept the Insane tier")
 	assert(level.data.boxes.size() == 429 and bot_match.bots.size() == 3, "Offline bots must use the arena without a server")
 	var first = bot_match.bots[0]
@@ -1549,7 +1553,19 @@ func run_smoke() -> void:
 	bot_match.respawn_bot(first)
 	first.invulnerable = 0
 	bot_match.damage(first.peer_id, 999, "player")
-	assert(not bot_match.active and not playing, "Twenty offline kills must end the match")
+	assert(bot_match.active and playing, "Twenty kills must not end a 30-kill match")
+	bot_match.scores.player.kills = bot_match.kill_limit - 1
+	bot_match.respawn_bot(first)
+	first.invulnerable = 0
+	bot_match.damage(first.peer_id, 999, "player")
+	assert(not bot_match.active and not playing, "The selected kill target must end the match")
+	bot_minutes = 5
+	await start_game(0)
+	assert(bot_match.kill_limit == 10 and bot_match.remaining == 300, "Five-minute matches must use a 10-kill target and a 300-second clock")
+	bot_match.remaining = 0.01
+	bot_match.update(0.02)
+	assert(not bot_match.active and not playing, "The match must finish when its selected time limit expires")
+	bot_minutes = 10
 	# Port maps: every enemy spawn must reach the player start on the baked navigation mesh.
 	for key in ["castle", "harbor", "pyramid", "station", "forest", "school", "military"]:
 		show_main_menu()
@@ -1624,6 +1640,7 @@ func save_settings() -> void:
 	preferences.set_value("video", "shading", shading)
 	preferences.set_value("survival", "difficulty", difficulty)
 	preferences.set_value("survival", "wave_size", wave_size)
+	preferences.set_value("bots", "minutes", bot_minutes)
 	preferences.save(save_path)
 
 func burst(at: Vector3, ink: int, count: int) -> void:
@@ -1945,8 +1962,9 @@ func show_offline_menu() -> void:
 	survival.add_theme_font_size_override("font_size", 40)
 	survival.custom_minimum_size.y = 76
 	var bots_start = menu_items.get_child_count()
-	_credit_section("Free for all with bots", "Fight bots that fight each other. Reach 20 kills or lead after 10 minutes. Respawn after every death. Port addition · not part of the original game.")
+	_credit_section("Free for all with bots", "Respawn and fight everyone. Choose the time limit below; the kill target scales with it. Port addition · not part of the original game.")
 	_choices(["Easy", "Normal", "Hard", "Insane"], bot_difficulty, func(index): bot_difficulty = index)
+	_bot_duration_selector()
 	_bot_count_selector()
 	var bots = _button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "StartButton")
 	bots.add_theme_font_size_override("font_size", 40)
@@ -1963,11 +1981,11 @@ func show_offline_menu() -> void:
 
 func _offline_card(cards: HBoxContainer, content: Array[Node]) -> void:
 	var card = PanelContainer.new()
-	card.add_theme_stylebox_override("panel", DoodlePen.box(Color(0.98, 0.972, 0.933, 0.95), DoodlePen.INK, 3.0, -0.35, Vector2(24, 20)))
+	card.add_theme_stylebox_override("panel", DoodlePen.box(Color(0.98, 0.972, 0.933, 0.95), DoodlePen.INK, 3.0, -0.35, Vector2(24, 16)))
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cards.add_child(card)
 	var items = VBoxContainer.new()
-	items.add_theme_constant_override("separation", 12)
+	items.add_theme_constant_override("separation", 8)
 	card.add_child(items)
 	for child in content:
 		# Align the start buttons at the bottom of both cards.
@@ -1976,6 +1994,32 @@ func _offline_card(cards: HBoxContainer, content: Array[Node]) -> void:
 			spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			items.add_child(spacer)
 		child.reparent(items)
+
+func _bot_duration_selector() -> void:
+	var row = HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 10)
+	menu_items.add_child(row)
+	var duration = Label.new()
+	duration.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	duration.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	duration.custom_minimum_size.x = 220
+	var decrease = _button("−", func(): pass, "AltButton")
+	decrease.tooltip_text = "Shorter match"
+	decrease.custom_minimum_size.x = 64
+	decrease.reparent(row)
+	row.add_child(duration)
+	var increase = _button("+", func(): pass, "AltButton")
+	increase.tooltip_text = "Longer match"
+	increase.custom_minimum_size.x = 64
+	increase.reparent(row)
+	var update_duration = func():
+		duration.text = "%d min · %d kills" % [bot_minutes, bot_minutes * DoodleBotMatch.KILLS_PER_MINUTE]
+		decrease.disabled = bot_minutes <= DoodleBotMatch.MIN_MINUTES
+		increase.disabled = bot_minutes >= DoodleBotMatch.MAX_MINUTES
+	decrease.pressed.connect(func(): bot_minutes = maxi(DoodleBotMatch.MIN_MINUTES, bot_minutes - 5); update_duration.call(); save_settings())
+	increase.pressed.connect(func(): bot_minutes = mini(DoodleBotMatch.MAX_MINUTES, bot_minutes + 5); update_duration.call(); save_settings())
+	update_duration.call()
 
 func _bot_count_selector() -> void:
 	var row = HBoxContainer.new()
