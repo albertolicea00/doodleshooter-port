@@ -66,6 +66,10 @@ var health_modifier = 1.0
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
 var menu_items: VBoxContainer
+var pulsed_control: Control = null
+var auto_scroll = false
+var auto_scroll_wait = 0.0
+var auto_scroll_pos = 0.0
 var hit_marker = 0.0
 var hurt_flash = 0.0
 var hurt_overlay: ColorRect
@@ -259,17 +263,43 @@ func _setup_ui() -> void:
 	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	menu.position = Vector2(-340, -328)
 	menu.custom_minimum_size = Vector2(680, 0)
-	menu.visibility_changed.connect(func(): menu_backdrop.visible = menu.visible)
+	var menu_hint = RichTextLabel.new()
+	var red_hex = DoodlePen.RED.to_html(false)
+	menu_hint.bbcode_enabled = true
+	menu_hint.fit_content = true
+	menu_hint.scroll_active = false
+	menu_hint.selection_enabled = false
+	menu_hint.focus_mode = Control.FOCUS_NONE
+	menu_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	menu_hint.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	menu_hint.offset_top = 8
+	menu_hint.add_theme_font_size_override("normal_font_size", 18)
+	menu_hint.add_theme_color_override("default_color", Color(DoodlePen.INK, 0.8))
+	menu_hint.text = "[center][color=#%s]A / X[/color] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B / O[/color] Back[/center]" % [red_hex, red_hex]
+	var update_hint = func(_val = 0.0):
+		menu_hint.visible = menu.visible and menu_scroll.scroll_vertical <= 2
+	menu.visibility_changed.connect(func():
+		menu_backdrop.visible = menu.visible
+		update_hint.call())
 	ui.add_child(menu)
+	ui.add_child(menu_hint)
 	menu_items = VBoxContainer.new()
 	menu_items.add_theme_constant_override("separation", 12)
 	menu_scroll = ScrollContainer.new()
 	menu_scroll.custom_minimum_size = Vector2(0, 604)
 	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	menu_scroll.follow_focus = true
 	menu_scroll.scroll_deadzone = 12
+	menu_scroll.get_v_scroll_bar().value_changed.connect(update_hint)
 	menu.add_child(menu_scroll)
+	var menu_pad = MarginContainer.new()
+	menu_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for side in ["margin_left", "margin_right", "margin_bottom"]:
+		menu_pad.add_theme_constant_override(side, 12)
+	menu_pad.add_theme_constant_override("margin_top", 28)
+	menu_scroll.add_child(menu_pad)
 	menu_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	menu_scroll.add_child(menu_items)
+	menu_pad.add_child(menu_items)
 	# Toolbar for the touch layout editor.
 	editor_bar = PanelContainer.new()
 	editor_bar.add_theme_stylebox_override("panel", DoodlePen.box(Color(DoodlePen.PAPER, 0.95), DoodlePen.BLACK, 2.5, 0.0, Vector2(14, 8)))
@@ -331,22 +361,31 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	menu.offset_left = -340
 	menu.offset_right = 340
 	Input.emulate_mouse_from_touch = true
+	auto_scroll = false
+	auto_scroll_wait = 0.0
+	auto_scroll_pos = 0.0
 	menu_scroll.scroll_vertical = 0
 	for child in menu_items.get_children():
 		child.free()
+	var header = VBoxContainer.new()
+	header.add_theme_constant_override("separation", -2)
+	menu_items.add_child(header)
 	var heading = Label.new()
 	heading.text = title
 	heading.add_theme_font_size_override("font_size", 60)
 	heading.add_theme_constant_override("line_spacing", -10)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	menu_items.add_child(heading)
+	heading.rotation_degrees = -1.2
+	heading.resized.connect(func(): heading.pivot_offset = heading.size * 0.5)
+	header.add_child(heading)
 	var sub = Label.new()
 	sub.text = subtitle
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sub.custom_minimum_size.x = 480
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_font_size_override("font_size", 22)
-	menu_items.add_child(sub)
+	sub.visible = subtitle != ""
+	header.add_child(sub)
 	menu.visible = true
 	_fit_menu.call_deferred()
 	hud.visible = false
@@ -359,16 +398,59 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	touch.reset()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-# Short screens shrink the sheet to their content; long ones scroll.
+# Short screens shrink the sheet to their content; long ones scroll to the screen edges.
 func _fit_menu() -> void:
+	_prepare_menu_controls(menu_items)
+	menu_scroll.follow_focus = false
+	var current_focus = get_viewport().gui_get_focus_owner()
+	if current_focus == null or not menu_items.is_ancestor_of(current_focus):
+		var first = _first_focusable(menu_items)
+		if first != null:
+			first.grab_focus()
 	# Wrapped text reports its final height one frame after it is added.
 	for pass_index in 2:
 		var padding = menu.get_theme_stylebox("panel").get_minimum_size().y
-		var height = minf(menu_items.get_combined_minimum_size().y, 656 - padding)
+		var viewport_h = maxf(ui.size.y, 720.0)
+		var max_h = viewport_h - (44.0 if padding > 0.0 else 0.0)
+		var content_h = menu_scroll.get_child(0).get_combined_minimum_size().y
+		var height = minf(content_h, max_h - padding)
 		menu_scroll.custom_minimum_size.y = height
-		menu.offset_top = -(height + padding) * 0.5
-		menu.offset_bottom = (height + padding) * 0.5
+		var top = maxf(36.0 - viewport_h * 0.5, -(height + padding) * 0.5) if padding > 0.0 else -(height + padding) * 0.5
+		menu.offset_top = top
+		menu.offset_bottom = top + height + padding
 		await get_tree().process_frame
+	menu_scroll.scroll_vertical = 0
+	menu_scroll.follow_focus = true
+
+func _prepare_menu_controls(node: Node) -> void:
+	if node is BaseButton:
+		node.mouse_filter = Control.MOUSE_FILTER_PASS
+		if not node.has_meta("focus_blip"):
+			node.set_meta("focus_blip", true)
+			node.focus_entered.connect(func(): _blip_control(node))
+	elif node is LineEdit:
+		node.keep_editing_on_text_submit = false
+	elif node is RichTextLabel:
+		node.selection_enabled = false
+		node.focus_mode = Control.FOCUS_NONE
+	for child in node.get_children():
+		_prepare_menu_controls(child)
+
+func _blip_control(control: Control) -> void:
+	control.pivot_offset = control.size * 0.5
+	control.scale = Vector2(1.035, 1.035)
+	var tween = control.create_tween()
+	tween.tween_property(control, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+func _first_focusable(node: Node) -> Control:
+	if node is Control and not (node is LineEdit) and node.is_visible_in_tree() and node.focus_mode == Control.FOCUS_ALL:
+		if not (node is BaseButton and node.disabled):
+			return node
+	for child in node.get_children():
+		var found = _first_focusable(child)
+		if found != null:
+			return found
+	return null
 
 func _button(text: String, callback: Callable, variation: String = "") -> Button:
 	var button = Button.new()
@@ -441,16 +523,16 @@ func show_main_menu() -> void:
 	playing = false
 	paused = false
 	_clear_menu("DOODLE SHOOTER ", "native port, portable too")
-	var header = VBoxContainer.new()
-	header.add_theme_constant_override("separation", -2)
-	var heading = menu_items.get_child(0)
-	var sub = menu_items.get_child(1)
-	menu_items.add_child(header)
-	menu_items.move_child(header, 0)
+	var header = menu_items.get_child(0)
+	var heading = header.get_child(0)
 	var title_row = HBoxContainer.new()
 	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_row.add_theme_constant_override("separation", 0)
+	title_row.rotation_degrees = -1.2
+	title_row.resized.connect(func(): title_row.pivot_offset = title_row.size * 0.5)
 	header.add_child(title_row)
+	header.move_child(title_row, 0)
+	heading.rotation_degrees = 0.0
 	heading.add_theme_constant_override("outline_size", 3)
 	heading.add_theme_color_override("font_outline_color", DoodlePen.INK)
 	heading.reparent(title_row)
@@ -462,7 +544,6 @@ func show_main_menu() -> void:
 	port_label.add_theme_constant_override("outline_size", 3)
 	port_label.add_theme_color_override("font_outline_color", DoodlePen.RED)
 	title_row.add_child(port_label)
-	sub.reparent(header)
 	var foot = Label.new()
 	foot.text = "v%s · development build" % ProjectSettings.get_setting("application/config/version")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -661,7 +742,6 @@ func apply_quality(level: int) -> void:
 
 func show_controls(return_to: Callable = Callable()) -> void:
 	_clear_menu("Controls", "")
-	menu_items.get_child(1).hide()
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
@@ -772,7 +852,7 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 	var buttons: Array[Button] = []
 	for index in 2:
 		var button = Button.new()
-		button.text = ["PS5 CONTROLLER", "XBOX CONTROLLER"][index]
+		button.text = ["PS CONTROLLER", "XBOX CONTROLLER"][index]
 		button.flat = true
 		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 			button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
@@ -913,7 +993,8 @@ func _credit_section(title: String, body: String) -> RichTextLabel:
 	text.text = body
 	text.fit_content = true
 	text.scroll_active = false
-	text.selection_enabled = true
+	text.selection_enabled = false
+	text.focus_mode = Control.FOCUS_NONE
 	text.custom_minimum_size.x = 480
 	text.mouse_filter = Control.MOUSE_FILTER_PASS
 	text.add_theme_font_size_override("normal_font_size", 20)
@@ -925,6 +1006,9 @@ func show_credit_notices() -> void:
 
 func show_license(title: String, text: String) -> void:
 	_clear_menu(title, "Attribution and license notices")
+	auto_scroll = true
+	auto_scroll_wait = 1.2
+	auto_scroll_pos = 0.0
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var start = menu_items.get_child_count()
 	_credit_section("", text)
@@ -1044,7 +1128,34 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and playing:
 		pause_menu()
 
+func _find_back_button(node: Node) -> Button:
+	if node is Button and node.is_visible_in_tree() and not node.disabled:
+		if node.text in ["BACK", "BACK TO CREDITS", "BACK TO GAME", "RESUME"]:
+			return node
+	for child in node.get_children():
+		var found = _find_back_button(child)
+		if found != null:
+			return found
+	return null
+
 func _input(event: InputEvent) -> void:
+	if menu.visible:
+		if event.is_action_pressed("ui_cancel"):
+			var back_btn = _find_back_button(menu_items)
+			if back_btn != null:
+				back_btn.emit_signal("pressed")
+				get_viewport().set_input_as_handled()
+				return
+		if event.is_action_pressed("ui_down") or event.is_action_pressed("ui_up"):
+			var bar = menu_scroll.get_v_scroll_bar()
+			if bar.max_value > menu_scroll.size.y:
+				var focused = get_viewport().gui_get_focus_owner()
+				var side = SIDE_BOTTOM if event.is_action_pressed("ui_down") else SIDE_TOP
+				if focused == null or focused.find_valid_focus_neighbor(side) == null:
+					auto_scroll = false
+					menu_scroll.scroll_vertical += 120 if side == SIDE_BOTTOM else -120
+					get_viewport().set_input_as_handled()
+					return
 	if event.is_action_pressed("pause") and not starting:
 		if editor_bar.visible:
 			close_layout_editor()
@@ -1087,7 +1198,31 @@ func start_wave(number: int) -> void:
 		spawn_pickup("ammo" if i < 5 else "health", level.pickup_spots.pick_random())
 	sound.play_effect("wave")
 
+func _update_focus_pulse() -> void:
+	var focused = get_viewport().gui_get_focus_owner() if menu.visible else null
+	if focused != null and not menu_items.is_ancestor_of(focused):
+		focused = null
+	if focused != pulsed_control:
+		if is_instance_valid(pulsed_control):
+			pulsed_control.self_modulate.a = 1.0
+		pulsed_control = focused
+	if is_instance_valid(pulsed_control):
+		pulsed_control.self_modulate.a = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
+
 func _process(delta: float) -> void:
+	_update_focus_pulse()
+	if menu.visible and auto_scroll:
+		if auto_scroll_wait > 0.0:
+			auto_scroll_wait -= delta
+			auto_scroll_pos = float(menu_scroll.scroll_vertical)
+		elif absf(float(menu_scroll.scroll_vertical) - auto_scroll_pos) > 4.0:
+			auto_scroll = false
+		else:
+			var max_scroll = maxf(0.0, menu_scroll.get_v_scroll_bar().max_value - menu_scroll.size.y)
+			auto_scroll_pos = minf(max_scroll, auto_scroll_pos + 32.0 * delta)
+			menu_scroll.scroll_vertical = int(auto_scroll_pos)
+			if auto_scroll_pos >= max_scroll:
+				auto_scroll = false
 	if not playing:
 		return
 	update_feel(delta)
@@ -1507,7 +1642,7 @@ func run_smoke() -> void:
 	# Make Godot enable touchscreen scrolling in the headless display server.
 	Input.emulate_touch_from_mouse = true
 	await smoke_tap_button("CREDITS")
-	assert(menu_items.get_child(0).text == "Credits", "A menu tap must open the credits screen")
+	assert(menu_items.get_child(0).get_child(0).text == "Credits", "A menu tap must open the credits screen")
 	var notices = await smoke_menu_button("FULL CREDITS & NOTICES")
 	var swipe_start = notices.get_global_rect().get_center()
 	var previous_scroll = menu_scroll.scroll_vertical
@@ -1515,16 +1650,16 @@ func run_smoke() -> void:
 	smoke_touch_drag(swipe_start, Vector2(0, 100))
 	smoke_touch(swipe_start + Vector2(0, 100), false)
 	await get_tree().process_frame
-	assert(menu_items.get_child(0).text == "Credits", "Swiping over a button must not activate it")
+	assert(menu_items.get_child(0).get_child(0).text == "Credits", "Swiping over a button must not activate it")
 	assert(menu_scroll.scroll_vertical < previous_scroll, "A swipe starting on a button must scroll the menu")
 	await smoke_tap_button("FULL CREDITS & NOTICES", Vector2(0, 4))
-	assert(menu_items.get_child(0).text == "Full credits & notices")
+	assert(menu_items.get_child(0).get_child(0).text == "Full credits & notices")
 	assert(menu_scroll.scroll_vertical == 0, "Each menu screen must open at the top")
 	await smoke_tap_button("BACK TO CREDITS")
 	await smoke_tap_button("BACK")
 	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
 	await smoke_tap_button("START")
-	assert(menu_items.get_child(0).text == "Play offline", "A menu tap must open offline play")
+	assert(menu_items.get_child(0).get_child(0).text == "Play offline", "A menu tap must open offline play")
 	Input.emulate_touch_from_mouse = false
 	var saved_difficulty = difficulty
 	for tuning in [[0, 0.42, 0.5, 4], [1, 0.72, 0.75, 5], [2, 1.2, 1.0, 7], [3, 1.62, 1.3, 9]]:

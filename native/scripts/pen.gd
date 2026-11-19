@@ -122,7 +122,7 @@ static func _button_styles(theme: Theme, type: String, fill: Color, text: Color,
 	theme.set_stylebox("hover", type, box(fill.lightened(0.15) if solid else Color(text, 0.1), fill.lightened(0.15) if solid else text, 2.5, tilt))
 	theme.set_stylebox("pressed", type, box(fill.darkened(0.2) if solid else text, fill.darkened(0.2) if solid else text, 2.5, tilt))
 	theme.set_stylebox("disabled", type, box(Color(fill, fill.a * 0.4), Color(line, 0.4), 2.5, tilt))
-	theme.set_stylebox("focus", type, StyleBoxEmpty.new())
+	theme.set_stylebox("focus", type, box(CLEAR, BLACK, 4.0, tilt))
 	for state in ["font_color", "font_hover_color", "font_focus_color", "font_disabled_color"]:
 		theme.set_color(state, type, text)
 	for state in ["font_pressed_color", "font_hover_pressed_color"]:
@@ -165,7 +165,7 @@ static func theme(font: Font) -> Theme:
 		theme.set_color(state, "PopupMenu", INK)
 	theme.set_constant("v_separation", "PopupMenu", 12)
 	theme.set_stylebox("normal", "LineEdit", box(CLEAR, INK, 2.5, 0.0, Vector2(12, 6)))
-	theme.set_stylebox("focus", "LineEdit", box(Color(INK, 0.06), INK, 3.0, 0.0, Vector2(12, 6)))
+	theme.set_stylebox("focus", "LineEdit", box(Color(INK, 0.06), BLACK, 4.0, 0.0, Vector2(12, 6)))
 	theme.set_stylebox("read_only", "LineEdit", box(CLEAR, Color(INK, 0.4), 2.5, 0.0, Vector2(12, 6)))
 	theme.set_color("font_color", "LineEdit", INK)
 	theme.set_color("font_placeholder_color", "LineEdit", Color(INK, 0.45))
