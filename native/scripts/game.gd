@@ -99,6 +99,7 @@ var match_mode = "survival"
 var bot_count = 5
 var bot_difficulty = 1
 var bot_minutes = 10
+var controls_xbox = false
 var bot_match: DoodleBotMatch
 var lan_server: DoodleLanServer
 var lan_address = ""
@@ -558,7 +559,7 @@ func show_controls() -> void:
 		"{LMB + RMB} charged katana execution in survival",
 		"{1–7 / Wheel} switch weapon: rifle · shotgun · sniper · katana · revolver · SMG · bazooka"
 	])
-	_controls_column(columns, "PS5 CONTROLLER", [
+	var ps5_lines: Array[String] = [
 		"{L stick} move   {R stick} look   {L3} sprint",
 		"{R2} fire / slash   {L2} aim / block",
 		"{×} jump / wall jump / double jump",
@@ -570,11 +571,13 @@ func show_controls() -> void:
 		"{□} reload   {△} next weapon",
 		"{R3} grenade · hold to throw further",
 		"{Options} pause"
-	])
+	]
+	var controller = _controls_column(columns, "", ps5_lines)
+	_controller_picker(controller, ps5_lines)
 	_credit_section("Touch", "Left thumb: move and sprint; drag up to the runner marker to keep running. Drag elsewhere to look, even while firing. SLIDE becomes DASH in the air. Tap a weapon to switch; tap it again or use reload to reload. Customize aiming and button layout in Settings under Touch & aiming.")
 	_button("BACK", pause_menu if paused else show_main_menu, "RedOutlineButton")
 
-func _controls_column(columns: HBoxContainer, title: String, lines: Array[String]) -> void:
+func _controls_column(columns: HBoxContainer, title: String, lines: Array[String]) -> VBoxContainer:
 	var column = VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 8)
@@ -595,12 +598,70 @@ func _controls_column(columns: HBoxContainer, title: String, lines: Array[String
 	legend.mouse_filter = Control.MOUSE_FILTER_PASS
 	legend.add_theme_font_size_override("normal_font_size", 22)
 	legend.add_theme_constant_override("line_separation", 2)
+	legend.text = _controls_text(lines)
+	column.add_child(legend)
+	return column
+
+func _controls_text(lines: Array[String]) -> String:
 	# Braces mark inputs, keeping the actions in the default blue ink.
-	legend.text = "\n".join(lines).replace("{", "[color=#%s]" % DoodlePen.RED.to_html(false)).replace("}", "[/color]")
+	var text = "\n".join(lines).replace("{", "[color=#%s]" % DoodlePen.RED.to_html(false)).replace("}", "[/color]")
 	var symbols = {"□": "square", "△": "triangle", "○": "circle", "×": "cross"}
 	for symbol in symbols:
-		legend.text = legend.text.replace(symbol, "[img=22x22]res://assets/ui/controller-%s.svg[/img]" % symbols[symbol])
-	column.add_child(legend)
+		text = text.replace(symbol, "[img=22x22]res://assets/ui/controller-%s.svg[/img]" % symbols[symbol])
+	return text
+
+func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void:
+	var xbox_lines: Array[String] = []
+	var bindings = {"{L stick}": "{LS}", "{R stick}": "{RS}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3}": "{RS click}", "{Options}": "{Menu}"}
+	for line in ps5_lines:
+		var translated = line
+		for binding in bindings:
+			translated = translated.replace(binding, bindings[binding])
+		xbox_lines.append(translated)
+	var legend = column.get_child(2) as RichTextLabel
+	column.get_child(0).free()
+	column.get_child(0).free()
+	var picker = HBoxContainer.new()
+	picker.add_theme_constant_override("separation", 10)
+	column.add_child(picker)
+	column.move_child(picker, 0)
+	var rule = Control.new()
+	rule.custom_minimum_size.y = 2
+	column.add_child(rule)
+	column.move_child(rule, 1)
+	var group = ButtonGroup.new()
+	var buttons: Array[Button] = []
+	for index in 2:
+		var button = Button.new()
+		button.text = ["PS5 CONTROLLER", "XBOX CONTROLLER"][index]
+		button.flat = true
+		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+			button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+		button.add_theme_color_override("font_color", Color(DoodlePen.INK, 0.55))
+		for state in ["font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+			button.add_theme_color_override(state, DoodlePen.INK)
+		button.add_theme_font_size_override("font_size", 26)
+		button.custom_minimum_size.y = 36
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.mouse_filter = Control.MOUSE_FILTER_PASS
+		button.toggle_mode = true
+		button.button_group = group
+		button.button_pressed = controls_xbox == (index == 1)
+		button.pressed.connect(func():
+			controls_xbox = index == 1
+			legend.text = _controls_text(xbox_lines if controls_xbox else ps5_lines)
+			rule.queue_redraw()
+			_fit_menu.call_deferred())
+		button.focus_entered.connect(rule.queue_redraw)
+		button.focus_exited.connect(rule.queue_redraw)
+		button.resized.connect(rule.queue_redraw)
+		buttons.append(button)
+		picker.add_child(button)
+	rule.draw.connect(func():
+		for button in buttons:
+			if button.button_pressed or button.has_focus():
+				rule.draw_line(Vector2(button.position.x + 10, 1.0), Vector2(button.position.x + button.size.x - 10, 1.0), DoodlePen.INK, 2.0, true))
+	legend.text = _controls_text(xbox_lines if controls_xbox else ps5_lines)
 
 # Every merged or assisted behaviour is optional, as in large mobile shooters.
 func show_touch_settings() -> void:
