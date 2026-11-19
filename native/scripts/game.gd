@@ -214,6 +214,13 @@ func _setup_ui() -> void:
 	touch.custom = preferences.get_value("touch", "layout", {})
 	touch.opacity = preferences.get_value("touch", "opacity", 1.0)
 	touch.options.merge(preferences.get_value("touch", "options", {}), true)
+	# Layout 2 moved every default; old offsets were relative to the old spots,
+	# so they are dropped and the new reload button is switched on.
+	if int(preferences.get_value("touch", "layout_version", 1)) < 2:
+		touch.custom = {}
+		touch.options.reload_button = true
+		preferences.set_value("touch", "layout", {})
+		preferences.set_value("touch", "layout_version", 2)
 	apply_quality(int(preferences.get_value("video", "quality", 1)))
 	show_fps = preferences.get_value("video", "fps", true)
 	screen_effects = preferences.get_value("video", "screen_effects", true)

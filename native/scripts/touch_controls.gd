@@ -29,7 +29,7 @@ var dragging = false
 var grab = Vector2.ZERO
 var toolbar: Control
 # Player preferences, edited under Settings and stored with the layout.
-var options = {"look": 1.0, "aim_look": 0.6, "invert_y": false, "gyro": 0, "gyro_speed": 1.0, "auto_fire": false, "left_fire": false, "reload_button": false, "aim_hold": false, "fixed_stick": false, "stick_sprint": true, "run_lock": true}
+var options = {"look": 1.0, "aim_look": 0.6, "invert_y": false, "gyro": 0, "gyro_speed": 1.0, "auto_fire": false, "left_fire": false, "reload_button": true, "aim_hold": false, "fixed_stick": false, "stick_sprint": true, "run_lock": true}
 var auto_firing = false
 
 func _ready() -> void:
@@ -76,28 +76,30 @@ func _place(control: String, at: Vector2, reach: Vector2) -> Vector2:
 	var tweak = _tweak(control)
 	return (at + Vector2(tweak[0], tweak[1])).clamp(reach, size - reach)
 
-# Right-thumb cluster: fire in the middle, the other actions on an arc around
-# it, everything measured from the safe area instead of the raw screen edge.
-# There is no reload button: an empty magazine reloads by itself and tapping
-# the active weapon chip reloads early.
+# Default layout chosen by the user from a phone play session: fire, aim,
+# jump, slide and reload around the right thumb, slash high on the right edge,
+# the hook under the health on the left, and grenade and smoke at the top
+# centre under the score. Everything is measured from the safe area. An empty
+# magazine still reloads by itself, and tapping the active weapon reloads too.
 func layout() -> void:
 	var inset = DoodlePen.safe_insets(self)
 	var r = size.x - inset[2]
 	var b = size.y - inset[3]
+	var mid = size.x * 0.5
 	buttons = {
-		"fire": [Vector2(r - 165, b - 175), 56.0, "FIRE"],
-		"jump": [Vector2(r - 62, b - 95), 40.0, "JUMP"],
-		"dash": [Vector2(r - 165, b - 62), 36.0, "DASH"],
-		"aim": [Vector2(r - 62, b - 215), 38.0, "AIM"],
-		"grapple": [Vector2(r - 110, b - 320), 38.0, "HOOK"],
-		"slash": [Vector2(r - 285, b - 140), 36.0, "SLASH"],
-		"grenade": [Vector2(r - 270, b - 240), 34.0, "NADE"],
-		"smoke": [Vector2(r - 200, b - 325), 30.0, "SMOKE"],
+		"fire": [Vector2(r - 184, b - 214), 56.0, "FIRE"],
+		"jump": [Vector2(r - 51, b - 163), 40.0, "JUMP"],
+		"dash": [Vector2(r - 147, b - 65), 36.0, "DASH"],
+		"aim": [Vector2(r - 130, b - 344), 38.0, "AIM"],
+		"grapple": [Vector2(inset[0] + 116, inset[1] + 142), 38.0, "HOOK"],
+		"slash": [Vector2(r - 68, b - 500), 36.0, "SLASH"],
+		"grenade": [Vector2(mid - 47, inset[1] + 113), 34.0, "NADE"],
+		"smoke": [Vector2(mid + 47, inset[1] + 113), 34.0, "SMOKE"],
 		"pause": [Vector2(r - 44, inset[1] + 44), 26.0, ""] }
 	if show_score or editing:
 		buttons["scoreboard"] = [Vector2(r - 112, inset[1] + 44), 26.0, "SCORE"]
 	if options.reload_button:
-		buttons["reload"] = [Vector2(r - 360, b - 70), 30.0, "RELOAD"]
+		buttons["reload"] = [Vector2(r - 92, b - 108), 24.0, "RELOAD"]
 	if options.left_fire:
 		buttons["fire_left"] = [Vector2(inset[0] + 60, b - 360), 40.0, "FIRE"]
 	for action in buttons:
@@ -105,10 +107,10 @@ func layout() -> void:
 		button[1] *= _tweak(action)[2]
 		button[0] = _place(action, button[0], Vector2(button[1], button[1]))
 	stick_radius = STICK_RADIUS * _tweak("stick")[2]
-	stick_rest = _place("stick", Vector2(inset[0] + 150, b - 150), Vector2(stick_radius, stick_radius))
-	# One chip per weapon along the bottom centre replaces a blind cycle button.
-	var chip = Vector2(76, 46) * _tweak("weapons")[2]
-	var step = chip.x + 8
+	stick_rest = _place("stick", Vector2(inset[0] + 202, b - 159), Vector2(stick_radius, stick_radius))
+	# One weapon bar along the bottom centre, a drawn weapon per slot.
+	var chip = Vector2(72, 44) * _tweak("weapons")[2]
+	var step = chip.x
 	var first = _place("weapons", Vector2(size.x * 0.5 - step * NAMES.size() * 0.5 + 4, b - 12 - chip.y), Vector2.ZERO)
 	first = first.clamp(Vector2.ZERO, size - Vector2(step * NAMES.size(), chip.y))
 	slots.clear()
@@ -280,6 +282,37 @@ func _strokes(c: Vector2, u: float, tone: Color, width: float, paths: Array) -> 
 			points.append(c + point * u)
 		draw_polyline(points, tone, width, true)
 
+# Side view of each weapon, muzzle to the right, in icon units around the slot centre.
+func _weapon(index: int, c: Vector2, u: float, tone: Color) -> void:
+	var w = maxf(2.0, u * 0.095)
+	var grip = func(x: float, y: float) -> Array: return [Vector2(x, y), Vector2(x - 0.08, y + 0.3), Vector2(x + 0.06, y + 0.3), Vector2(x + 0.12, y)]
+	match index:
+		0:
+			_strokes(c, u, tone, w, [[Vector2(-0.95, -0.15), Vector2(-0.55, -0.1), Vector2(-0.55, 0.15), Vector2(-0.95, 0.25), Vector2(-0.95, -0.15)],
+				[Vector2(-0.55, -0.15), Vector2(0.35, -0.15), Vector2(0.35, 0.05), Vector2(-0.55, 0.05)], [Vector2(0.35, -0.08), Vector2(0.95, -0.08)],
+				[Vector2(0.0, 0.05), Vector2(0.06, 0.4), Vector2(0.21, 0.37), Vector2(0.18, 0.05)], grip.call(-0.35, 0.05), [Vector2(-0.12, -0.15), Vector2(-0.07, -0.28), Vector2(0.1, -0.28), Vector2(0.13, -0.15)]])
+		1:
+			_strokes(c, u, tone, w, [[Vector2(-0.95, -0.1), Vector2(-0.5, -0.08), Vector2(-0.5, 0.12), Vector2(-0.95, 0.28), Vector2(-0.95, -0.1)],
+				[Vector2(-0.5, -0.12), Vector2(0.95, -0.12)], [Vector2(-0.5, 0.0), Vector2(0.95, 0.0)], [Vector2(0.2, 0.0), Vector2(0.6, 0.0), Vector2(0.6, 0.15), Vector2(0.2, 0.15), Vector2(0.2, 0.0)], grip.call(-0.4, 0.05)])
+		2:
+			_strokes(c, u, tone, w, [[Vector2(-0.98, -0.05), Vector2(-0.55, -0.02), Vector2(-0.55, 0.15), Vector2(-0.98, 0.28), Vector2(-0.98, -0.05)],
+				[Vector2(-0.55, -0.05), Vector2(0.1, -0.05), Vector2(0.1, 0.08), Vector2(-0.55, 0.08)], [Vector2(0.1, 0.01), Vector2(1.0, 0.01)],
+				[Vector2(-0.42, -0.34), Vector2(0.12, -0.34), Vector2(0.12, -0.19), Vector2(-0.42, -0.19), Vector2(-0.42, -0.34)], [Vector2(-0.3, -0.19), Vector2(-0.3, -0.05)], [Vector2(0.0, -0.19), Vector2(0.0, -0.05)], grip.call(-0.38, 0.08)])
+		3:
+			_strokes(c, u, tone, w, [[Vector2(-0.95, 0.24), Vector2(-0.5, 0.15)], [Vector2(-0.52, 0.0), Vector2(-0.46, 0.32)],
+				[Vector2(-0.46, 0.12), Vector2(0.2, 0.0), Vector2(0.7, -0.13), Vector2(0.98, -0.27), Vector2(0.7, -0.06), Vector2(0.2, 0.07), Vector2(-0.46, 0.19)]])
+		4:
+			draw_arc(c + Vector2(-0.12, -0.04) * u, 0.17 * u, 0, TAU, 12, tone, w, true)
+			draw_arc(c + Vector2(-0.12, 0.2) * u, 0.12 * u, 0, PI, 8, tone, w, true)
+			_strokes(c, u, tone, w, [[Vector2(0.05, -0.17), Vector2(0.75, -0.17), Vector2(0.75, -0.02), Vector2(0.05, -0.02)], [Vector2(-0.3, -0.2), Vector2(-0.05, -0.2)],
+				[Vector2(-0.3, -0.1), Vector2(-0.58, 0.38), Vector2(-0.4, 0.44), Vector2(-0.22, 0.1)], [Vector2(-0.38, -0.2), Vector2(-0.45, -0.3)]])
+		5:
+			_strokes(c, u, tone, w, [[Vector2(-0.5, -0.15), Vector2(0.45, -0.15), Vector2(0.45, 0.05), Vector2(-0.5, 0.05), Vector2(-0.5, -0.15)], [Vector2(0.45, -0.07), Vector2(0.8, -0.07)],
+				[Vector2(0.05, 0.05), Vector2(0.05, 0.48), Vector2(0.2, 0.48), Vector2(0.2, 0.05)], grip.call(-0.3, 0.05), [Vector2(-0.5, -0.1), Vector2(-0.85, -0.05), Vector2(-0.85, 0.15), Vector2(-0.5, 0.05)]])
+		6:
+			_strokes(c, u, tone, w, [[Vector2(-0.95, -0.12), Vector2(0.8, -0.12)], [Vector2(-0.95, 0.12), Vector2(0.8, 0.12)], [Vector2(0.8, -0.12), Vector2(0.98, -0.21), Vector2(0.98, 0.21), Vector2(0.8, 0.12)],
+				[Vector2(-0.95, -0.17), Vector2(-0.95, 0.17)], [Vector2(-0.2, 0.12), Vector2(-0.25, 0.4)], [Vector2(0.15, 0.12), Vector2(0.12, 0.36)], [Vector2(0.0, -0.12), Vector2(0.0, -0.28), Vector2(0.1, -0.28)]])
+
 # Draws the picture for a control's label; false when there is none.
 func _icon(kind: String, c: Vector2, r: float, tone: Color) -> bool:
 	var u = r * 0.52
@@ -356,20 +389,21 @@ func _draw() -> void:
 				draw_line(b[0] + Vector2(side, -10), b[0] + Vector2(side, 10), tone, 4, true)
 			continue
 		# Pen icons in play; the layout editor keeps the words so every control can be told apart.
-		if editing or not _icon(b[2], b[0], b[1], tone):
+		if not _icon(b[2], b[0], b[1], tone):
 			_label(b[0], b[2], int(b[1] * (0.43 if action == "fire" else 0.47)), tone)
+	# The weapon bar is one box; ammunition is already shown top-left, so each slot is just the weapon.
 	var live = is_instance_valid(player)
+	var bar = Rect2(slots[0].position, slots[-1].end - slots[0].position)
+	DoodlePen.sketch_box(self, bar, Color(DoodlePen.PAPER, 0.55), mark if editing and selected == "weapons" else ink, 2.5, 0.4)
 	for i in slots.size():
 		var active = live and i == player.weapon_index
 		var empty = live and i != 3 and player.magazines[i] + player.reserves[i] <= 0
-		var tone = DoodlePen.PAPER if active else Color(DoodlePen.RED if empty else DoodlePen.INK, 0.75)
-		DoodlePen.sketch_box(self, slots[i], DoodlePen.INK if active else Color(DoodlePen.PAPER, 0.55), mark if editing and selected == "weapons" else ink, 2.5, 0.6 if i % 2 == 0 else -0.6)
-		var ammo = "–"
-		if live:
-			ammo = "%d%%" % int(player.katana_charge * 100) if i == 3 else "%d / %d" % [player.magazines[i], player.reserves[i]]
-		var scale = slots[i].size.y / 46.0
-		_label(slots[i].position + slots[i].size * Vector2(0.5, 0.3), NAMES[i], int(18 * scale), tone)
-		_label(slots[i].position + slots[i].size * Vector2(0.5, 0.73), "reload" if active and player.magazines[i] <= 0 and i != 3 else ammo, int(14 * scale), tone)
+		if active:
+			DoodlePen.sketch_box(self, slots[i].grow(-4), DoodlePen.INK, DoodlePen.INK, 2.0, 0.5 if i % 2 == 0 else -0.5)
+		elif i > 0 and not (live and i - 1 == player.weapon_index):
+			draw_line(slots[i].position + Vector2(0, 9), slots[i].position + Vector2(0, slots[i].size.y - 9), Color(DoodlePen.INK, 0.3), 1.5, true)
+		var tone = DoodlePen.PAPER if active else Color(DoodlePen.RED if empty else DoodlePen.INK, 0.8)
+		_weapon(i, slots[i].get_center(), slots[i].size.x * 0.4, tone)
 	var center = origin if move_finger >= 0 else stick_rest
 	var knob = thumb if move_finger >= 0 else center + move_vector * stick_radius
 	var stick_tone = mark if (editing and selected == "stick") or sprinting else ink

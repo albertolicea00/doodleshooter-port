@@ -92,13 +92,25 @@ func _draw() -> void:
 		var slant = -1.5 if i % 5 == 4 else 0.7
 		draw_line(Vector2(x + 2 + slant, y), Vector2(x + 2 - slant, y + 20), Color(DoodlePen.INK, 0.9), 4, true)
 		x += 17 if i % 5 == 4 else 7
-	# Score and combo: top-left on desktop, under the ammunition on touch.
-	y = y + 26 if touch_mode else top + 30
-	write(Vector2(left, y), score_text, 26 if touch_mode else 30)
-	var score_width = font.get_string_size(score_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26 if touch_mode else 30).x
-	if game.show_fps:
-		write(Vector2(left + score_width + 24, y), "%d fps" % Engine.get_frames_per_second(), 20, Color(DoodlePen.INK, 0.7))
-	write(Vector2(left, y + 28), combo_text, 24 if touch_mode else 26, DoodlePen.RED)
+	# Score and combo: top-left on desktop; on touch, centred at the top above the grenade buttons.
+	var fps = "%d fps" % Engine.get_frames_per_second() if game.show_fps else ""
+	if touch_mode:
+		var line = score_text + ("   " + combo_text if combo_text != "" else "")
+		var line_width = font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+		var fps_width = font.get_string_size(fps, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x + 16 if fps != "" else 0.0
+		var x0 = size.x * 0.5 - (line_width + fps_width) * 0.5
+		write(Vector2(x0, inset[1] + 44), score_text, 26)
+		if combo_text != "":
+			write(Vector2(x0 + font.get_string_size(score_text + "   ", HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x, inset[1] + 44), combo_text, 26, DoodlePen.RED)
+		if fps != "":
+			write(Vector2(x0 + line_width + 16, inset[1] + 44), fps, 20, Color(DoodlePen.INK, 0.7))
+	else:
+		y = top + 30
+		write(Vector2(left, y), score_text, 30)
+		var score_width = font.get_string_size(score_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 30).x
+		if fps != "":
+			write(Vector2(left + score_width + 24, y), fps, 20, Color(DoodlePen.INK, 0.7))
+		write(Vector2(left, y + 28), combo_text, 26, DoodlePen.RED)
 	# Wave, modifier, remaining enemies or match clock: top-right.
 	y = top + 30
 	for i in info.size():
@@ -112,8 +124,10 @@ func _draw() -> void:
 		_draw_focus(player, maxf(size.x * 0.045, inset[0] + 24))
 	if boss_name != "":
 		var boss_width = font.get_string_size(boss_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
-		write(Vector2(size.x * 0.5 - boss_width * 0.5, size.y * 0.06 + 24), boss_name, 26)
-		bar(Rect2(size.x * 0.5 - 210, size.y * 0.06 + 32, 420, 20), boss_fraction, DoodlePen.RED, 7.0)
+		# On touch the top centre holds the score and grenade buttons, so the boss bar sits below them.
+		var boss_y = inset[1] + 176 if touch_mode else size.y * 0.06 + 24
+		write(Vector2(size.x * 0.5 - boss_width * 0.5, boss_y), boss_name, 26)
+		bar(Rect2(size.x * 0.5 - 210, boss_y + 8, 420, 20), boss_fraction, DoodlePen.RED, 7.0)
 	_draw_crosshair(player, size * 0.5)
 	for i in popups.size():
 		var entry: Dictionary = popups[i]
