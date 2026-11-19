@@ -2098,6 +2098,7 @@ func show_lobby() -> void:
 		_button("START MATCH", func(): network.send_packet({"type": "start"}), "StartButton")
 	_button("LEAVE LOBBY", lobby_return if lobby_return.is_valid() else show_main_menu, "RedOutlineButton")
 	_card_wrap(start, split)
+	_back_button(lobby_return if lobby_return.is_valid() else show_main_menu)
 
 func _network_packet(packet: Dictionary) -> void:
 	match packet.get("type", ""):
