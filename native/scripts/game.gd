@@ -514,20 +514,20 @@ func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
 	menu_items.add_child(grid)
 	_button("BACK", back, "AltButton")
 
-func _card_wrap(start: int, split: int = -1) -> void:
+func _card_wrap(start: int, split: int = -1, align_bottom: bool = false) -> void:
 	if split >= 0:
 		var content = menu_items.get_children()
 		var cards = HBoxContainer.new()
 		cards.add_theme_constant_override("separation", 24)
 		menu_items.add_child(cards)
 		for slice in [content.slice(start, split), content.slice(split)]:
-			var card = _make_card(slice)
+			var card = _make_card(slice, align_bottom)
 			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			cards.add_child(card)
 		return
-	menu_items.add_child(_make_card(menu_items.get_children().slice(start)))
+	menu_items.add_child(_make_card(menu_items.get_children().slice(start), align_bottom))
 
-func _make_card(content: Array[Node]) -> PanelContainer:
+func _make_card(content: Array[Node], align_bottom: bool = false) -> PanelContainer:
 	var card = PanelContainer.new()
 	card.mouse_filter = Control.MOUSE_FILTER_PASS
 	card.add_theme_stylebox_override("panel", DoodlePen.box(Color(0.98, 0.972, 0.933, 0.95), DoodlePen.INK, 3.0, -0.35, Vector2(24, 16)))
@@ -535,6 +535,10 @@ func _make_card(content: Array[Node]) -> PanelContainer:
 	items.add_theme_constant_override("separation", 12)
 	card.add_child(items)
 	for child in content:
+		if align_bottom and child == content.back():
+			var spacer = Control.new()
+			spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			items.add_child(spacer)
 		child.reparent(items)
 	return card
 
@@ -1988,21 +1992,32 @@ func run_capture() -> void:
 
 func show_online_menu() -> void:
 	playing = false
-	_clear_menu("Play online", "Free for all · 10 players · first to 20 kills
-Connect to a native lobby server")
+	_clear_menu("Play online", "Free for all · 10 players · first to 20 kills · Connect to a native lobby server")
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var top_inputs = HBoxContainer.new()
+	top_inputs.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_inputs.add_theme_constant_override("separation", 16)
+	menu_items.add_child(top_inputs)
 	name_input = LineEdit.new()
 	name_input.placeholder_text = "Your name"
 	name_input.text = player_name
-	name_input.custom_minimum_size.y = 48
-	menu_items.add_child(name_input)
+	name_input.custom_minimum_size = Vector2(280, 48)
+	top_inputs.add_child(name_input)
 	server_input = LineEdit.new()
 	server_input.placeholder_text = "wss://your-lobby-server"
 	server_input.text = server_url
-	server_input.custom_minimum_size.y = 48
-	menu_items.add_child(server_input)
-	_button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}), "StartButton")
+	server_input.custom_minimum_size = Vector2(420, 48)
+	top_inputs.add_child(server_input)
+	var start = menu_items.get_child_count()
+	_credit_section("Create a lobby", "Open a new room on the lobby server and share its code with friends, or list it publicly.")
 	_button("CREATE PUBLIC LOBBY", func(): connect_online({"type": "host", "public": true, "map": map_key}))
 	_button("CREATE PRIVATE LOBBY", func(): connect_online({"type": "host", "public": false, "map": map_key}), "AltButton")
+	var split = menu_items.get_child_count()
+	_credit_section("Join a lobby", "Jump into an open match, enter a 5-character room code, or browse public rooms.")
+	_button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}), "StartButton")
 	code_input = LineEdit.new()
 	code_input.placeholder_text = "Five-character lobby code"
 	code_input.max_length = 5
@@ -2010,7 +2025,8 @@ Connect to a native lobby server")
 	menu_items.add_child(code_input)
 	_button("JOIN CODE", func(): connect_online({"type": "join", "code": code_input.text.to_upper()}))
 	_button("BROWSE PUBLIC LOBBIES", func(): connect_online({"type": "list"}), "AltButton")
-	_button("BACK", show_main_menu, "AltButton")
+	_card_wrap(start, split)
+	_back_button(show_main_menu)
 
 func connect_online(request: Dictionary) -> void:
 	player_name = name_input.text.strip_edges().left(24)
@@ -2288,21 +2304,30 @@ func _bot_count_selector() -> HBoxContainer:
 	return row
 
 func show_lan_menu() -> void:
-	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed. The hosting device must keep the game open.")
+	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed.")
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
 	name_input = LineEdit.new()
 	name_input.placeholder_text = "Your name"
 	name_input.text = player_name
-	name_input.custom_minimum_size.y = 46
+	name_input.custom_minimum_size = Vector2(360, 46)
+	name_input.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	menu_items.add_child(name_input)
+	var start = menu_items.get_child_count()
+	_credit_section("Host a room", "Create a local match on this device and share the host IP shown in your lobby. Keep this device in the game while others play.")
 	_button("HOST LAN GAME", host_lan_game)
+	var split = menu_items.get_child_count()
+	_credit_section("Join a room", "Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other.")
 	server_input = LineEdit.new()
 	server_input.placeholder_text = "Host IP address, for example 192.168.1.10"
 	server_input.text = lan_address
 	server_input.custom_minimum_size.y = 46
 	menu_items.add_child(server_input)
 	_button("JOIN LAN GAME", join_lan_game)
-	_credit_section("Joining a room", "Ask the host for the IP address shown in their lobby. Enter it above, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other.")
-	_button("BACK", show_main_menu, "AltButton")
+	_card_wrap(start, split, true)
+	_back_button(show_main_menu)
 
 func save_player_name() -> void:
 	player_name = name_input.text.strip_edges().left(24)
