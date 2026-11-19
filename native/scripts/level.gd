@@ -9,9 +9,11 @@ var pickup_spots: Array[Vector3] = []
 var breakables: Dictionary = {}
 var movers: Array[Node3D] = []
 var elapsed = 0.0
+var map_animations: Array[Dictionary] = []
 
 func load_map(key: String, arena: bool = false) -> void:
 	data = ReferenceAssets.read_json(key + ("_arena" if arena else ""))
+	ReferenceAssets.set_map_style(data.get("style", {}))
 	start = ReferenceAssets.vector(data.player_start)
 	for p in data.spawns:
 		spawns.append(ReferenceAssets.vector(p))
@@ -62,10 +64,61 @@ func load_map(key: String, arena: bool = false) -> void:
 		body.add_child(shape)
 		mover.add_child(body)
 
+	for target in data.get("grapple_targets", []):
+		var mover = geometry.get_child(int(target.node))
+		var body = AnimatableBody3D.new()
+		body.collision_layer = 16
+		body.collision_mask = 0
+		body.sync_to_physics = false
+		var shape = CollisionShape3D.new()
+		var sphere = SphereShape3D.new()
+		sphere.radius = float(target.radius)
+		shape.shape = sphere
+		body.add_child(shape)
+		mover.add_child(body)
+	for animation in data.get("animations", []):
+		var entry: Dictionary = animation.duplicate()
+		entry.visual = geometry.get_child(int(entry.node))
+		if entry.has("rope"):
+			entry.rope_visual = geometry.get_child(int(entry.rope))
+		map_animations.append(entry)
+	animate_at(0.0)
+
+# Parameters and equations come from the deployed original Jungle builder.
+func animate_at(time: float) -> void:
+	for animation in map_animations:
+		var visual: Node3D = animation.visual
+		match animation.type:
+			"vine":
+				var anchor = ReferenceAssets.vector(animation.anchor)
+				var angle = 0.45 * sin(time * 1.1 + float(animation.phase))
+				var reach = sin(angle) * float(animation.length)
+				visual.position = anchor + Vector3(reach * cos(float(animation.yaw)), -cos(angle) * float(animation.length), reach * sin(float(animation.yaw)))
+				visual.rotation.y = time * 0.6
+				var rope: Node3D = animation.rope_visual
+				var toward = visual.position - anchor
+				rope.position = (anchor + visual.position) * 0.5
+				rope.quaternion = Quaternion(Vector3.UP, toward.normalized())
+				rope.scale = Vector3(0.07, toward.length(), 0.07)
+			"bird":
+				var angle = float(animation.direction) * time * float(animation.speed) + float(animation.phase)
+				var next = angle + float(animation.direction) * 0.05
+				var radius = float(animation.radius)
+				var height = float(animation.height)
+				visual.position = Vector3(cos(angle) * radius, height + sin(angle * 1.7) * 2.5, sin(angle) * radius * 0.8)
+				visual.look_at(Vector3(cos(next) * radius, height + sin(next * 1.7) * 2.5, sin(next) * radius * 0.8), Vector3.UP, true)
+				var flap = sin(time * 7 + float(animation.phase)) * 0.55
+				visual.get_child(3).rotation.z = flap
+				visual.get_child(4).rotation.z = -flap
+			"flame":
+				visual.scale = Vector3(1 + sin(time * 9 + float(animation.x)) * 0.12, 1 + sin(time * 13 + float(animation.z)) * 0.25, 1 + cos(time * 11) * 0.12)
+				visual.rotation.y = time * 2
+
 func _physics_process(delta: float) -> void:
 	if not get_parent().get_parent().playing:
 		return
 	elapsed += delta
+	animate_at(elapsed)
 	for i in movers.size():
 		var a = elapsed * (0.11 + i * 0.01) + i * 2.1
 		var radius = 30.0 + i * 8.0

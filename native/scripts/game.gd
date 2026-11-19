@@ -28,9 +28,10 @@ var scoreboard: Label
 var menu_backdrop: ColorRect
 var editor_bar: PanelContainer
 var quality = 1
-# District and Mexico come from the original game; the others are port additions built by tools/make-maps.py.
+# District, Jungle, and Mexico come from the original game; the others are port additions built by tools/make-maps.py.
 const MAPS = [
 	{"key": "district", "name": "Doodle District", "music": "district"},
+	{"key": "jungle", "name": "Doodle Jungle", "music": "district"},
 	{"key": "mexico", "name": "Doodle Mexico", "music": "mexico"},
 	{"key": "castle", "name": "Doodle Castle", "music": "district"},
 	{"key": "harbor", "name": "Doodle Harbor", "music": "mexico"},
@@ -525,7 +526,7 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) ->
 
 # Square cards with a rendered preview of each map.
 func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
-	_clear_menu("Choose a map", "District and Mexico are original · the rest are new in this port")
+	_clear_menu("Choose a map", "District, Jungle and Mexico are original · the rest are new in this port")
 	var grid = GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 12)
@@ -841,7 +842,7 @@ func show_credits() -> void:
 	ref.bbcode_enabled = true
 	ref.text = "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
 	ref.meta_clicked.connect(func(meta): OS.shell_open(str(meta)))
-	_credit_section("Native adaptation", "Shared Android and iOS project built with Godot Engine. Original maps and models are converted for native playback; the original procedural music and effects are rendered from the reference audio generator.")
+	_credit_section("Native adaptation", "Shared Android and iOS project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator.")
 	_credit_section("Engine and font", "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1")
 	_credit_section("Reference dependencies", "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause.")
 	_button("FULL CREDITS & NOTICES", show_credit_notices, "AltButton")
@@ -1955,7 +1956,9 @@ func run_capture() -> void:
 		player.set_physics_process(false)
 		player.rig.visible = false
 		player.camera.fov = 70
-		player.camera.global_transform = Transform3D(Basis(), Vector3(26, 13, 40)).looking_at(Vector3(0, 3, -6))
+		var scenic_from = Vector3(68, 42, 92) if map_key == "jungle" else Vector3(26, 13, 40)
+		var scenic_target = Vector3(0, 12, 0) if map_key == "jungle" else Vector3(0, 3, -6)
+		player.camera.global_transform = Transform3D(Basis(), scenic_from).looking_at(scenic_target)
 		for i in 8:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
@@ -1973,7 +1976,9 @@ func run_capture() -> void:
 		var overview = Image.create(PREVIEW_SIZE * PREVIEW_COLUMNS, PREVIEW_SIZE * ceili(float(PREVIEW_FRAMES) / PREVIEW_COLUMNS), false, Image.FORMAT_RGB8)
 		for shot in PREVIEW_FRAMES:
 			var angle = TAU * shot / PREVIEW_FRAMES + 0.6
-			player.camera.global_transform = Transform3D(Basis(), Vector3(sin(angle) * 60, 40, cos(angle) * 60 - 4)).looking_at(Vector3(0, 2, -4))
+			var radius = 112.0 if map_key == "jungle" else 60.0
+			var height = 76.0 if map_key == "jungle" else 40.0
+			player.camera.global_transform = Transform3D(Basis(), Vector3(sin(angle) * radius, height, cos(angle) * radius - 4)).looking_at(Vector3(0, 2, -4))
 			for i in 4:
 				await get_tree().process_frame
 			await RenderingServer.frame_post_draw

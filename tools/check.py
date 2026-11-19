@@ -18,6 +18,11 @@ for relative, expected in manifest['files_sha256'].items():
     actual = hashlib.sha256((ROOT / 'reference/upstream' / relative).read_bytes()).hexdigest()
     if actual != expected:
         raise SystemExit(f'Reference changed unexpectedly: {relative}')
+for snapshot in (ROOT / 'reference').glob('web-*/manifest.json'):
+    extra = json.loads(snapshot.read_text())
+    for relative, expected in extra['files_sha256'].items():
+        if hashlib.sha256((snapshot.parent / relative).read_bytes()).hexdigest() != expected:
+            raise SystemExit(f'Deployed reference changed unexpectedly: {relative}')
 print('PASS: reference source hashes')
 
 def run(extra, tag):
@@ -35,9 +40,11 @@ def run(extra, tag):
     if tag == 'smoke' and output.count('SMOKE PASS:') != 2:
         print(output)
         raise SystemExit('FAIL: smoke did not reach both completion markers')
+    if tag == 'jungle' and 'JUNGLE PASS:' not in output:
+        raise SystemExit('FAIL: Jungle check did not reach its completion marker')
     if tag == 'lan' and 'LAN PASS:' not in output:
         raise SystemExit('FAIL: native LAN test did not reach its completion marker')
-    print('\n'.join(line for line in output.splitlines() if line.startswith(('SMOKE PASS:', 'LAN PASS:'))) or f'PASS: {tag}')
+    print('\n'.join(line for line in output.splitlines() if line.startswith(('SMOKE PASS:', 'LAN PASS:', 'JUNGLE PASS:'))) or f'PASS: {tag}')
     print(f'Log: {logfile}')
 
 run(['--editor', '--import'], 'import')
@@ -45,6 +52,7 @@ try:
     run(['--', '--smoke'], 'smoke')
 finally:
     (ROOT / 'native/.smoke-progress.cfg').unlink(missing_ok=True)
+run(['--script', str(ROOT / 'tests/jungle.gd')], 'jungle')
 run(['--script', str(ROOT / 'tests/native_lan.gd')], 'lan')
 
 def run_lan_game():

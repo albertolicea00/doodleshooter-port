@@ -9,7 +9,7 @@ import time
 from websockets.asyncio.server import serve
 
 ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # pragma: allowlist secret (lobby code alphabet)
-MAPS = ('district', 'mexico', 'castle', 'harbor', 'pyramid', 'station', 'forest', 'school', 'military')
+MAPS = ('district', 'jungle', 'mexico', 'castle', 'harbor', 'pyramid', 'station', 'forest', 'school', 'military')
 DAMAGE = {'rifle': (19, 1.8), 'shotgun': (16, 1.6), 'sniper': (150, 1.5), 'katana': (55, 1), 'revolver': (48, 1.6), 'smg': (12, 1.6), 'grenade': (62, 1), 'deflect': (90, 1)}
 INTERVAL = {'rifle': 1 / 11, 'shotgun': 0.78, 'sniper': 0.85, 'katana': 0.33, 'revolver': 0.3, 'smg': 1 / 15, 'grenade': 0.7, 'deflect': 0.19}
 

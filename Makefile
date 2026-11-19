@@ -83,13 +83,13 @@ maps:
 	"$(PYTHON)" tools/make-maps.py
 
 map-previews: import
-	for map in district mexico castle harbor pyramid station forest school military; do \
+	for map in district jungle mexico castle harbor pyramid station forest school military; do \
 	  DOODLE_CAPTURE="$(CURDIR)/$(PROJECT)/assets/previews/$$map.png" "$(GODOT_BIN)" --path "$(PROJECT)" --resolution 720x720 -- --capture --preview --map=$$map; \
 	done
 
 screenshots: import
 	mkdir -p docs/screenshots
-	for map in district mexico castle harbor pyramid station forest school military; do \
+	for map in district jungle mexico castle harbor pyramid station forest school military; do \
 	  DOODLE_CAPTURE="$(CURDIR)/docs/screenshots/$$map.png" "$(GODOT_BIN)" --path "$(PROJECT)" --resolution 1280x720 -- --capture --scenic --map=$$map; \
 	  sips -s format jpeg -s formatOptions 82 "docs/screenshots/$$map.png" --out "docs/screenshots/$$map.jpg" >/dev/null; \
 	  rm -f "docs/screenshots/$$map.png"; \
@@ -100,6 +100,7 @@ capture-menus: import
 
 assets-reference:
 	"$(NODE)" --experimental-vm-modules tools/extract-reference.mjs
+	"$(NODE)" --experimental-vm-modules tools/extract-jungle.mjs
 
 audio-deps:
 	"$(NPM)" ci --prefix tools

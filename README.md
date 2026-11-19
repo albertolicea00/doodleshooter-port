@@ -8,13 +8,14 @@ All port UI and project documentation are in English. The original game's attrib
 
 ## Maps
 
-Doodle District and Doodle Mexico come from the original game. The other seven are port additions and are not part of the original. All are shown in the port's coloured-pencil shading; the original hatching is available in Settings.
+Doodle District, Doodle Jungle, and Doodle Mexico come from the original game. Jungle comes from the deployed web version archived separately on November 19, 2026. The other seven are port additions and are not part of the original. All are shown in the port's coloured-pencil shading; the original hatching is available in Settings.
 
 | | | |
 | --- | --- | --- |
 | ![Doodle District](docs/screenshots/district.jpg) Doodle District (original) | ![Doodle Mexico](docs/screenshots/mexico.jpg) Doodle Mexico (original) | ![Doodle Castle](docs/screenshots/castle.jpg) Doodle Castle (port) |
 | ![Doodle Harbor](docs/screenshots/harbor.jpg) Doodle Harbor (port) | ![Doodle Pyramid](docs/screenshots/pyramid.jpg) Doodle Pyramid (port) | ![Doodle Station](docs/screenshots/station.jpg) Doodle Station (port) |
 | ![Doodle Forest](docs/screenshots/forest.jpg) Doodle Forest (port) | ![Doodle School](docs/screenshots/school.jpg) Doodle School (port) | ![Doodle Base](docs/screenshots/military.jpg) Doodle Base (port) |
+| ![Doodle Jungle](docs/screenshots/jungle.jpg) Doodle Jungle (original) | | |
 
 Regenerate them with `make screenshots` (desktop renders, converted with macOS `sips`).
 

@@ -6,6 +6,8 @@ The original concept, game design, maps, characters, weapons, mechanics, and bal
 
 The public code reference used is https://github.com/iifor/doodleshooter, revision `8d8fad9ebeff2564881f427f4365336db98941b7`, retrieved on November 9, 2026. That repository includes a Chinese localization and locally bundled dependencies. It is identified as the **reference source**, without asserting that its owner is the sole original author.
 
+Doodle Jungle is converted from the original game deployed at https://doodleshooter.vercel.app/ on November 19, 2026 (bundle `game.7LCERBLR.js`). That map is absent from the historical repository revision. The separately archived assets and their SHA-256 manifest are in `reference/web-2026-11-19/`; `tools/extract-jungle.mjs` converts its original geometry, spawn points, palette, liana, bird, and flame animations. Jungle is an original-game map, not a port addition. The deployed source is build-time reference only and is not shipped in the native application.
+
 The received snapshot remains unchanged in `reference/upstream/`. Per-file SHA-256 hashes are recorded in `reference/manifest.json`. The converter at `tools/extract-reference.mjs` translates procedural maps and models into Godot geometry data. The native application runs GDScript; neither the website nor JavaScript is part of its mobile runtime. Port UI, extracted display names, and project documentation are in English.
 
 No game-code license file was found in the reference revision. This project does not infer or assign an MIT license or any other license to that code. Attribution and provenance notices are preserved independently.

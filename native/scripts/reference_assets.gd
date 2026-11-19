@@ -4,6 +4,8 @@ extends RefCounted
 # The first six inks are the original's. Yellow, lime, purple and teal are port additions used by the port maps.
 const COLORS = [Color(0.10, 0.19, 0.76), Color(0.86, 0.12, 0.20), Color(0.18, 0.20, 0.26), Color(0.92, 0.55, 0.08), Color(0.12, 0.60, 0.30), Color(0.90, 0.40, 0.66),
 	Color(0.90, 0.70, 0.02), Color(0.42, 0.72, 0.08), Color(0.50, 0.24, 0.74), Color(0.04, 0.58, 0.62)]
+static var map_colors: Array = COLORS.duplicate()
+static var map_paper = Color(0.97, 0.96, 0.91)
 static var materials: Dictionary = {}
 static var models: Dictionary = {}
 static var detail = 1.0
@@ -21,7 +23,9 @@ static func material(ink: int = 0, solid: bool = false, shade: Array = [1.0, 0.0
 	if not materials.has(key):
 		var mat = ShaderMaterial.new()
 		mat.shader = preload("res://shaders/ink.gdshader")
-		mat.set_shader_parameter("ink", COLORS[ink])
+		mat.set_meta("ink_index", ink)
+		mat.set_shader_parameter("ink", map_colors[ink])
+		mat.set_shader_parameter("paper_color", map_paper)
 		mat.set_shader_parameter("solid", solid)
 		mat.set_shader_parameter("shade_scale", float(shade[0]))
 		mat.set_shader_parameter("shade_bias", float(shade[1]))
@@ -68,6 +72,17 @@ static func model(collection: String, key: String) -> Node3D:
 		var data: Dictionary = read_json(collection)[key]
 		models[id] = build(data.model if data.has("model") else data)
 	return models[id].duplicate()
+
+static func set_map_style(settings: Dictionary) -> void:
+	map_colors = COLORS.duplicate()
+	var palette: Array = settings.get("inks", [])
+	for i in mini(palette.size(), map_colors.size()):
+		map_colors[i] = Color(palette[i][0], palette[i][1], palette[i][2])
+	var paper: Array = settings.get("paper", [0.97, 0.96, 0.91])
+	map_paper = Color(paper[0], paper[1], paper[2])
+	for mat in materials.values():
+		mat.set_shader_parameter("ink", map_colors[int(mat.get_meta("ink_index"))])
+		mat.set_shader_parameter("paper_color", map_paper)
 
 static func set_detail(level: float) -> void:
 	detail = level

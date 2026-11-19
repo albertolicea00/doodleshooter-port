@@ -41,6 +41,9 @@ func run() -> void:
 	var guest = client(url, {"type": "join", "code": "LAN"})
 	lobby = await guest.receive("lobby")
 	assert(lobby.players.size() == 2)
+	host.network.send_packet({"type": "map", "map": "jungle"})
+	assert((await guest.receive("lobby")).map == "jungle")
+	assert(server.map_key == "jungle")
 	# Only the hosting player may start the LAN match.
 	guest.network.send_packet({"type": "start"})
 	await create_timer(0.05).timeout

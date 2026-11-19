@@ -44,6 +44,16 @@ class LobbyTests(unittest.IsolatedAsyncioTestCase):
         await self.receive(guest, 'lobby')
         return host, host_id, guest, guest_id, room['code']
 
+    async def test_original_jungle_map_selection(self):
+        host, _ = await self.client()
+        await self.send(host, 'host', public=False, map='jungle')
+        room = await self.receive(host, 'lobby')
+        self.assertEqual(room['map'], 'jungle')
+        await self.send(host, 'map', map='district')
+        self.assertEqual((await self.receive(host, 'lobby'))['map'], 'district')
+        await self.send(host, 'map', map='jungle')
+        self.assertEqual((await self.receive(host, 'lobby'))['map'], 'jungle')
+
     async def test_private_capacity_and_host_migration(self):
         host, host_id = await self.client()
         await self.send(host, 'host', public=False)

@@ -6,6 +6,7 @@ render_mode unshaded, cull_disabled;
 // surface turns away from the light. Lit surfaces such as the floor stay
 // clean paper.
 uniform vec4 ink : source_color = vec4(0.1, 0.19, 0.76, 1.0);
+uniform vec4 paper_color : source_color = vec4(0.97, 0.96, 0.91, 1.0);
 uniform bool solid = false;
 uniform float shade_scale = 1.0;
 uniform float shade_bias = 0.0;
@@ -48,7 +49,7 @@ void vertex() {
     world_normal = normalize(MODEL_NORMAL_MATRIX * NORMAL);
 }
 void fragment() {
-    vec3 paper = vec3(0.97, 0.96, 0.91);
+    vec3 paper = paper_color.rgb;
     vec3 n = normalize(world_normal);
     if (!FRONT_FACING) {
         n = -n;
