@@ -427,6 +427,12 @@ func _close_network() -> void:
 		lan_server = null
 	lan_host_note = ""
 
+func _menu_gap(height: float) -> void:
+	var gap = Control.new()
+	gap.custom_minimum_size.y = height
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	menu_items.add_child(gap)
+
 func show_main_menu() -> void:
 	_close_network()
 	bot_match.stop()
@@ -434,29 +440,61 @@ func show_main_menu() -> void:
 	_clear_remote_players()
 	playing = false
 	paused = false
-	_clear_menu("doodleshooter-port", "A doodle-style survival shooter · native port of Doodle District")
-	_button("PLAY OFFLINE", show_offline_menu, "StartButton")
-	if checkpoint >= 5:
-		_button("CONTINUE · WAVE " + str(checkpoint), func(): start_game(checkpoint))
-	var network_row = HBoxContainer.new()
-	network_row.add_theme_constant_override("separation", 10)
-	menu_items.add_child(network_row)
-	var online = _button("PLAY ONLINE", show_online_menu, "RedButton")
-	online.reparent(network_row)
-	online.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var local = _button("LOCAL NETWORK", show_lan_menu, "AltButton")
-	local.reparent(network_row)
-	local.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_info_row()
-	var exit = _button("EXIT", func(): get_tree().quit(), "RedOutlineButton")
-	exit.custom_minimum_size.x = 240
-	exit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_clear_menu("DOODLE SHOOTER ", "native port, portable too")
+	var header = VBoxContainer.new()
+	header.add_theme_constant_override("separation", -2)
+	var heading = menu_items.get_child(0)
+	var sub = menu_items.get_child(1)
+	menu_items.add_child(header)
+	menu_items.move_child(header, 0)
+	var title_row = HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 0)
+	header.add_child(title_row)
+	heading.add_theme_constant_override("outline_size", 3)
+	heading.add_theme_color_override("font_outline_color", DoodlePen.INK)
+	heading.reparent(title_row)
+	var port_label = Label.new()
+	port_label.text = "port"
+	port_label.add_theme_font_size_override("font_size", 60)
+	port_label.add_theme_constant_override("line_spacing", -10)
+	port_label.add_theme_color_override("font_color", DoodlePen.RED)
+	port_label.add_theme_constant_override("outline_size", 3)
+	port_label.add_theme_color_override("font_outline_color", DoodlePen.RED)
+	title_row.add_child(port_label)
+	sub.reparent(header)
 	var foot = Label.new()
 	foot.text = "v%s · development build" % ProjectSettings.get_setting("application/config/version")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	foot.add_theme_font_size_override("font_size", 18)
 	foot.modulate.a = 0.8
-	menu_items.add_child(foot)
+	header.add_child(foot)
+	_menu_gap(6)
+	var play_offline = _button("START", show_offline_menu, "StartButton")
+	play_offline.custom_minimum_size.x = 420
+	play_offline.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	play_offline.rotation_degrees = -1.0
+	play_offline.resized.connect(func(): play_offline.pivot_offset = play_offline.size * 0.5)
+	var network_row = HBoxContainer.new()
+	network_row.add_theme_constant_override("separation", 10)
+	network_row.custom_minimum_size.x = 460
+	network_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	menu_items.add_child(network_row)
+	var online = _button("PLAY ONLINE", show_online_menu, "RedButton")
+	online.reparent(network_row)
+	online.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var local = _button("PLAY LAN", show_lan_menu, "RedOutlineButton")
+	local.reparent(network_row)
+	local.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_menu_gap(8)
+	for entry in [["CONTROLS", show_controls], ["SETTINGS", show_settings], ["CREDITS", show_credits]]:
+		var info_btn = _button(entry[0], entry[1], "AltButton")
+		info_btn.custom_minimum_size = Vector2(420, 44)
+		info_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_menu_gap(6)
+	var exit = _button("EXIT", func(): get_tree().quit(), "RedOutlineButton")
+	exit.custom_minimum_size.x = 240
+	exit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 func map_info(key: String) -> Dictionary:
 	for info in MAPS:
@@ -1484,8 +1522,8 @@ func run_smoke() -> void:
 	assert(menu_scroll.scroll_vertical == 0, "Each menu screen must open at the top")
 	await smoke_tap_button("BACK TO CREDITS")
 	await smoke_tap_button("BACK")
-	assert(menu_items.get_child(0).text == "doodleshooter-port", "Menu navigation must return to the main menu")
-	await smoke_tap_button("PLAY OFFLINE")
+	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
+	await smoke_tap_button("START")
 	assert(menu_items.get_child(0).text == "Play offline", "A menu tap must open offline play")
 	Input.emulate_touch_from_mouse = false
 	var saved_difficulty = difficulty
