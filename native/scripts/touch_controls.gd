@@ -19,7 +19,7 @@ var sprinting = false
 var run_locked = false
 var stick_rest = Vector2.ZERO
 var stick_radius = STICK_RADIUS
-# Player layout: control name -> [x offset, y offset, scale] from the default.
+# Player layout: control name -> [x offset, y offset, scale, opacity] from the default; opacity is optional.
 var custom: Dictionary = {}
 var defaults: Dictionary = {}
 var opacity = 1.0
@@ -74,6 +74,21 @@ func turn(amount: Vector2) -> void:
 func _tweak(control: String) -> Array:
 	return custom.get(control, [0.0, 0.0, 1.0])
 
+# Per-control opacity set with FAINTER and BOLDER in the editor.
+func _alpha(control: String) -> float:
+	var tweak = _tweak(control)
+	return float(tweak[3]) if tweak.size() > 3 else 1.0
+
+func _set_tweak(control: String, x: float, y: float, scale: float, alpha: float = -1.0) -> void:
+	var entry = [x, y, scale]
+	var keep = _alpha(control) if alpha < 0 else alpha
+	if keep < 0.999:
+		entry.append(keep)
+	custom[control] = entry
+
+static func _faded(color: Color, alpha: float) -> Color:
+	return Color(color, color.a * alpha)
+
 func _place(control: String, at: Vector2, reach: Vector2) -> Vector2:
 	defaults[control] = at
 	var tweak = _tweak(control)
@@ -96,8 +111,8 @@ func layout() -> void:
 		"aim": [Vector2(r - 130, b - 344), 38.0, "AIM"],
 		"grapple": [Vector2(inset[0] + 116, inset[1] + 142), 38.0, "HOOK"],
 		"slash": [Vector2(r - 68, b - 500), 36.0, "SLASH"],
-		"grenade": [Vector2(mid - 47, inset[1] + 113), 34.0, "NADE"],
-		"smoke": [Vector2(mid + 47, inset[1] + 113), 34.0, "SMOKE"],
+		"grenade": [Vector2(mid - 47, inset[1] + 98), 34.0, "NADE"],
+		"smoke": [Vector2(mid + 47, inset[1] + 98), 34.0, "SMOKE"],
 		"pause": [Vector2(r - 44, inset[1] + 44), 26.0, ""] }
 	if show_score or editing:
 		buttons["scoreboard"] = [Vector2(r - 112, inset[1] + 44), 26.0, "SCORE"]
@@ -268,13 +283,13 @@ func _edit(event: InputEvent) -> void:
 		# Absolute placement, so a touch and its emulated mouse event agree.
 		var target: Vector2 = (event.position - grab).clamp(Vector2.ZERO, size)
 		var offset: Vector2 = target - defaults[selected]
-		custom[selected] = [offset.x, offset.y, _tweak(selected)[2]]
+		_set_tweak(selected, offset.x, offset.y, _tweak(selected)[2])
 
 func resize_selected(step: float) -> void:
 	if selected == "":
 		return
 	var tweak = _tweak(selected)
-	custom[selected] = [tweak[0], tweak[1], clampf(tweak[2] + step, 0.6, 1.6)]
+	_set_tweak(selected, tweak[0], tweak[1], clampf(tweak[2] + step, 0.6, 1.6))
 
 # Adds a copy of the selected button next to it, so a player can have, say, two fire buttons.
 func duplicate_selected() -> void:
@@ -288,7 +303,7 @@ func duplicate_selected() -> void:
 	var gap = buttons[selected][1] * 2.3
 	var shift = Vector2(-gap, 0) if buttons[selected][0].x > size.x * 0.5 else Vector2(gap, 0)
 	var offset: Vector2 = buttons[selected][0] + shift - defaults[base]
-	custom[key] = [offset.x, offset.y, _tweak(selected)[2]]
+	_set_tweak(key, offset.x, offset.y, _tweak(selected)[2], _alpha(selected))
 	selected = key
 
 # Only copies can be removed, so every action always keeps at least one button.
@@ -300,8 +315,13 @@ func delete_selected() -> void:
 		custom.erase(selected)
 		selected = ""
 
+# Fades the selected control only; with nothing selected it fades them all.
 func fade(step: float) -> void:
-	opacity = clampf(opacity + step, 0.3, 1.0)
+	if selected == "":
+		opacity = clampf(opacity + step, 0.3, 1.0)
+		return
+	var tweak = _tweak(selected)
+	_set_tweak(selected, tweak[0], tweak[1], tweak[2], clampf(_alpha(selected) + step, 0.15, 1.0))
 
 func restore_defaults() -> void:
 	custom.clear()
@@ -421,8 +441,9 @@ func _draw() -> void:
 		var b: Array = buttons[action]
 		var base = _base(action)
 		var down = held.values().has("fire" if base == "fire_left" else base) or (base == "aim" and aim_locked)
-		var tone = mark if editing and action == selected else ink
-		draw_circle(b[0], b[1], Color(DoodlePen.INK, 0.28) if down else Color(DoodlePen.PAPER, 0.55))
+		var alpha = _alpha(action)
+		var tone = _faded(mark if editing and action == selected else ink, alpha)
+		draw_circle(b[0], b[1], _faded(Color(DoodlePen.INK, 0.28) if down else Color(DoodlePen.PAPER, 0.55), alpha))
 		DoodlePen.sketch_circle(self, b[0], b[1], tone, 3.0 if action == "fire" else 2.5)
 		if action == "pause":
 			for side in [-6, 6]:
@@ -434,19 +455,20 @@ func _draw() -> void:
 	# The weapon bar is one box; ammunition is already shown top-left, so each slot is just the weapon.
 	var live = is_instance_valid(player)
 	var bar = Rect2(slots[0].position, slots[-1].end - slots[0].position)
-	DoodlePen.sketch_box(self, bar, Color(DoodlePen.PAPER, 0.55), mark if editing and selected == "weapons" else ink, 2.5, 0.4)
+	var bar_alpha = _alpha("weapons")
+	DoodlePen.sketch_box(self, bar, _faded(Color(DoodlePen.PAPER, 0.55), bar_alpha), _faded(mark if editing and selected == "weapons" else ink, bar_alpha), 2.5, 0.4)
 	for i in slots.size():
 		var active = live and i == player.weapon_index
 		var empty = live and i != 3 and player.magazines[i] + player.reserves[i] <= 0
 		if active:
-			DoodlePen.sketch_box(self, slots[i].grow(-4), DoodlePen.INK, DoodlePen.INK, 2.0, 0.5 if i % 2 == 0 else -0.5)
+			DoodlePen.sketch_box(self, slots[i].grow(-4), _faded(DoodlePen.INK, bar_alpha), _faded(DoodlePen.INK, bar_alpha), 2.0, 0.5 if i % 2 == 0 else -0.5)
 		elif i > 0 and not (live and i - 1 == player.weapon_index):
-			draw_line(slots[i].position + Vector2(0, 9), slots[i].position + Vector2(0, slots[i].size.y - 9), Color(DoodlePen.INK, 0.3), 1.5, true)
-		var tone = DoodlePen.PAPER if active else Color(DoodlePen.RED if empty else DoodlePen.INK, 0.8)
+			draw_line(slots[i].position + Vector2(0, 9), slots[i].position + Vector2(0, slots[i].size.y - 9), _faded(Color(DoodlePen.INK, 0.3), bar_alpha), 1.5, true)
+		var tone = _faded(DoodlePen.PAPER if active else Color(DoodlePen.RED if empty else DoodlePen.INK, 0.8), bar_alpha)
 		_weapon(i, slots[i].get_center(), slots[i].size.x * 0.4, tone)
 	var center = origin if move_finger >= 0 else stick_rest
 	var knob = thumb if move_finger >= 0 else center + move_vector * stick_radius
-	var stick_tone = mark if (editing and selected == "stick") or sprinting else ink
+	var stick_tone = _faded(mark if (editing and selected == "stick") or sprinting else ink, _alpha("stick"))
 	DoodlePen.sketch_circle(self, center, stick_radius, stick_tone, 2.5, true)
 	draw_circle(knob, stick_radius * 0.38, Color(stick_tone, 0.25))
 	DoodlePen.sketch_circle(self, knob, stick_radius * 0.38, stick_tone, 2.0)

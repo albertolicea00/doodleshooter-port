@@ -6,6 +6,7 @@ const INK = Color(0.10, 0.19, 0.76)
 const RED = Color(0.82, 0.13, 0.19)
 const PAPER = Color(0.965, 0.953, 0.902)
 const HIT = Color(0.91, 0.50, 0.10)
+const GREEN = Color(0.12, 0.56, 0.28)
 const CLEAR = Color(0, 0, 0, 0)
 
 static func wobble(point: Vector2, amount: float) -> Vector2:
@@ -132,10 +133,11 @@ static func theme(font: Font) -> Theme:
 	theme.set_color("default_color", "RichTextLabel", INK)
 	# Filled ink buttons (.bigbtn), outlined buttons (.alt / .mapbtn), the red second button and the big start button.
 	_button_styles(theme, "Button", INK, PAPER, -0.6)
-	for variation in ["AltButton", "RedButton", "StartButton"]:
+	for variation in ["AltButton", "RedButton", "GreenButton", "StartButton"]:
 		theme.set_type_variation(variation, "Button")
 	_button_styles(theme, "AltButton", CLEAR, INK, 0.5)
 	_button_styles(theme, "RedButton", RED, PAPER, 0.7)
+	_button_styles(theme, "GreenButton", GREEN, PAPER, -0.5)
 	_button_styles(theme, "StartButton", INK, PAPER, -1.0)
 	for state in ["normal", "hover", "pressed"]:
 		var start: DoodleSketchBox = theme.get_stylebox(state, "StartButton")

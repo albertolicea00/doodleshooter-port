@@ -279,13 +279,19 @@ func _setup_ui() -> void:
 			editor_bar.position = (editor_bar.position + event.relative).clamp(Vector2.ZERO, ui.size - editor_bar.size))
 	editor_rows.add_child(editor_handle)
 	var editor_hint = Label.new()
-	editor_hint.text = "Drag a control to move it · tap one to resize, copy or delete it"
+	editor_hint.text = "Drag a control to move it · tap one to resize, fade, copy or delete it"
 	editor_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	editor_hint.add_theme_font_size_override("font_size", 20)
 	editor_rows.add_child(editor_hint)
 	var tool_rows = [
-		[["SMALLER", func(): touch.resize_selected(-0.1), "AltButton"], ["BIGGER", func(): touch.resize_selected(0.1), "AltButton"], ["DUPLICATE", func(): touch.duplicate_selected(), "AltButton"], ["DELETE", func(): touch.delete_selected(), "RedButton"]],
-		[["FAINTER", func(): touch.fade(-0.1), "AltButton"], ["BOLDER", func(): touch.fade(0.1), "AltButton"], ["RESET", func(): touch.restore_defaults(), "RedButton"], ["DONE", close_layout_editor, ""]]]
+		[["SMALLER", func(): touch.resize_selected(-0.1), "AltButton"], ["BIGGER", func(): touch.resize_selected(0.1), "AltButton"], ["FAINTER", func(): touch.fade(-0.1), "AltButton"], ["BOLDER", func(): touch.fade(0.1), "AltButton"]],
+		[["DUPLICATE", func(): touch.duplicate_selected(), "AltButton"], ["DELETE", func(): touch.delete_selected(), "RedButton"], ["RESET", func(): touch.restore_defaults(), "RedButton"], ["DONE", close_layout_editor, "GreenButton"]]]
+	# The editor bar's text is drawn in a bolder weight of the handwriting font.
+	var bold = FontVariation.new()
+	bold.base_font = ui.theme.default_font
+	bold.variation_embolden = 0.8
+	editor_handle.add_theme_font_override("font", bold)
+	editor_hint.add_theme_font_override("font", bold)
 	for row in tool_rows:
 		var editor_tools = HBoxContainer.new()
 		editor_tools.add_theme_constant_override("separation", 8)
@@ -296,6 +302,7 @@ func _setup_ui() -> void:
 			button.text = tool[0]
 			button.theme_type_variation = tool[2]
 			button.add_theme_font_size_override("font_size", 20)
+			button.add_theme_font_override("font", bold)
 			button.pressed.connect(tool[1])
 			editor_tools.add_child(button)
 			if tool[0] == "DELETE":
@@ -1303,6 +1310,12 @@ func run_smoke() -> void:
 	touch.delete_selected()
 	touch.layout()
 	assert(not touch.buttons.has("fire#2") and touch.buttons.has("fire"), "Deleting a copy must keep the original")
+	touch.selected = "jump"
+	touch.fade(-0.3)
+	assert(touch._alpha("jump") < 0.8 and touch._alpha("fire") == 1.0 and touch.opacity == 1.0, "Fading must change only the selected control")
+	touch.resize_selected(0.1)
+	assert(touch._alpha("jump") < 0.8, "Resizing must keep a control's opacity")
+	touch.selected = ""
 	touch.custom = {}
 	var fire_finger = InputEventScreenTouch.new()
 	fire_finger.index = 5
