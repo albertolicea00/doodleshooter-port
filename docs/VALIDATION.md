@@ -179,3 +179,19 @@ Regenerated all nine preview atlases using the native renderer: 120 evenly space
 A temporary graphical harness passed checks for all nine 1920×1600 atlases, frame bounds across all ten rows, wrap after 120 steps, and automatic timer progression. Desktop screenshots around the loop boundary (`/private/tmp/doodleshooter-smooth-frame-0.png` and `doodleshooter-smooth-frame-119.png`) were inspected for rendering and consistent layout. These checks do not establish perceived smoothness or performance on physical phones. The denser atlases increase menu texture memory; phone performance remains unverified.
 
 `python3 tools/check.py` passed after the preview update: reference hashes, import, both smoke markers, LAN protocol, and host/guest game integration.
+
+### Keep previews animated during selection (November 19)
+
+Offline selection no longer rebuilds the menu or replaces its preview textures. A ButtonGroup updates the exclusive highlight and title colours in place. Preview regions use a shared uptime-based phase so lobby rebuilds retain the orbit phase too. A temporary graphical harness selected Castle, Station, Base, then District, verifying all nine textures advanced after each selection, the same row survived, exactly one card remained pressed, and bot count/time were retained. It also verified a rebuilt picker starts at the current shared phase. The desktop screenshot `/private/tmp/doodleshooter-selection-animation.png` was inspected for the retained layout/highlight. Physical phone behavior and network-triggered lobby redraw performance remain unverified.
+
+`python3 tools/check.py` passed after this fix: source hashes, import, both smoke markers, LAN protocol, and host/guest LAN integration.
+
+### Preserve the LAN map row during server updates (November 19)
+
+The prior shared-clock fix retained orbit phase but still destroyed/recreated LAN preview controls on every lobby acknowledgment. `show_lobby()` now temporarily reparents the existing LAN host map row while rebuilding the remaining lobby controls, then restores it and synchronizes the authoritative selected map. Textures, materials, buttons, and the timer remain alive. Leaving the lobby still frees the row.
+
+A temporary graphical harness hosted an actual loopback LAN room, selected Castle, Station, Base, and District through the real button/server acknowledgment path, and sent a config update. It verified row/timer/texture identity, advancing regions for all nine maps after every selection, exclusive selection, retention across the config acknowledgment, and row cleanup on leaving. The 1280×720 desktop screenshot `/private/tmp/doodleshooter-lan-animation.png` was inspected for the retained strip and layout. This does not verify phone smoothness or physical Wi-Fi play.
+
+`python3 tools/check.py` passed reference hashes, import, both gameplay smoke markers, and LAN protocol checks, but its two-process game test timed out waiting for the lobby/arena load, followed by null-player errors. The full invocation therefore failed.
+
+An isolated rerun of the unchanged `run_lan_game()` function from `tools/check.py` passed both host and guest completion markers. The earlier full-run timeout remains recorded above.

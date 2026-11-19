@@ -37,3 +37,7 @@ The port-only lobby includes a setup subtitle (with waiting guidance for guests)
 Play offline reuses the LAN host's full-width animated map strip below the subtitle and above the Survival/Bot match setup cards. The selected map applies to either offline mode; this inline picker is port UI, not part of the original game.
 
 The port-only animated map cards use 120 views per orbit at 30 frames per second (four seconds per turn), replacing the original port's ten-view reel. Preview images are stored as 12×10 atlases with 160-pixel cells; this is presentation added by the port, not original game behavior.
+
+Offline map selection updates the existing cards in place, with an exclusive selected highlight. All preview cards share an uptime-based rotation phase, so rebuilding a lobby does not restart their orbit. This remains port-only menu presentation.
+
+LAN host lobby refreshes retain the existing map row, preview textures, and running timer across server acknowledgments and setup/roster updates. The authoritative map selection is applied to the retained cards; leaving the lobby frees the row normally.

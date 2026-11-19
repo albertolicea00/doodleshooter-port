@@ -106,6 +106,7 @@ var lan_minutes = 10
 var controls_xbox = false
 var layout_return: Callable = Callable()
 var lobby_return: Callable = Callable()
+var lobby_map_row: HBoxContainer
 var bot_match: DoodleBotMatch
 var lan_server: DoodleLanServer
 var lan_address = ""
@@ -461,22 +462,28 @@ func map_info(key: String) -> Dictionary:
 			return info
 	return MAPS[0]
 
+func _map_preview_region() -> Rect2:
+	var frame_index = int(Time.get_ticks_msec() * 30 / 1000) % PREVIEW_FRAMES
+	return Rect2(Vector2(frame_index % PREVIEW_COLUMNS, frame_index / PREVIEW_COLUMNS) * PREVIEW_SIZE, Vector2.ONE * PREVIEW_SIZE)
+
 func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) -> void:
 	var frames: Array[AtlasTexture] = []
 	var reel = Timer.new()
 	reel.wait_time = 1.0 / 30.0
 	reel.autostart = true
-	var shown = [0]
+	var selection = ButtonGroup.new()
 	reel.timeout.connect(func():
-		shown[0] = (shown[0] + 1) % PREVIEW_FRAMES
+		var region = _map_preview_region()
 		for frame in frames:
-			frame.region.position = Vector2(shown[0] % PREVIEW_COLUMNS, shown[0] / PREVIEW_COLUMNS) * PREVIEW_SIZE)
+			frame.region = region)
 	container.add_child(reel)
 	for info in MAPS:
 		var chosen: bool = info.key == map_key
 		var card = Button.new()
+		card.set_meta("map_key", info.key)
 		card.theme_type_variation = "AltButton"
 		card.toggle_mode = true
+		card.button_group = selection
 		card.button_pressed = chosen
 		card.custom_minimum_size = Vector2(0, 116) if mini else Vector2(194, 212)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -492,7 +499,7 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) ->
 			var frame = AtlasTexture.new()
 			frame.atlas = load(preview)
 			frame.filter_clip = true
-			frame.region = Rect2(0, 0, PREVIEW_SIZE, PREVIEW_SIZE)
+			frame.region = _map_preview_region()
 			picture.texture = frame
 			frames.append(frame)
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -511,6 +518,7 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) ->
 		label.add_theme_color_override("font_color", DoodlePen.PAPER if chosen else DoodlePen.INK)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		column.add_child(label)
+		card.toggled.connect(func(pressed: bool): label.add_theme_color_override("font_color", DoodlePen.PAPER if pressed else DoodlePen.INK))
 		var key: String = info.key
 		card.pressed.connect(func(): on_pick.call(key), CONNECT_DEFERRED)
 		container.add_child(card)
@@ -2078,18 +2086,28 @@ func show_lobby() -> void:
 	var lobby_hint = "Choose a map, adjust the match settings, and start when everyone is ready."
 	if network.peer_id != network.host_id:
 		lobby_hint = "Review the match settings and players while the host prepares the match."
+	var local_host = network.peer_id == network.host_id and is_instance_valid(lan_server)
+	# Keep the atlas textures and animation timer alive across server lobby updates.
+	if local_host and is_instance_valid(lobby_map_row):
+		lobby_map_row.reparent(self)
 	_clear_menu("Lobby " + network.code, lobby_hint)
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
-	if network.peer_id == network.host_id and is_instance_valid(lan_server):
-		var map_row = HBoxContainer.new()
-		map_row.add_theme_constant_override("separation", 8)
-		menu_items.add_child(map_row)
-		_populate_map_cards(map_row, true, func(key: String):
-			map_key = key
-			network.send_packet({"type": "map", "map": key}))
+	if local_host:
+		if is_instance_valid(lobby_map_row):
+			lobby_map_row.reparent(menu_items)
+			for card in lobby_map_row.get_children():
+				if card is Button:
+					card.button_pressed = card.get_meta("map_key") == map_key
+		else:
+			lobby_map_row = HBoxContainer.new()
+			lobby_map_row.add_theme_constant_override("separation", 8)
+			menu_items.add_child(lobby_map_row)
+			_populate_map_cards(lobby_map_row, true, func(key: String):
+				map_key = key
+				network.send_packet({"type": "map", "map": key}))
 	var start = menu_items.get_child_count()
 	if network.peer_id == network.host_id:
 		var match_rules = _credit_section("Match setup", rules_text)
@@ -2313,8 +2331,7 @@ func show_offline_menu() -> void:
 	map_row.add_theme_constant_override("separation", 8)
 	menu_items.add_child(map_row)
 	_populate_map_cards(map_row, true, func(key: String):
-		map_key = key
-		show_offline_menu())
+		map_key = key)
 	var survival_start = menu_items.get_child_count()
 	_credit_section("Survival · Enemy waves", "Survive growing waves of enemies and bosses. Difficulty and wave-size choices are port additions, not part of the original game.")
 	_choices(["Easy", "Normal", "Hard", "Insane"], difficulty, func(index): difficulty = index; save_settings())
