@@ -22,6 +22,8 @@ var spawn_queue: Array[String] = []
 var spawn_timer = 2.0
 var intermission = 0.0
 var map_key = "district"
+var online_map_key = "district"
+var online_custom_map_key = ""
 var hud: DoodleHud
 var center_text: Label
 var scoreboard: Label
@@ -445,7 +447,6 @@ func show_main_menu() -> void:
 	var local = _button("LOCAL NETWORK", show_lan_menu, "AltButton")
 	local.reparent(network_row)
 	local.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_main_menu), "AltButton")
 	_info_row()
 	var exit = _button("EXIT", func(): get_tree().quit(), "RedOutlineButton")
 	exit.custom_minimum_size.x = 240
@@ -467,7 +468,8 @@ func _map_preview_region() -> Rect2:
 	var frame_index = int(Time.get_ticks_msec() * 30 / 1000) % PREVIEW_FRAMES
 	return Rect2(Vector2(frame_index % PREVIEW_COLUMNS, frame_index / PREVIEW_COLUMNS) * PREVIEW_SIZE, Vector2.ONE * PREVIEW_SIZE)
 
-func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) -> void:
+func _populate_map_cards(container: Container, mini: bool, on_pick: Callable, excluded_key: String = "", selected_key: String = "__map_key__") -> void:
+	var active_key: String = map_key if selected_key == "__map_key__" else selected_key
 	var frames: Array[AtlasTexture] = []
 	var reel = Timer.new()
 	reel.wait_time = 1.0 / 30.0
@@ -479,7 +481,9 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) ->
 			frame.region = region)
 	container.add_child(reel)
 	for info in MAPS:
-		var chosen: bool = info.key == map_key
+		if info.key == excluded_key:
+			continue
+		var chosen: bool = info.key == active_key
 		var card = Button.new()
 		card.set_meta("map_key", info.key)
 		card.theme_type_variation = "AltButton"
@@ -525,19 +529,23 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) ->
 		container.add_child(card)
 
 # Square cards with a rendered preview of each map.
-func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
-	_clear_menu("Choose a map", "District, Jungle and Mexico are original · the rest are new in this port")
+func show_map_menu(back: Callable, pick: Callable = Callable(), excluded_key: String = "", selected_key: String = "__map_key__") -> void:
+	_clear_menu("Choose a custom map" if excluded_key != "" else "Choose a map", "District, Jungle and Mexico are original · the rest are new in this port")
+	if excluded_key != "":
+		menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var grid = GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	_populate_map_cards(grid, false, func(key: String):
-		map_key = key
+		if excluded_key == "":
+			map_key = key
 		if pick.is_valid():
 			pick.call(key)
-		back.call())
+		back.call(), excluded_key, selected_key)
 	menu_items.add_child(grid)
-	_button("BACK", back, "AltButton")
+	if excluded_key == "":
+		_button("BACK", back, "AltButton")
 
 func _card_wrap(start: int, split: int = -1, align_bottom: bool = false) -> void:
 	if split >= 0:
@@ -2024,6 +2032,65 @@ func run_capture() -> void:
 	print("CAPTURE: ", path)
 	get_tree().quit()
 
+# Keep the default online map beside a reusable picker for every other map.
+func _online_map_selector(container: Container) -> void:
+	var row = HBoxContainer.new()
+	row.name = "OnlineMaps"
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 8)
+	container.add_child(row)
+	var caption = Label.new()
+	caption.text = "map"
+	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	caption.add_theme_font_size_override("font_size", 20)
+	row.add_child(caption)
+	var selection = ButtonGroup.new()
+	var custom_title: String = map_info(online_custom_map_key).name.to_upper() if online_custom_map_key != "" else "SELECT CUSTOM MAP"
+	for info in [{"key": "district", "name": "DOODLE DISTRICT", "blurb": "default global map"}, {"key": "custom", "name": custom_title, "blurb": "custom map · tap to change" if online_custom_map_key != "" else "choose from 9 maps"}]:
+		var card = Button.new()
+		card.theme_type_variation = "AltButton"
+		card.set_meta("map_key", info.key)
+		card.toggle_mode = true
+		card.button_group = selection
+		card.button_pressed = (online_map_key == "district") if info.key == "district" else (online_map_key != "district")
+		card.custom_minimum_size = Vector2(194, 56)
+		card.add_theme_stylebox_override("normal", DoodlePen.box(DoodlePen.CLEAR, Color(DoodlePen.INK, 0.55), 1.4, 0.5))
+		row.add_child(card)
+		var text = VBoxContainer.new()
+		text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6)
+		text.alignment = BoxContainer.ALIGNMENT_CENTER
+		text.add_theme_constant_override("separation", 0)
+		text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(text)
+		for entry in [[info.name, 18], [info.blurb, 13]]:
+			var label = Label.new()
+			label.text = entry[0]
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			label.add_theme_font_size_override("font_size", entry[1])
+			label.add_theme_color_override("font_color", DoodlePen.PAPER if card.button_pressed else Color(DoodlePen.INK, 0.65))
+			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			text.add_child(label)
+		card.toggled.connect(func(pressed: bool):
+			for label in text.get_children():
+				label.add_theme_color_override("font_color", DoodlePen.PAPER if pressed else Color(DoodlePen.INK, 0.65)))
+		var key: String = info.key
+		card.pressed.connect(func():
+			if key == "district":
+				online_map_key = "district"
+			else:
+				_show_online_custom_maps(), CONNECT_DEFERRED)
+
+func _show_online_custom_maps() -> void:
+	var draft_name = name_input.text
+	var draft_server = server_input.text
+	var return_to_online = func():
+		show_online_menu()
+		name_input.text = draft_name
+		server_input.text = draft_server
+	show_map_menu(return_to_online, func(key: String):
+		online_custom_map_key = key
+		online_map_key = key, "district", online_custom_map_key)
+
 func show_online_menu() -> void:
 	_close_network()
 	playing = false
@@ -2032,7 +2099,7 @@ func show_online_menu() -> void:
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
-	var quick = _button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}), "StartButton")
+	var quick = _button("QUICK PLAY", func(): connect_online({"type": "quick", "map": online_map_key}), "StartButton")
 	quick.custom_minimum_size.x = 340
 	quick.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var top_inputs = HBoxContainer.new()
@@ -2042,17 +2109,18 @@ func show_online_menu() -> void:
 	name_input = LineEdit.new()
 	name_input.placeholder_text = "Your name"
 	name_input.text = player_name
-	name_input.custom_minimum_size = Vector2(280, 48)
+	name_input.custom_minimum_size = Vector2(240, 48)
 	top_inputs.add_child(name_input)
 	server_input = LineEdit.new()
 	server_input.placeholder_text = "wss://your-lobby-server"
 	server_input.text = server_url
-	server_input.custom_minimum_size = Vector2(420, 48)
+	server_input.custom_minimum_size = Vector2(360, 48)
 	top_inputs.add_child(server_input)
+	_online_map_selector(top_inputs)
 	var start = menu_items.get_child_count()
 	_credit_section("Create a lobby", "Open a new room on the lobby server and share its code with friends, or list it publicly.")
-	_button("CREATE PRIVATE LOBBY", func(): connect_online({"type": "host", "public": false, "map": map_key}), "AltButton")
-	_button("CREATE PUBLIC LOBBY", func(): connect_online({"type": "host", "public": true, "map": map_key}))
+	_button("CREATE PRIVATE LOBBY", func(): connect_online({"type": "host", "public": false, "map": online_map_key}), "AltButton")
+	_button("CREATE PUBLIC LOBBY", func(): connect_online({"type": "host", "public": true, "map": online_map_key}))
 	var split = menu_items.get_child_count()
 	_credit_section("Join a lobby", "Enter a five-character room code from a friend, or browse open public rooms to jump into a match.")
 	var code_row = HBoxContainer.new()
