@@ -39,7 +39,9 @@ func record_step(delta: float, player: Node3D, enemies: Array, bots: Array, remo
 	if sample_timer > 0.0:
 		return
 	sample_timer += SAMPLE_INTERVAL
-	var eye = player.global_position + Vector3(0, 1.5, 0)
+	var eye = player.camera.global_position if is_instance_valid(player.camera) else player.global_position + Vector3(0, 1.5, 0)
+	var yaw = player.rotation.y
+	var pitch = player.camera.rotation.x if is_instance_valid(player.camera) else 0.0
 	var actors: Array = []
 	for enemy in enemies:
 		if is_instance_valid(enemy) and enemy.alive:
@@ -56,7 +58,7 @@ func record_step(delta: float, player: Node3D, enemies: Array, bots: Array, remo
 			return Vector3(a[0], a[1], a[2]).distance_squared_to(eye) < Vector3(b[0], b[1], b[2]).distance_squared_to(eye))
 		actors.resize(10)
 	recorded.append({
-		"p": [snappedf(eye.x, 0.01), snappedf(eye.y, 0.01), snappedf(eye.z, 0.01), snappedf(player.yaw, 0.001), snappedf(player.pitch, 0.001)],
+		"p": [snappedf(eye.x, 0.01), snappedf(eye.y, 0.01), snappedf(eye.z, 0.01), snappedf(yaw, 0.001), snappedf(pitch, 0.001)],
 		"e": actors
 	})
 	if recorded.size() > MAX_FRAMES:
