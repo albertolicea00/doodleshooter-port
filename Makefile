@@ -10,9 +10,13 @@ PROJECT := native
 ANDROID_APK := builds/android/doodleshooter-port-debug.apk
 ANDROID_RELEASE_APK := builds/android/doodleshooter-port-release.apk
 IOS_ZIP := builds/ios/doodleshooter-port.zip
+WINDOWS_EXE := builds/windows/doodleshooter-port.exe
+LINUX_BIN := builds/linux/doodleshooter-port.x86_64
+MACOS_ZIP := builds/macos/doodleshooter-port.zip
 SERVER_PYTHON := .venv/bin/python
 
-.PHONY: help import run touch check build android android-release ios \
+.PHONY: help import run touch check build android android-release ios windows linux macos \
+	version bump-patch bump-minor bump-major \
 	install-android server-deps server test-server capture-menus maps map-previews screenshots \
 	assets-reference audio-deps assets-audio clean
 
@@ -26,6 +30,13 @@ help:
 	  'make android          Export the Android debug APK' \
 	  'make android-release  Export a release APK (requires release signing)' \
 	  'make ios              Export the iOS project once signing is configured' \
+	  'make windows          Export the Windows Desktop executable' \
+	  'make linux            Export the Linux x86_64 executable' \
+	  'make macos            Export the unsigned macOS universal archive' \
+	  'make version          Show the current version and version code' \
+	  'make bump-patch       Bump patch version and increment version code' \
+	  'make bump-minor       Bump minor version and increment version code' \
+	  'make bump-major       Bump major version and increment version code' \
 	  'make install-android  Install the existing debug APK via ADB' \
 	  'make server-deps      Install the online lobby dependencies' \
 	  'make server           Run the online lobby server' \
@@ -64,6 +75,30 @@ android-release: import
 ios: import
 	mkdir -p "$(dir $(IOS_ZIP))"
 	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-debug iOS "$(CURDIR)/$(IOS_ZIP)"
+
+windows: import
+	mkdir -p "$(dir $(WINDOWS_EXE))"
+	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release "Windows Desktop" "$(CURDIR)/$(WINDOWS_EXE)"
+
+linux: import
+	mkdir -p "$(dir $(LINUX_BIN))"
+	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release Linux "$(CURDIR)/$(LINUX_BIN)"
+
+macos: import
+	mkdir -p "$(dir $(MACOS_ZIP))"
+	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release macOS "$(CURDIR)/$(MACOS_ZIP)"
+
+version:
+	"$(PYTHON)" tools/bump_version.py --show
+
+bump-patch:
+	"$(PYTHON)" tools/bump_version.py patch
+
+bump-minor:
+	"$(PYTHON)" tools/bump_version.py minor
+
+bump-major:
+	"$(PYTHON)" tools/bump_version.py major
 
 install-android:
 	@test -f "$(ANDROID_APK)" || { printf '%s\n' 'Debug APK missing. Run make android first.' >&2; exit 1; }
