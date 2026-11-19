@@ -1480,6 +1480,9 @@ func run_smoke() -> void:
 		await get_tree().physics_frame
 	match_mode = "bots"
 	map_key = "district"
+	bot_count = DoodleBotMatch.MAX_BOTS
+	await start_game(0)
+	assert(bot_match.bots.size() == 19 and bot_match.scores.size() == 20, "Offline matches must support 19 bots plus the player")
 	bot_count = 3
 	bot_difficulty = 3
 	await start_game(0)
@@ -1952,12 +1955,20 @@ func _bot_count_selector() -> void:
 	increase.tooltip_text = "More bots"
 	increase.custom_minimum_size.x = 64
 	increase.reparent(row)
+	var warning = Label.new()
+	warning.text = "10+ bots may reduce performance, especially on mobile devices."
+	warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	warning.add_theme_font_size_override("font_size", 22)
+	warning.add_theme_color_override("font_color", DoodlePen.RED)
+	menu_items.add_child(warning)
 	var update_count = func():
+		warning.visible = bot_count >= 10
 		count.text = "1 bot" if bot_count == 1 else "%d bots" % bot_count
 		decrease.disabled = bot_count <= 1
-		increase.disabled = bot_count >= 9
+		increase.disabled = bot_count >= DoodleBotMatch.MAX_BOTS
 	decrease.pressed.connect(func(): bot_count = maxi(1, bot_count - 1); update_count.call())
-	increase.pressed.connect(func(): bot_count = mini(9, bot_count + 1); update_count.call())
+	increase.pressed.connect(func(): bot_count = mini(DoodleBotMatch.MAX_BOTS, bot_count + 1); update_count.call())
 	update_count.call()
 
 func show_lan_menu() -> void:

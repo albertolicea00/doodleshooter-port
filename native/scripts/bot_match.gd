@@ -1,6 +1,8 @@
 class_name DoodleBotMatch
 extends Node
 
+const MAX_BOTS = 19
+
 var game: Node3D
 var active = false
 var difficulty = 1
@@ -17,7 +19,7 @@ func begin(count: int, skill: int) -> void:
 	remaining = 600
 	scores["player"] = {"name": game.player_name, "kills": 0, "deaths": 0}
 	player_shield = 2
-	for i in clampi(count, 1, 9):
+	for i in clampi(count, 1, MAX_BOTS):
 		var bot = DoodleArenaBot.new()
 		bot.game = game
 		bot.match_controller = self
