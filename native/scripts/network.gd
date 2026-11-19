@@ -16,6 +16,10 @@ var elapsed = 0.0
 var activity = 0.0
 var timeout = 0.0
 var remaining = 600
+var kill_limit = 20
+var match_minutes = 10
+var lobby_bots = 0
+var lobby_difficulty = 1
 var endpoint = "ws://127.0.0.1:8911"
 
 func connect_lobby(url: String, request: Dictionary) -> void:
@@ -39,6 +43,10 @@ func close() -> void:
 	peer_id = ""
 	roster.clear()
 	remaining = 600
+	kill_limit = 20
+	match_minutes = 10
+	lobby_bots = 0
+	lobby_difficulty = 1
 	elapsed = 0
 	activity = 0
 
@@ -81,8 +89,13 @@ func _process(delta: float) -> void:
 				code = packet.code
 				host_id = packet.host
 				roster = packet.players
+				kill_limit = int(packet.get("kill_limit", 20))
+				match_minutes = int(packet.get("minutes", 10))
+				lobby_bots = int(packet.get("bots", 0))
+				lobby_difficulty = int(packet.get("difficulty", 1))
 			"start":
 				in_match = true
+				kill_limit = int(packet.get("kill_limit", kill_limit))
 			"clock":
 				remaining = int(packet.remaining)
 				roster = packet.players

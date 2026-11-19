@@ -8,6 +8,8 @@ const KILLS_PER_MINUTE = 2
 
 var game: Node3D
 var active = false
+var lan_host = false
+var sync_elapsed = 0.0
 var difficulty = 1
 var remaining = 600.0
 var kill_limit = 20
@@ -39,8 +41,25 @@ func begin(count: int, skill: int, minutes: int = 10) -> void:
 	for i in 7:
 		game.spawn_pickup("ammo" if i < 5 else "health", game.level.pickup_spots.pick_random())
 
+func begin_lan(count: int, skill: int) -> void:
+	stop()
+	active = true
+	lan_host = true
+	difficulty = clampi(skill, 0, 3)
+	for i in clampi(count, 0, MAX_BOTS):
+		var bot = DoodleArenaBot.new()
+		bot.game = game
+		bot.match_controller = self
+		bot.peer_id = "bot_" + str(i)
+		game.add_child(bot)
+		bots.append(bot)
+		game.remote_players[bot.peer_id] = bot
+		respawn_bot(bot, i + 1)
+
 func stop() -> void:
 	active = false
+	lan_host = false
+	sync_elapsed = 0.0
 	bots.clear()
 	scores.clear()
 
@@ -63,9 +82,9 @@ func respawn_bot(bot: DoodleArenaBot, index: int = -1) -> void:
 	bot.think_time = 0
 
 func choose_target(bot: DoodleArenaBot) -> Node3D:
-	var candidates: Array = []
-	candidates.append_array(bots)
-	candidates.append(game.player)
+	var candidates: Array = game.remote_players.values()
+	if is_instance_valid(game.player):
+		candidates.append(game.player)
 	var nearest: Node3D
 	var distance = INF
 	for actor in candidates:
@@ -78,7 +97,14 @@ func choose_target(bot: DoodleArenaBot) -> Node3D:
 	return nearest
 
 func damage(id: String, amount: float, attacker: String) -> void:
-	if not active or not scores.has(id) or not scores.has(attacker):
+	if not active:
+		return
+	if lan_host:
+		var target_id = game.network.peer_id if id == "player" else id
+		var attacker_id = game.network.peer_id if attacker == "player" else attacker
+		game.network.send_packet({"type": "damage", "target": target_id, "attacker": attacker_id, "amount": amount, "source": "deflect" if amount == 90 else "rifle"})
+		return
+	if not scores.has(id) or not scores.has(attacker):
 		return
 	if id == "player":
 		if not game.player.alive or player_shield > 0:
@@ -117,6 +143,13 @@ func blast(at: Vector3) -> void:
 
 func update(delta: float) -> void:
 	if not active:
+		return
+	if lan_host:
+		sync_elapsed += delta
+		if sync_elapsed >= 0.05:
+			sync_elapsed = 0.0
+			for bot in bots:
+				game.network.send_packet({"type": "bot_state", "id": bot.peer_id, "state": {"position": [bot.position.x, bot.position.y, bot.position.z], "rotation": [0.0, bot.model.rotation.y - PI, 0.0], "velocity": [bot.velocity.x, bot.velocity.y, bot.velocity.z], "grapple": [0.0, 0.0, 0.0], "grappling": false, "aiming": false, "sprinting": false, "weapon": 0}})
 		return
 	remaining = maxf(0, remaining - delta)
 	player_shield = maxf(0, player_shield - delta)

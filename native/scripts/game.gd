@@ -99,8 +99,12 @@ var match_mode = "survival"
 var bot_count = 5
 var bot_difficulty = 1
 var bot_minutes = 10
+var lan_bot_count = 0
+var lan_bot_difficulty = 1
+var lan_minutes = 10
 var controls_xbox = false
 var layout_return: Callable = Callable()
+var lobby_return: Callable = Callable()
 var bot_match: DoodleBotMatch
 var lan_server: DoodleLanServer
 var lan_address = ""
@@ -409,7 +413,7 @@ func _toggle(text: String, value: bool, callback: Callable) -> void:
 	button.text = text + (": on" if value else ": off")
 	button.toggled.connect(func(on): button.text = text + (": on" if on else ": off"); callback.call(on))
 
-func show_main_menu() -> void:
+func _close_network() -> void:
 	if network != null:
 		network.close()
 	if is_instance_valid(lan_server):
@@ -417,6 +421,9 @@ func show_main_menu() -> void:
 		lan_server.queue_free()
 		lan_server = null
 	lan_host_note = ""
+
+func show_main_menu() -> void:
+	_close_network()
 	bot_match.stop()
 	match_mode = "survival"
 	_clear_remote_players()
@@ -901,6 +908,8 @@ func start_game(first_wave: int) -> void:
 			if level.breakables.has(int(id)):
 				level.hit_prop(level.breakables[int(id)].body, 9999, false)
 		pending_broken.clear()
+		if is_instance_valid(lan_server) and lan_server.bot_count > 0 and network.peer_id == network.host_id:
+			bot_match.begin_lan(lan_server.bot_count, lan_server.bot_difficulty)
 	elif match_mode == "bots":
 		bot_match.begin(bot_count, bot_difficulty, bot_minutes)
 	else:
@@ -1994,6 +2003,7 @@ func run_capture() -> void:
 	get_tree().quit()
 
 func show_online_menu() -> void:
+	_close_network()
 	playing = false
 	_clear_menu("Play online", "Free for all · 10 players · first to 20 kills · Connect to a native lobby server")
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
@@ -2021,17 +2031,24 @@ func show_online_menu() -> void:
 	var split = menu_items.get_child_count()
 	_credit_section("Join a lobby", "Jump into an open match, enter a 5-character room code, or browse public rooms.")
 	_button("QUICK PLAY", func(): connect_online({"type": "quick", "map": map_key}), "StartButton")
+	var code_row = HBoxContainer.new()
+	code_row.add_theme_constant_override("separation", 12)
+	menu_items.add_child(code_row)
 	code_input = LineEdit.new()
 	code_input.placeholder_text = "Five-character lobby code"
 	code_input.max_length = 5
 	code_input.custom_minimum_size.y = 48
-	menu_items.add_child(code_input)
-	_button("JOIN CODE", func(): connect_online({"type": "join", "code": code_input.text.to_upper()}))
+	code_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	code_row.add_child(code_input)
+	var join_code = _button("JOIN CODE", func(): connect_online({"type": "join", "code": code_input.text.to_upper()}))
+	join_code.custom_minimum_size.x = 170
+	join_code.reparent(code_row)
 	_button("BROWSE PUBLIC LOBBIES", func(): connect_online({"type": "list"}), "AltButton")
 	_card_wrap(start, split)
 	_back_button(show_main_menu)
 
 func connect_online(request: Dictionary) -> void:
+	lobby_return = show_online_menu
 	player_name = name_input.text.strip_edges().left(24)
 	server_url = server_input.text.strip_edges()
 	preferences.set_value("online", "name", player_name)
@@ -2048,11 +2065,23 @@ func show_lobby() -> void:
 	var names = ""
 	for entry in network.roster:
 		names += entry.name + (" · host" if entry.id == network.host_id else "") + "\n"
-	_clear_menu("Lobby " + network.code, names + "\nFree for all · first to 20 · 10 minute limit" + lan_host_note)
+	var bot_note = " · %d bots" % network.lobby_bots if network.lobby_bots > 0 else ""
+	_clear_menu("Lobby " + network.code, names + "\nFree for all · first to %d · %d minute limit%s" % [network.kill_limit, network.match_minutes, bot_note] + lan_host_note)
 	if network.peer_id == network.host_id:
 		_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_lobby, func(key): network.send_packet({"type": "map", "map": key})), "AltButton")
+		if is_instance_valid(lan_server):
+			var send_config = func(): network.send_packet({"type": "config", "minutes": lan_minutes, "bots": lan_bot_count, "difficulty": lan_bot_difficulty})
+			_choices(["Easy", "Normal", "Hard", "Insane"], lan_bot_difficulty, func(index): lan_bot_difficulty = index; send_config.call())
+			var diff_row = menu_items.get_child(-1)
+			for btn in diff_row.get_children():
+				btn.disabled = lan_bot_count == 0
+			var selectors = HBoxContainer.new()
+			selectors.add_theme_constant_override("separation", 24)
+			menu_items.add_child(selectors)
+			_duration_selector(menu_items.get_child(1), lan_minutes, func(m): lan_minutes = m; send_config.call(), func(_m): return menu_items.get_child(1).text).reparent(selectors)
+			_count_selector(lan_bot_count, 0, func(c): lan_bot_count = c; send_config.call()).reparent(selectors)
 		_button("START MATCH", func(): network.send_packet({"type": "start"}), "StartButton")
-	_button("LEAVE LOBBY", show_main_menu, "AltButton")
+	_button("LEAVE LOBBY", lobby_return if lobby_return.is_valid() else show_main_menu, "AltButton")
 
 func _network_packet(packet: Dictionary) -> void:
 	match packet.get("type", ""):
@@ -2106,8 +2135,21 @@ func _network_packet(packet: Dictionary) -> void:
 		"broken":
 			if is_instance_valid(level) and level.breakables.has(int(packet.id)):
 				level.hit_prop(level.breakables[int(packet.id)].body, 9999, false)
+		"bot_hurt":
+			if remote_players.has(packet.id):
+				var bot: DoodleRemotePlayer = remote_players[packet.id]
+				bot.hp = float(packet.hp)
+				if bot.hp <= 0 and bot.alive:
+					bot.alive = false
+					bot.model.visible = false
+					bot.collision_layer = 0
+					burst(bot.position + Vector3.UP, 1, 24)
+		"bot_respawn":
+			if remote_players.has(packet.id) and bot_match.active and bot_match.lan_host:
+				bot_match.respawn_bot(remote_players[packet.id], int(packet.spawn))
 		"result":
 			playing = false
+			bot_match.stop()
 			online_results = packet.players
 			var scores = ""
 			for entry in online_results:
@@ -2125,8 +2167,15 @@ func _network_packet(packet: Dictionary) -> void:
 func _network_failure(message: String) -> void:
 	playing = false
 	_clear_menu("Connection", message)
-	_button("BACK TO ONLINE", show_online_menu)
-	_button("MAIN MENU", show_main_menu)
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	menu_items.add_child(row)
+	var back_online = _button("BACK TO ONLINE", show_online_menu, "AltButton")
+	back_online.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	back_online.reparent(row)
+	var main_btn = _button("MAIN MENU", show_main_menu)
+	main_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_btn.reparent(row)
 
 func _clear_remote_players() -> void:
 	for remote in remote_players.values():
@@ -2142,11 +2191,13 @@ func apply_online_spawn(index: int) -> void:
 	player.detach_grapple()
 
 func update_online(delta: float) -> void:
+	if bot_match.active and bot_match.lan_host:
+		bot_match.update(delta)
 	var own_kills = 0
 	for entry in network.roster:
 		if entry.id == network.peer_id:
 			own_kills = int(entry.kills)
-	hud.score_text = "Kills %d / 20" % own_kills
+	hud.score_text = "Kills %d / %d" % [own_kills, network.kill_limit]
 	hud.combo_text = ""
 	hud.boss_name = ""
 	hud.info = [["%02d:%02d" % [network.remaining / 60, network.remaining % 60], true], ["Lobby " + network.code, false]]
@@ -2208,8 +2259,8 @@ func show_offline_menu() -> void:
 	var selectors = HBoxContainer.new()
 	selectors.add_theme_constant_override("separation", 24)
 	menu_items.add_child(selectors)
-	_bot_duration_selector(bot_rules).reparent(selectors)
-	_bot_count_selector().reparent(selectors)
+	_duration_selector(bot_rules, bot_minutes, func(m): bot_minutes = m; save_settings(), func(m): return "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game." % [m * DoodleBotMatch.KILLS_PER_MINUTE, m]).reparent(selectors)
+	_count_selector(bot_count, 1, func(c): bot_count = c).reparent(selectors)
 	var bots = _button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "StartButton")
 	bots.add_theme_font_size_override("font_size", 40)
 	bots.custom_minimum_size.y = 76
@@ -2239,7 +2290,7 @@ func _offline_card(cards: HBoxContainer, content: Array[Node]) -> void:
 			items.add_child(spacer)
 		child.reparent(items)
 
-func _bot_duration_selector(rules: RichTextLabel) -> HBoxContainer:
+func _duration_selector(rules: Node, current_minutes: int, on_change: Callable, format_rules: Callable) -> HBoxContainer:
 	var row = HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -2258,18 +2309,19 @@ func _bot_duration_selector(rules: RichTextLabel) -> HBoxContainer:
 	increase.tooltip_text = "Longer match"
 	increase.custom_minimum_size.x = 64
 	increase.reparent(row)
+	var minutes_state = [current_minutes]
 	var update_duration = func():
-		duration.text = "%d min" % bot_minutes
-		rules.text = "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game." % [bot_minutes * DoodleBotMatch.KILLS_PER_MINUTE, bot_minutes]
+		duration.text = "%d min" % minutes_state[0]
+		rules.text = format_rules.call(minutes_state[0])
 		_fit_menu.call_deferred()
-		decrease.disabled = bot_minutes <= DoodleBotMatch.MIN_MINUTES
-		increase.disabled = bot_minutes >= DoodleBotMatch.MAX_MINUTES
-	decrease.pressed.connect(func(): bot_minutes = maxi(DoodleBotMatch.MIN_MINUTES, bot_minutes - 5); update_duration.call(); save_settings())
-	increase.pressed.connect(func(): bot_minutes = mini(DoodleBotMatch.MAX_MINUTES, bot_minutes + 5); update_duration.call(); save_settings())
+		decrease.disabled = minutes_state[0] <= DoodleBotMatch.MIN_MINUTES
+		increase.disabled = minutes_state[0] >= DoodleBotMatch.MAX_MINUTES
+	decrease.pressed.connect(func(): minutes_state[0] = maxi(DoodleBotMatch.MIN_MINUTES, minutes_state[0] - 5); on_change.call(minutes_state[0]); update_duration.call())
+	increase.pressed.connect(func(): minutes_state[0] = mini(DoodleBotMatch.MAX_MINUTES, minutes_state[0] + 5); on_change.call(minutes_state[0]); update_duration.call())
 	update_duration.call()
 	return row
 
-func _bot_count_selector() -> HBoxContainer:
+func _count_selector(current_count: int, min_count: int, on_change: Callable) -> HBoxContainer:
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2294,19 +2346,21 @@ func _bot_count_selector() -> HBoxContainer:
 	warning.add_theme_font_size_override("font_size", 22)
 	warning.add_theme_color_override("font_color", DoodlePen.RED)
 	menu_items.add_child(warning)
+	var count_state = [current_count]
 	var update_count = func():
-		warning.visible = bot_count >= 20
-		warning.text = "You're crazy! With 30 bots, the game might barely run!" if bot_count >= 30 else "20+ bots may reduce performance, especially on mobile devices."
-		count.text = "1 bot" if bot_count == 1 else "%d bots" % bot_count
-		decrease.disabled = bot_count <= 1
-		increase.disabled = bot_count >= DoodleBotMatch.MAX_BOTS
+		warning.visible = count_state[0] >= 20
+		warning.text = "You're crazy! With 30 bots, the game might barely run!" if count_state[0] >= 30 else "20+ bots may reduce performance, especially on mobile devices."
+		count.text = "1 bot" if count_state[0] == 1 else "%d bots" % count_state[0]
+		decrease.disabled = count_state[0] <= min_count
+		increase.disabled = count_state[0] >= DoodleBotMatch.MAX_BOTS
 		_fit_menu.call_deferred()
-	decrease.pressed.connect(func(): bot_count = maxi(1, bot_count - 1); update_count.call())
-	increase.pressed.connect(func(): bot_count = mini(DoodleBotMatch.MAX_BOTS, bot_count + 1); update_count.call())
+	decrease.pressed.connect(func(): count_state[0] = maxi(min_count, count_state[0] - 1); on_change.call(count_state[0]); update_count.call())
+	increase.pressed.connect(func(): count_state[0] = mini(DoodleBotMatch.MAX_BOTS, count_state[0] + 1); on_change.call(count_state[0]); update_count.call())
 	update_count.call()
 	return row
 
 func show_lan_menu() -> void:
+	_close_network()
 	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed.")
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
@@ -2319,7 +2373,7 @@ func show_lan_menu() -> void:
 	name_input.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	menu_items.add_child(name_input)
 	var start = menu_items.get_child_count()
-	_credit_section("Host a room", "Create a local match on this device and share the host IP shown in your lobby. Keep this device in the game while others play.")
+	_credit_section("Host a room", "Create a local match on this device and share your host IP with friends on the same Wi-Fi or hotspot. Keep this device in the game while others play. Once inside the lobby, you can choose the map, time limit, and bots.\n\nHost IP: " + _local_ip_text())
 	_button("HOST LAN GAME", host_lan_game)
 	var split = menu_items.get_child_count()
 	_credit_section("Join a room", "Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other.")
@@ -2339,6 +2393,13 @@ func save_player_name() -> void:
 	preferences.set_value("online", "name", player_name)
 	preferences.save(save_path)
 
+func _local_ip_text() -> String:
+	var addresses: Array[String] = []
+	for address in IP.get_local_addresses():
+		if address.is_valid_ip_address() and not ":" in address and not address.begins_with("127.") and not address.begins_with("169.254."):
+			addresses.append(address)
+	return ", ".join(addresses) if not addresses.is_empty() else "Check this device's Wi-Fi settings"
+
 func host_lan_game() -> void:
 	save_player_name()
 	if is_instance_valid(lan_server):
@@ -2353,14 +2414,11 @@ func host_lan_game() -> void:
 		_clear_menu("LAN hosting unavailable", "Could not open the local game port. Close another hosted room and try again.")
 		_button("BACK", show_lan_menu)
 		return
-	var addresses: Array[String] = []
-	for address in IP.get_local_addresses():
-		if address.is_valid_ip_address() and not ":" in address and not address.begins_with("127.") and not address.begins_with("169.254."):
-			addresses.append(address)
-	lan_host_note = "\n\nHost IP: " + (", ".join(addresses) if not addresses.is_empty() else "Check this device's Wi-Fi settings") + "\nKeep this device in the game to host the room."
-	network.connect_lobby("ws://127.0.0.1:%d" % DoodleLanServer.PORT, {"type": "host", "map": map_key})
+	lobby_return = show_lan_menu
+	lan_host_note = "\n\nHost IP: " + _local_ip_text() + "\nKeep this device in the game to host the room."
+	network.connect_lobby("ws://127.0.0.1:%d" % DoodleLanServer.PORT, {"type": "host", "map": map_key, "minutes": lan_minutes, "bots": lan_bot_count, "difficulty": lan_bot_difficulty})
 	_clear_menu("Creating LAN room…", "Starting a game on this device")
-	_button("CANCEL", show_main_menu)
+	_button("CANCEL", show_lan_menu)
 
 func join_lan_game() -> void:
 	save_player_name()
@@ -2373,6 +2431,7 @@ func join_lan_game() -> void:
 		if not ":" in url:
 			url += ":%d" % DoodleLanServer.PORT
 		url = "ws://" + url
+	lobby_return = show_lan_menu
 	network.connect_lobby(url, {"type": "join", "code": "LAN"})
 	_clear_menu("Joining LAN room…", "Connecting to the host on your local network")
-	_button("CANCEL", show_main_menu)
+	_button("CANCEL", show_lan_menu)

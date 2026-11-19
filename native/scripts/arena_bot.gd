@@ -30,9 +30,10 @@ func _physics_process(delta: float) -> void:
 		return
 	invulnerable = maxf(0, invulnerable - delta)
 	if not alive:
-		respawn_time -= delta
-		if respawn_time <= 0:
-			match_controller.respawn_bot(self)
+		if not match_controller.lan_host:
+			respawn_time -= delta
+			if respawn_time <= 0:
+				match_controller.respawn_bot(self)
 		return
 	think_time -= delta
 	path_time -= delta
@@ -90,6 +91,8 @@ func _physics_process(delta: float) -> void:
 		var end = muzzle + direction * 70 if hit.is_empty() else hit.position
 		game.tracer(muzzle, end, 1)
 		game.sound.play_effect("enemyShot", muzzle)
+		if match_controller.lan_host:
+			game.network.send_packet({"type": "bot_shot", "id": peer_id, "end": [end.x, end.y, end.z]})
 		if not hit.is_empty():
 			if hit.collider == game.player:
 				var deflection = game.player.try_deflect(direction)
@@ -97,11 +100,14 @@ func _physics_process(delta: float) -> void:
 					match_controller.damage(peer_id, 90, "player")
 				elif deflection == 0:
 					match_controller.damage("player", 19, peer_id)
-			elif hit.collider is DoodleArenaBot:
+			elif hit.collider is DoodleRemotePlayer:
 				match_controller.damage(hit.collider.peer_id, 19, peer_id)
 
 func take_damage(amount: float, _point: Vector3 = Vector3.INF) -> void:
-	match_controller.damage(peer_id, amount, "player")
+	if match_controller.lan_host:
+		super.take_damage(amount, _point)
+	else:
+		match_controller.damage(peer_id, amount, "player")
 
 func yank(from: Vector3) -> void:
 	velocity = (from - global_position).normalized() * 12 + Vector3.UP * 5

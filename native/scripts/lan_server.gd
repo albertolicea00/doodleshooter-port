@@ -13,6 +13,10 @@ const MAPS = ["district", "mexico", "castle", "harbor", "pyramid", "station", "f
 var map_key = "district"
 var started = false
 var ended = false
+var match_minutes = 10
+var kill_limit = 20
+var bot_count = 0
+var bot_difficulty = 1
 var remaining = 600.0
 var status_time = 0.0
 var broken: Array = []
@@ -48,7 +52,7 @@ func roster() -> Array:
 	return result
 
 func lobby_info() -> void:
-	broadcast({"type": "lobby", "code": "LAN", "host": host, "public": false, "map": map_key, "started": started, "players": roster()})
+	broadcast({"type": "lobby", "code": "LAN", "host": host, "public": false, "map": map_key, "started": started, "minutes": match_minutes, "kill_limit": kill_limit, "bots": bot_count, "difficulty": bot_difficulty, "players": roster()})
 
 func _process(delta: float) -> void:
 	while listener.is_connection_available():
@@ -94,6 +98,14 @@ func _process(delta: float) -> void:
 		if not members.has(id):
 			continue
 		var member: Dictionary = members[id]
+		if member.get("bot", false):
+			if member.hp <= 0 and now - member.died >= 2.5:
+				member.hp = 120.0
+				member.shield = now + 2
+				send_to(host, {"type": "bot_respawn", "id": id, "spawn": randi_range(0, 15)})
+			elif member.hp > 0 and member.hp < 120 and now - member.hurt > 4.5:
+				member.hp = minf(120, member.hp + 11 * delta)
+			continue
 		if now - member.activity > 150:
 			send_to(id, {"type": "idle", "message": "Removed after 150 seconds without input.", "code": "LAN"})
 			leave(id)
@@ -142,10 +154,15 @@ func handle(id: String, packet: Dictionary) -> void:
 		if type == "host":
 			host = id
 			map_key = packet.map if packet.get("map") in MAPS else "district"
+			match_minutes = clampi(int(packet.get("minutes", 10)), 5, 30)
+			remaining = match_minutes * 60.0
+			kill_limit = match_minutes * 2
+			bot_count = clampi(int(packet.get("bots", 0)), 0, 30)
+			bot_difficulty = clampi(int(packet.get("difficulty", 1)), 0, 3)
 		members[id] = {"name": peers[id].name, "hp": 120.0, "kills": 0, "deaths": 0, "shield": now + 2, "died": 0.0, "hurt": now, "activity": now, "state": {}, "fire": {}}
 		lobby_info()
 		if started:
-			send_to(id, {"type": "start", "map": map_key, "spawn": members.size() - 1, "late": true, "broken": broken})
+			send_to(id, {"type": "start", "map": map_key, "spawn": members.size() - 1, "late": true, "broken": broken, "kill_limit": kill_limit})
 		return
 	if not members.has(id):
 		return
@@ -158,12 +175,23 @@ func handle(id: String, packet: Dictionary) -> void:
 		map_key = packet.map if packet.get("map") in MAPS else "district"
 		lobby_info()
 		return
+	if type == "config" and id == host and not started:
+		match_minutes = clampi(int(packet.get("minutes", match_minutes)), 5, 30)
+		remaining = match_minutes * 60.0
+		kill_limit = match_minutes * 2
+		bot_count = clampi(int(packet.get("bots", bot_count)), 0, 30)
+		bot_difficulty = clampi(int(packet.get("difficulty", bot_difficulty)), 0, 3)
+		lobby_info()
+		return
 	if type == "start" and id == host and not started:
 		started = true
+		for i in bot_count:
+			members["bot_" + str(i)] = {"name": "Doodler Bot %d" % (i + 1), "hp": 120.0, "kills": 0, "deaths": 0, "shield": now + 2, "died": 0.0, "hurt": now, "activity": now, "state": {}, "fire": {}, "bot": true}
 		var index = 0
 		for member_id in members:
 			members[member_id].shield = now + 2
-			send_to(member_id, {"type": "start", "map": map_key, "spawn": index, "late": false, "broken": []})
+			if not members[member_id].get("bot", false):
+				send_to(member_id, {"type": "start", "map": map_key, "spawn": index, "late": false, "broken": [], "kill_limit": kill_limit})
 			index += 1
 		return
 	if not started or ended:
@@ -186,16 +214,42 @@ func handle(id: String, packet: Dictionary) -> void:
 			p.state = state.duplicate()
 			p.state.merge({"id": id, "hp": p.hp, "alive": p.hp > 0}, true)
 			broadcast({"type": "state", "state": p.state}, id)
+		"bot_state":
+			if id != host:
+				return
+			var bot_id = str(packet.get("id", ""))
+			var state = packet.get("state")
+			if not members.get(bot_id, {}).get("bot", false) or not state is Dictionary:
+				return
+			for key in ["position", "rotation", "velocity", "grapple"]:
+				if not vector_valid(state.get(key)):
+					return
+			var bot_member: Dictionary = members[bot_id]
+			bot_member.state = state.duplicate()
+			bot_member.state.merge({"id": bot_id, "hp": bot_member.hp, "alive": bot_member.hp > 0}, true)
+			broadcast({"type": "state", "state": bot_member.state}, id)
+		"bot_shot":
+			if id != host:
+				return
+			var bot_id = str(packet.get("id", ""))
+			if members.get(bot_id, {}).get("bot", false) and members[bot_id].hp > 0 and vector_valid(packet.get("end")):
+				broadcast({"type": "shot", "id": bot_id, "weapon": 0, "end": packet.end}, id)
 		"damage":
 			var victim = str(packet.get("target", ""))
 			var source = str(packet.get("source", ""))
 			var amount = packet.get("amount")
-			if p.hp <= 0 or victim == id or not DAMAGE.has(source) or not (amount is float or amount is int) or not is_finite(amount):
+			var attacker_id = id
+			if id == host and packet.has("attacker"):
+				var candidate = str(packet.get("attacker", ""))
+				if members.get(candidate, {}).get("bot", false):
+					attacker_id = candidate
+			var attacker_member: Dictionary = members[attacker_id]
+			if attacker_member.hp <= 0 or victim == attacker_id or not DAMAGE.has(source) or not (amount is float or amount is int) or not is_finite(amount):
 				return
-			if now - p.fire.get(source, -100.0) < INTERVAL[source] * 0.85:
+			if now - attacker_member.fire.get(source, -100.0) < INTERVAL[source] * 0.85:
 				return
-			p.fire[source] = now
-			hurt(victim, clampf(amount, 0, DAMAGE[source][0] * DAMAGE[source][1]), id, source)
+			attacker_member.fire[source] = now
+			hurt(victim, clampf(amount, 0, DAMAGE[source][0] * DAMAGE[source][1]), attacker_id, source)
 		"respawn":
 			if p.hp <= 0 and now - p.died >= 2.5:
 				p.hp = 120.0
@@ -239,14 +293,17 @@ func hurt(id: String, amount: float, attacker: String, source: String) -> void:
 		return
 	p.hp = maxf(0, p.hp - amount)
 	p.hurt = now
-	send_to(id, {"type": "damage", "amount": amount, "hp": p.hp, "by": attacker, "source": source})
+	if p.get("bot", false):
+		send_to(host, {"type": "bot_hurt", "id": id, "hp": p.hp})
+	else:
+		send_to(id, {"type": "damage", "amount": amount, "hp": p.hp, "by": attacker, "source": source})
 	if p.hp <= 0:
 		p.died = now
 		p.deaths += 1
 		if attacker != id:
 			members[attacker].kills += 1
 		broadcast({"type": "kill", "victim": id, "killer": attacker, "source": source, "players": roster()})
-		if members[attacker].kills >= 20:
+		if members[attacker].kills >= kill_limit:
 			finish()
 
 func finish() -> void:
