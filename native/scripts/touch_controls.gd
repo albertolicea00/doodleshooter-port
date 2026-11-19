@@ -397,6 +397,12 @@ func _icon(kind: String, c: Vector2, r: float, tone: Color) -> bool:
 			_strokes(c, u, tone, w, [[Vector2(0.34, -0.42), Vector2(-0.12, 0.1)], [Vector2(0.72, -0.05), Vector2(0.2, -0.22), Vector2(-0.3, -0.4)],
 				[Vector2(-0.12, 0.1), Vector2(0.34, 0.38), Vector2(0.12, 0.82)], [Vector2(-0.12, 0.1), Vector2(-0.58, 0.34), Vector2(-0.9, 0.14)],
 				[Vector2(-0.95, -0.55), Vector2(-0.45, -0.55)], [Vector2(-1.0, -0.2), Vector2(-0.6, -0.2)], [Vector2(-0.9, 0.7), Vector2(-0.4, 0.7)]])
+		"RUN":
+			# A runner with an arrow above: the run lock keeps sprinting.
+			draw_arc(c + Vector2(0.3, -0.5) * u, 0.18 * u, 0, TAU, 12, tone, w, true)
+			_strokes(c, u, tone, w, [[Vector2(0.18, -0.32), Vector2(-0.1, 0.2)], [Vector2(0.55, 0.0), Vector2(0.15, -0.15), Vector2(-0.25, -0.3)],
+				[Vector2(-0.1, 0.2), Vector2(0.3, 0.45), Vector2(0.15, 0.85)], [Vector2(-0.1, 0.2), Vector2(-0.5, 0.42), Vector2(-0.75, 0.25)],
+				[Vector2(-0.75, -0.55), Vector2(-0.5, -0.85), Vector2(-0.25, -0.55)], [Vector2(-0.5, -0.85), Vector2(-0.5, -0.3)]])
 		"AIM":
 			draw_arc(c, 0.62 * u, 0, TAU, 24, tone, w, true)
 			draw_circle(c, 0.09 * u, tone)
@@ -476,4 +482,6 @@ func _draw() -> void:
 		var lock = center + Vector2(0, -stick_radius * 1.9)
 		draw_circle(lock, 22, Color(DoodlePen.RED, 0.3) if run_locked else Color(DoodlePen.PAPER, 0.55))
 		DoodlePen.sketch_circle(self, lock, 22, mark if run_locked else ink, 2.0)
-		_label(lock, "RUN", 15, mark if run_locked else ink)
+		var lock_tone = mark if run_locked else ink
+		if not _icon("RUN", lock, 22.0, lock_tone):
+			_label(lock, "RUN", 15, lock_tone)

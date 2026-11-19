@@ -7,6 +7,7 @@ const RED = Color(0.82, 0.13, 0.19)
 const PAPER = Color(0.965, 0.953, 0.902)
 const HIT = Color(0.91, 0.50, 0.10)
 const GREEN = Color(0.12, 0.56, 0.28)
+const BLACK = Color(0.11, 0.11, 0.13)
 const CLEAR = Color(0, 0, 0, 0)
 
 static func wobble(point: Vector2, amount: float) -> Vector2:
@@ -115,10 +116,12 @@ static func dot(diameter: int, color: Color) -> ImageTexture:
 
 static func _button_styles(theme: Theme, type: String, fill: Color, text: Color, tilt: float) -> void:
 	var solid = fill.a > 0
-	theme.set_stylebox("normal", type, box(fill, INK if not solid else fill, 2.5, tilt))
-	theme.set_stylebox("hover", type, box(fill.lightened(0.15) if solid else Color(INK, 0.1), INK if not solid else fill.lightened(0.15), 2.5, tilt))
-	theme.set_stylebox("pressed", type, box(fill.darkened(0.2) if solid else INK, INK if not solid else fill.darkened(0.2), 2.5, tilt))
-	theme.set_stylebox("disabled", type, box(Color(fill, fill.a * 0.4), Color(INK if not solid else fill, 0.4), 2.5, tilt))
+	# Outlined buttons draw their border in their text colour.
+	var line = fill if solid else text
+	theme.set_stylebox("normal", type, box(fill, line, 2.5, tilt))
+	theme.set_stylebox("hover", type, box(fill.lightened(0.15) if solid else Color(text, 0.1), fill.lightened(0.15) if solid else text, 2.5, tilt))
+	theme.set_stylebox("pressed", type, box(fill.darkened(0.2) if solid else text, fill.darkened(0.2) if solid else text, 2.5, tilt))
+	theme.set_stylebox("disabled", type, box(Color(fill, fill.a * 0.4), Color(line, 0.4), 2.5, tilt))
 	theme.set_stylebox("focus", type, StyleBoxEmpty.new())
 	for state in ["font_color", "font_hover_color", "font_focus_color", "font_disabled_color"]:
 		theme.set_color(state, type, text)
@@ -133,11 +136,12 @@ static func theme(font: Font) -> Theme:
 	theme.set_color("default_color", "RichTextLabel", INK)
 	# Filled ink buttons (.bigbtn), outlined buttons (.alt / .mapbtn), the red second button and the big start button.
 	_button_styles(theme, "Button", INK, PAPER, -0.6)
-	for variation in ["AltButton", "RedButton", "GreenButton", "StartButton"]:
+	for variation in ["AltButton", "BlackButton", "RedButton", "GreenButton", "StartButton"]:
 		theme.set_type_variation(variation, "Button")
 	_button_styles(theme, "AltButton", CLEAR, INK, 0.5)
 	_button_styles(theme, "RedButton", RED, PAPER, 0.7)
 	_button_styles(theme, "GreenButton", GREEN, PAPER, -0.5)
+	_button_styles(theme, "BlackButton", CLEAR, BLACK, 0.5)
 	_button_styles(theme, "StartButton", INK, PAPER, -1.0)
 	for state in ["normal", "hover", "pressed"]:
 		var start: DoodleSketchBox = theme.get_stylebox(state, "StartButton")

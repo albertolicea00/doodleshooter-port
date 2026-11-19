@@ -284,14 +284,9 @@ func _setup_ui() -> void:
 	editor_hint.add_theme_font_size_override("font_size", 20)
 	editor_rows.add_child(editor_hint)
 	var tool_rows = [
-		[["SMALLER", func(): touch.resize_selected(-0.1), "AltButton"], ["BIGGER", func(): touch.resize_selected(0.1), "AltButton"], ["FAINTER", func(): touch.fade(-0.1), "AltButton"], ["BOLDER", func(): touch.fade(0.1), "AltButton"]],
-		[["DUPLICATE", func(): touch.duplicate_selected(), "AltButton"], ["DELETE", func(): touch.delete_selected(), "RedButton"], ["RESET", func(): touch.restore_defaults(), "RedButton"], ["DONE", close_layout_editor, "GreenButton"]]]
-	# The editor bar's text is drawn in a bolder weight of the handwriting font.
-	var bold = FontVariation.new()
-	bold.base_font = ui.theme.default_font
-	bold.variation_embolden = 0.8
-	editor_handle.add_theme_font_override("font", bold)
-	editor_hint.add_theme_font_override("font", bold)
+		[["SMALLER", func(): touch.resize_selected(-0.1), "BlackButton"], ["BIGGER", func(): touch.resize_selected(0.1), "BlackButton"], ["FAINTER", func(): touch.fade(-0.1), "BlackButton"], ["BOLDER", func(): touch.fade(0.1), "BlackButton"]],
+		[["DUPLICATE", func(): touch.duplicate_selected(), "BlackButton"], ["DELETE", func(): touch.delete_selected(), "BlackButton"], ["RESET", func(): touch.restore_defaults(), "RedButton"], ["DONE", close_layout_editor, "GreenButton"]]]
+	editor_hint.add_theme_color_override("font_color", DoodlePen.BLACK)
 	for row in tool_rows:
 		var editor_tools = HBoxContainer.new()
 		editor_tools.add_theme_constant_override("separation", 8)
@@ -302,7 +297,6 @@ func _setup_ui() -> void:
 			button.text = tool[0]
 			button.theme_type_variation = tool[2]
 			button.add_theme_font_size_override("font_size", 20)
-			button.add_theme_font_override("font", bold)
 			button.pressed.connect(tool[1])
 			editor_tools.add_child(button)
 			if tool[0] == "DELETE":
