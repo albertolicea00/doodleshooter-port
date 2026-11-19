@@ -2175,7 +2175,8 @@ func burst(at: Vector3, ink: int, count: int) -> void:
 
 func muzzle_fx(at: Vector3, forward: Vector3, pellets: int, flash_scale: float, smoke_count: int) -> void:
 	particles.muzzle_sparks(at, 4 + pellets, flash_scale)
-	particles.muzzle_smoke(at, forward, smoke_count)
+	# Muzzle smoke disabled per visual preference; keep muzzle flash and sparks.
+	# particles.muzzle_smoke(at, forward, smoke_count)
 
 func blood_pool(at: Vector3, radius: float, ink: int) -> void:
 	var query = PhysicsRayQueryParameters3D.create(at + Vector3.UP, at + Vector3.DOWN * 4, 1)
