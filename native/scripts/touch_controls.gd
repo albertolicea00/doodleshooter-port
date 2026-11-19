@@ -32,6 +32,10 @@ var delete_button: Button
 # Player preferences, edited under Settings and stored with the layout.
 var options = {"look": 1.0, "aim_look": 0.6, "invert_y": false, "gyro": 0, "gyro_speed": 1.0, "auto_fire": false, "left_fire": false, "reload_button": true, "aim_hold": false, "fixed_stick": false, "stick_sprint": true, "run_lock": true}
 var auto_firing = false
+var has_gyro = false
+var accel_filtered = Vector3.ZERO
+var accel_ready = false
+var prev_tilt = Vector2.ZERO
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -46,11 +50,29 @@ func _process(delta: float) -> void:
 		delete_button.disabled = not can_delete()
 	if editing or not is_instance_valid(player) or not player.alive or not player.game.playing:
 		return
-	# Gyroscope aiming: rotation rate around the screen's vertical axis turns,
-	# around its horizontal axis pitches.
+	# Gyroscope aiming: use hardware gyroscope when available, otherwise fall back
+	# to smoothed accelerometer tilt on devices without a gyro sensor.
 	if options.gyro == 2 or (options.gyro == 1 and player.aiming):
 		var rate = Input.get_gyroscope()
-		turn(Vector2(-rate.y, -rate.x) * delta * options.gyro_speed)
+		if rate.length_squared() > 1e-6:
+			has_gyro = true
+			turn(Vector2(-rate.y, -rate.x) * delta * options.gyro_speed)
+		elif not has_gyro:
+			var raw_accel = Input.get_accelerometer()
+			if raw_accel.length_squared() > 0.1:
+				if not accel_ready:
+					accel_filtered = raw_accel
+					prev_tilt = _accel_tilt(accel_filtered)
+					accel_ready = true
+				else:
+					accel_filtered = accel_filtered.lerp(raw_accel, minf(1.0, delta * 10.0))
+					var tilt = _accel_tilt(accel_filtered)
+					var move = tilt - prev_tilt
+					prev_tilt = tilt
+					if move.length() > 0.0015:
+						turn(move * options.gyro_speed * 1.4)
+	else:
+		accel_ready = false
 	# Auto fire: shoot while something that can be hurt is under the crosshair.
 	var reach = 3.2 if player.weapon_index == 3 else 18.0 if player.weapon_index == 1 else 120.0
 	var target = options.auto_fire and player.ray(reach).get("collider") != null and player.ray(reach).collider.has_method("take_damage")
@@ -63,6 +85,11 @@ func _process(delta: float) -> void:
 			Input.action_press("fire")
 		elif not held.values().has("fire"):
 			Input.action_release("fire")
+
+func _accel_tilt(accel: Vector3) -> Vector2:
+	var roll = atan2(accel.y, sqrt(accel.x * accel.x + accel.z * accel.z))
+	var pitch = atan2(accel.z, sqrt(accel.x * accel.x + accel.y * accel.y))
+	return Vector2(-roll, pitch)
 
 func turn(amount: Vector2) -> void:
 	if not is_instance_valid(player):
