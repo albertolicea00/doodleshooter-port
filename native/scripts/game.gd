@@ -39,8 +39,9 @@ const MAPS = [
 	{"key": "forest", "name": "Doodle Forest", "music": "district"},
 	{"key": "school", "name": "Doodle School", "music": "district"},
 	{"key": "military", "name": "Doodle Base", "music": "mexico"}]
-const PREVIEW_FRAMES = 10
-const PREVIEW_SIZE = 192
+const PREVIEW_FRAMES = 120
+const PREVIEW_COLUMNS = 12
+const PREVIEW_SIZE = 160
 var show_fps = true
 var smokes: Array = []
 # Port additions: how smeared, swaying and greyed-out the view is right now.
@@ -463,13 +464,13 @@ func map_info(key: String) -> Dictionary:
 func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) -> void:
 	var frames: Array[AtlasTexture] = []
 	var reel = Timer.new()
-	reel.wait_time = 0.16
+	reel.wait_time = 1.0 / 30.0
 	reel.autostart = true
 	var shown = [0]
 	reel.timeout.connect(func():
 		shown[0] = (shown[0] + 1) % PREVIEW_FRAMES
 		for frame in frames:
-			frame.region.position.x = shown[0] * PREVIEW_SIZE)
+			frame.region.position = Vector2(shown[0] % PREVIEW_COLUMNS, shown[0] / PREVIEW_COLUMNS) * PREVIEW_SIZE)
 	container.add_child(reel)
 	for info in MAPS:
 		var chosen: bool = info.key == map_key
@@ -487,9 +488,10 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable) ->
 		var picture = TextureRect.new()
 		var preview = "res://assets/previews/%s.png" % info.key
 		if ResourceLoader.exists(preview):
-			# The preview is a strip of frames circling the map; the timer below plays it.
+			# The preview is a tiled atlas of evenly spaced views around the map.
 			var frame = AtlasTexture.new()
 			frame.atlas = load(preview)
+			frame.filter_clip = true
 			frame.region = Rect2(0, 0, PREVIEW_SIZE, PREVIEW_SIZE)
 			picture.texture = frame
 			frames.append(frame)
@@ -1960,7 +1962,7 @@ func run_capture() -> void:
 		player.set_physics_process(false)
 		player.rig.visible = false
 		player.camera.fov = 62
-		var overview = Image.create(PREVIEW_SIZE * PREVIEW_FRAMES, PREVIEW_SIZE, false, Image.FORMAT_RGB8)
+		var overview = Image.create(PREVIEW_SIZE * PREVIEW_COLUMNS, PREVIEW_SIZE * ceili(float(PREVIEW_FRAMES) / PREVIEW_COLUMNS), false, Image.FORMAT_RGB8)
 		for shot in PREVIEW_FRAMES:
 			var angle = TAU * shot / PREVIEW_FRAMES + 0.6
 			player.camera.global_transform = Transform3D(Basis(), Vector3(sin(angle) * 60, 40, cos(angle) * 60 - 4)).looking_at(Vector3(0, 2, -4))
@@ -1970,7 +1972,7 @@ func run_capture() -> void:
 			var view = get_viewport().get_texture().get_image()
 			view.convert(Image.FORMAT_RGB8)
 			view.resize(PREVIEW_SIZE, PREVIEW_SIZE, Image.INTERPOLATE_LANCZOS)
-			overview.blit_rect(view, Rect2i(0, 0, PREVIEW_SIZE, PREVIEW_SIZE), Vector2i(shot * PREVIEW_SIZE, 0))
+			overview.blit_rect(view, Rect2i(0, 0, PREVIEW_SIZE, PREVIEW_SIZE), Vector2i(shot % PREVIEW_COLUMNS, shot / PREVIEW_COLUMNS) * PREVIEW_SIZE)
 		overview.save_png(OS.get_environment("DOODLE_CAPTURE"))
 		print("CAPTURE: ", OS.get_environment("DOODLE_CAPTURE"))
 		get_tree().quit()

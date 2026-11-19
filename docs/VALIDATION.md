@@ -171,3 +171,11 @@ Godot headless editor import passed for this presentation revision. No gameplay 
 Play offline now uses the same compact animated nine-map row as the LAN host, between its subtitle and setup cards. A temporary graphical harness verified all nine cards, selecting Castle, and retaining bot count/time across the menu rebuild. The resulting 1280×720 desktop screenshot (`/private/tmp/doodleshooter-offline-preview.png`) was inspected: the map strip appears above both setup cards with rounded upper preview corners and blue selected-card styling. The Back button requires scrolling at this viewport. This is desktop UI verification, not physical-device or gameplay verification.
 
 `python3 tools/check.py` passed for this change: reference hashes, import, both gameplay smoke markers, native LAN protocol, and both host/guest LAN game completion markers.
+
+### Smoother map preview rotation (November 19)
+
+Regenerated all nine preview atlases using the native renderer: 120 evenly spaced angles (3° steps) in a 12×10 grid of 160-pixel cells. Playback is 30 fps with a four-second orbit, replacing ten angles (36° steps) changing every 0.16 seconds. Atlas filtering clips each cell to avoid sampling neighbouring views. The shared picker applies this to offline, LAN, and the full map menu.
+
+A temporary graphical harness passed checks for all nine 1920×1600 atlases, frame bounds across all ten rows, wrap after 120 steps, and automatic timer progression. Desktop screenshots around the loop boundary (`/private/tmp/doodleshooter-smooth-frame-0.png` and `doodleshooter-smooth-frame-119.png`) were inspected for rendering and consistent layout. These checks do not establish perceived smoothness or performance on physical phones. The denser atlases increase menu texture memory; phone performance remains unverified.
+
+`python3 tools/check.py` passed after the preview update: reference hashes, import, both smoke markers, LAN protocol, and host/guest game integration.

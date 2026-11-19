@@ -35,3 +35,5 @@ Work order: rebuild and validate Android, compare solo movement/combat and prese
 The port-only lobby includes a setup subtitle (with waiting guidance for guests). Map selection retains its original port card styling with rounded upper preview corners; this presentation is not part of the original game.
 
 Play offline reuses the LAN host's full-width animated map strip below the subtitle and above the Survival/Bot match setup cards. The selected map applies to either offline mode; this inline picker is port UI, not part of the original game.
+
+The port-only animated map cards use 120 views per orbit at 30 frames per second (four seconds per turn), replacing the original port's ten-view reel. Preview images are stored as 12×10 atlases with 160-pixel cells; this is presentation added by the port, not original game behavior.
