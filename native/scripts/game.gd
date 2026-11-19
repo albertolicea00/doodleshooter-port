@@ -1481,8 +1481,9 @@ func run_smoke() -> void:
 	match_mode = "bots"
 	map_key = "district"
 	bot_count = 3
-	bot_difficulty = 2
+	bot_difficulty = 3
 	await start_game(0)
+	assert(bot_match.difficulty == 3, "Bot matches must accept the Insane tier")
 	assert(level.data.boxes.size() == 429 and bot_match.bots.size() == 3, "Offline bots must use the arena without a server")
 	var first = bot_match.bots[0]
 	var second = bot_match.bots[1]
@@ -1928,17 +1929,36 @@ func show_offline_menu() -> void:
 	_credit_section("Survival difficulty", "Port addition · not part of the original game. Normal is the former Easy; Hard is the former Normal; Insane is the former Hard.")
 	_choices(["Easy", "Normal", "Hard", "Insane"], difficulty, func(index): difficulty = index; save_settings())
 	_choices(["Normal waves", "Large waves", "Huge waves"], wave_size, func(index): wave_size = index; save_settings())
-	_credit_section("Free for all with bots", "Fight other doodlers in the arena. Bots fight you and each other. First to 20 kills, or the highest score after 10 minutes. Respawns are automatic.")
-	var count = OptionButton.new()
-	for i in range(1, 10):
-		count.add_item("1 bot" if i == 1 else "%d bots" % i)
-	count.selected = bot_count - 1
-	count.custom_minimum_size.y = 46
-	count.item_selected.connect(func(index): bot_count = index + 1)
-	menu_items.add_child(count)
-	_choices(["Easy bots", "Normal bots", "Hard bots"], bot_difficulty, func(index): bot_difficulty = index)
+	_credit_section("Free for all with bots", "Fight other doodlers in the arena. Bots fight you and each other. First to 20 kills, or the highest score after 10 minutes. Respawns are automatic. Bot difficulty is a port addition, not part of the original game.")
+	_bot_count_selector()
+	_choices(["Easy", "Normal", "Hard", "Insane"], bot_difficulty, func(index): bot_difficulty = index)
 	_button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "RedButton")
 	_button("BACK", show_main_menu, "AltButton")
+
+func _bot_count_selector() -> void:
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	menu_items.add_child(row)
+	var count = Label.new()
+	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var decrease = _button("−", func(): pass, "AltButton")
+	decrease.tooltip_text = "Fewer bots"
+	decrease.custom_minimum_size.x = 64
+	decrease.reparent(row)
+	row.add_child(count)
+	var increase = _button("+", func(): pass, "AltButton")
+	increase.tooltip_text = "More bots"
+	increase.custom_minimum_size.x = 64
+	increase.reparent(row)
+	var update_count = func():
+		count.text = "1 bot" if bot_count == 1 else "%d bots" % bot_count
+		decrease.disabled = bot_count <= 1
+		increase.disabled = bot_count >= 9
+	decrease.pressed.connect(func(): bot_count = maxi(1, bot_count - 1); update_count.call())
+	increase.pressed.connect(func(): bot_count = mini(9, bot_count + 1); update_count.call())
+	update_count.call()
 
 func show_lan_menu() -> void:
 	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed. The hosting device must keep the game open.")

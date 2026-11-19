@@ -13,7 +13,7 @@ var player_shield = 2.0
 func begin(count: int, skill: int) -> void:
 	stop()
 	active = true
-	difficulty = clampi(skill, 0, 2)
+	difficulty = clampi(skill, 0, 3)
 	remaining = 600
 	scores["player"] = {"name": game.player_name, "kills": 0, "deaths": 0}
 	player_shield = 2
@@ -123,7 +123,7 @@ func update(delta: float) -> void:
 	game.hud.score_text = "Kills %d / 20" % scores.player.kills
 	game.hud.combo_text = ""
 	game.hud.boss_name = ""
-	game.hud.info = [["%02d:%02d" % [int(remaining) / 60, int(remaining) % 60], true], ["%d bots · %s" % [bots.size(), ["Easy", "Normal", "Hard"][difficulty]], false]]
+	game.hud.info = [["%02d:%02d" % [int(remaining) / 60, int(remaining) % 60], true], ["%d bots · %s" % [bots.size(), ["Easy", "Normal", "Hard", "Insane"][difficulty]], false]]
 	var standings = sorted_scores()
 	game.scoreboard.text = "OFFLINE FREE FOR ALL\n" + "\n".join(standings.map(func(entry): return "%s     %d K / %d D" % [entry.name, entry.kills, entry.deaths]))
 	game.scoreboard.visible = Input.is_action_pressed("scoreboard")

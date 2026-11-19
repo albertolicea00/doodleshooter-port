@@ -82,8 +82,8 @@ func _physics_process(delta: float) -> void:
 		if limb != null:
 			limb.rotation.x = sin(phase + (PI if name.ends_with("L") else 0)) * 0.65
 	if can_see and fire_time <= 0 and offset.length() < 55:
-		fire_time = [0.48, 0.3, 0.19][match_controller.difficulty]
-		var spread = [0.12, 0.065, 0.028][match_controller.difficulty]
+		fire_time = [0.75, 0.48, 0.3, 0.19][match_controller.difficulty]
+		var spread = [0.2, 0.12, 0.065, 0.028][match_controller.difficulty]
 		var direction = (offset.normalized() + Vector3(randf_range(-spread, spread), randf_range(-spread, spread), randf_range(-spread, spread))).normalized()
 		query = PhysicsRayQueryParameters3D.create(muzzle, muzzle + direction * 70, 1 | 2 | 32, [get_rid()])
 		hit = get_world_3d().direct_space_state.intersect_ray(query)
