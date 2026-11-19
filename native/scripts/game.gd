@@ -259,7 +259,7 @@ func _setup_ui() -> void:
 	menu_scroll.add_child(menu_items)
 	# Toolbar for the touch layout editor.
 	editor_bar = PanelContainer.new()
-	editor_bar.add_theme_stylebox_override("panel", DoodlePen.box(Color(DoodlePen.PAPER, 0.95), DoodlePen.INK, 2.5, 0.0, Vector2(14, 8)))
+	editor_bar.add_theme_stylebox_override("panel", DoodlePen.box(Color(DoodlePen.PAPER, 0.95), DoodlePen.BLACK, 2.5, 0.0, Vector2(14, 8)))
 	# Free-floating: it opens in the middle of the screen and its top line drags it,
 	# so controls can be placed where it first appears.
 	editor_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
