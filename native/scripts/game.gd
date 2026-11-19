@@ -2307,6 +2307,12 @@ func show_offline_menu() -> void:
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
+	var map_row = HBoxContainer.new()
+	map_row.add_theme_constant_override("separation", 8)
+	menu_items.add_child(map_row)
+	_populate_map_cards(map_row, true, func(key: String):
+		map_key = key
+		show_offline_menu())
 	var survival_start = menu_items.get_child_count()
 	_credit_section("Survival · Enemy waves", "Survive growing waves of enemies and bosses. Difficulty and wave-size choices are port additions, not part of the original game.")
 	_choices(["Easy", "Normal", "Hard", "Insane"], difficulty, func(index): difficulty = index; save_settings())

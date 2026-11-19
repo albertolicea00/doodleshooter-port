@@ -165,3 +165,9 @@ Added host setup guidance and guest waiting guidance below the lobby title. Map 
 Restored the previous blue selection/border styling and original title spacing, retaining the lobby subtitle. A preview shader rounds only the upper image corners, using local coordinates so animated atlas frames and covered image scaling retain the same corner radius. This revision has not been visually or device verified.
 
 Godot headless editor import passed for this presentation revision. No gameplay checks were rerun because gameplay was unchanged; headless import does not verify shader rendering.
+
+### Inline offline map picker (November 19)
+
+Play offline now uses the same compact animated nine-map row as the LAN host, between its subtitle and setup cards. A temporary graphical harness verified all nine cards, selecting Castle, and retaining bot count/time across the menu rebuild. The resulting 1280×720 desktop screenshot (`/private/tmp/doodleshooter-offline-preview.png`) was inspected: the map strip appears above both setup cards with rounded upper preview corners and blue selected-card styling. The Back button requires scrolling at this viewport. This is desktop UI verification, not physical-device or gameplay verification.
+
+`python3 tools/check.py` passed for this change: reference hashes, import, both gameplay smoke markers, native LAN protocol, and both host/guest LAN game completion markers.
