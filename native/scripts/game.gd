@@ -100,6 +100,7 @@ var bot_count = 5
 var bot_difficulty = 1
 var bot_minutes = 10
 var controls_xbox = false
+var layout_return: Callable = Callable()
 var bot_match: DoodleBotMatch
 var lan_server: DoodleLanServer
 var lan_address = ""
@@ -511,20 +512,65 @@ func show_map_menu(back: Callable, pick: Callable = Callable()) -> void:
 	menu_items.add_child(grid)
 	_button("BACK", back, "AltButton")
 
+func _card_wrap(start: int, split: int = -1) -> void:
+	if split >= 0:
+		var content = menu_items.get_children()
+		var cards = HBoxContainer.new()
+		cards.add_theme_constant_override("separation", 24)
+		menu_items.add_child(cards)
+		for slice in [content.slice(start, split), content.slice(split)]:
+			var card = _make_card(slice)
+			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			cards.add_child(card)
+		return
+	menu_items.add_child(_make_card(menu_items.get_children().slice(start)))
+
+func _make_card(content: Array[Node]) -> PanelContainer:
+	var card = PanelContainer.new()
+	card.add_theme_stylebox_override("panel", DoodlePen.box(Color(0.98, 0.972, 0.933, 0.95), DoodlePen.INK, 3.0, -0.35, Vector2(24, 16)))
+	var items = VBoxContainer.new()
+	items.add_theme_constant_override("separation", 12)
+	card.add_child(items)
+	for child in content:
+		child.reparent(items)
+	return card
+
+func _back_button(callback: Callable) -> void:
+	var back = _button("BACK", callback, "RedOutlineButton")
+	back.custom_minimum_size.x = 240
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
 func show_settings() -> void:
 	_clear_menu("Settings", "Choose how you want to play")
-	_button("TOUCH & AIMING", show_touch_settings)
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var top_row = HBoxContainer.new()
+	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_row.add_theme_constant_override("separation", 16)
+	menu_items.add_child(top_row)
+	var touch_button = _button("TOUCH & AIMING", show_touch_settings)
+	touch_button.custom_minimum_size.x = 260
+	touch_button.reparent(top_row)
+	var controls_button = _button("CONTROLS", func(): show_controls(show_settings), "RedOutlineButton")
+	controls_button.custom_minimum_size.x = 220
+	controls_button.reparent(top_row)
+	var start = menu_items.get_child_count()
+	_credit_section("Sound", "")
+	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
+	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
+	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
+	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
+	var split = menu_items.get_child_count()
 	_credit_section("Graphics detail", "")
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
 	_credit_section("Shading", "")
 	_choices(["Original hatching", "Coloured pencil"], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
-	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
-	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
-	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
-	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
-	_button("BACK", pause_menu if paused else show_main_menu, "AltButton")
+	_card_wrap(start, split)
+	_back_button(pause_menu if paused else show_main_menu)
 
 # Low renders the scene at 70% size with straight pen strokes and no edge
 # smoothing; Medium adds the hand-drawn stroke waver and 2x smoothing; High
@@ -535,7 +581,7 @@ func apply_quality(level: int) -> void:
 	get_viewport().scaling_3d_scale = [0.7, 1.0, 1.0][quality]
 	ReferenceAssets.set_detail(float(quality))
 
-func show_controls() -> void:
+func show_controls(return_to: Callable = Callable()) -> void:
 	_clear_menu("Controls", "")
 	menu_items.get_child(1).hide()
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
@@ -543,8 +589,8 @@ func show_controls() -> void:
 	menu.offset_left = -580
 	menu.offset_right = 580
 	var touch_card = _controls_column(menu_items, "TOUCH", [
-		"{Left thumb} move and sprint · drag up to runner marker to lock   {Drag elsewhere} look, even while firing",
-		"{SLIDE} becomes {DASH} in air   {Weapon bar} tap to switch / reload   Customize in Settings → {Touch & aiming}"
+		"{Left thumb} move and sprint · drag up to the runner marker to keep running   {Drag elsewhere} look, even while firing",
+		"{SLIDE} becomes {DASH} in the air   {Weapon bar} tap a weapon to switch · tap it again or use reload to reload"
 	])
 	var touch_header = HBoxContainer.new()
 	touch_header.add_theme_constant_override("separation", 16)
@@ -554,7 +600,10 @@ func show_controls() -> void:
 	touch_card.add_child(touch_header)
 	touch_card.move_child(touch_header, 0)
 	touch_heading.reparent(touch_header)
-	var customize_touch = _button("CUSTOMIZE LAYOUT", show_layout_editor)
+	var touch_settings_button = _button("TOUCH & AIMING", func(): show_touch_settings(func(): show_controls(return_to)))
+	touch_settings_button.custom_minimum_size = Vector2(220, 42)
+	touch_settings_button.reparent(touch_header)
+	var customize_touch = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(func(): show_controls(return_to)), "RedOutlineButton")
 	customize_touch.custom_minimum_size = Vector2(220, 42)
 	customize_touch.reparent(touch_header)
 	var cards = HBoxContainer.new()
@@ -589,9 +638,7 @@ func show_controls() -> void:
 	]
 	var controller = _controls_column(cards, "", ps5_lines)
 	_controller_picker(controller, ps5_lines)
-	var back = _button("BACK", pause_menu if paused else show_main_menu, "RedOutlineButton")
-	back.custom_minimum_size.x = 240
-	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_back_button(return_to if return_to.is_valid() else (pause_menu if paused else show_main_menu))
 
 func _controls_column(parent: Container, title: String, lines: Array[String]) -> VBoxContainer:
 	var card = PanelContainer.new()
@@ -678,10 +725,25 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 	legend.text = _controls_text(xbox_lines if controls_xbox else ps5_lines)
 
 # Every merged or assisted behaviour is optional, as in large mobile shooters.
-func show_touch_settings() -> void:
+func show_touch_settings(return_to: Callable = Callable()) -> void:
 	_clear_menu("Touch & aiming", "Changes apply immediately and are saved on this device")
-	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var top_row = HBoxContainer.new()
+	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_row.add_theme_constant_override("separation", 16)
+	menu_items.add_child(top_row)
 	_toggle("Touch controls", use_touch, func(value): use_touch = value)
+	var touch_toggle = menu_items.get_child(-1) as Button
+	touch_toggle.custom_minimum_size.x = 280
+	touch_toggle.reparent(top_row)
+	var layout_button = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(show_touch_settings), "RedOutlineButton")
+	layout_button.custom_minimum_size.x = 260
+	layout_button.reparent(top_row)
+	var start = menu_items.get_child_count()
+	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
 	_credit_section("Looking", "")
 	_slider("Look sensitivity", touch.options.look, 0.3, 2.5, option.call("look"))
 	_slider("Sensitivity while aiming", touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
@@ -689,16 +751,18 @@ func show_touch_settings() -> void:
 	_credit_section("Gyroscope", "Turn the device to aim. Needs a motion sensor.")
 	_choices(["Off", "While aiming", "Always"], touch.options.gyro, option.call("gyro"))
 	_slider("Gyroscope sensitivity", touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
+	var split = menu_items.get_child_count()
+	_credit_section("Moving", "")
+	_toggle("Fixed joystick", touch.options.fixed_stick, option.call("fixed_stick"))
+	_toggle("Sprint with a full forward push", touch.options.stick_sprint, option.call("stick_sprint"))
+	_toggle("Run lock marker", touch.options.run_lock, option.call("run_lock"))
 	_credit_section("Shooting", "")
 	_toggle("Auto fire on target", touch.options.auto_fire, option.call("auto_fire"))
 	_toggle("Hold to aim", touch.options.aim_hold, option.call("aim_hold"))
 	_toggle("Second fire button on the left", touch.options.left_fire, option.call("left_fire"))
 	_toggle("Reload button", touch.options.reload_button, option.call("reload_button"))
-	_credit_section("Moving", "")
-	_toggle("Fixed joystick", touch.options.fixed_stick, option.call("fixed_stick"))
-	_toggle("Sprint with a full forward push", touch.options.stick_sprint, option.call("stick_sprint"))
-	_toggle("Run lock marker", touch.options.run_lock, option.call("run_lock"))
-	_button("BACK", show_settings, "AltButton")
+	_card_wrap(start, split)
+	_back_button(return_to if return_to.is_valid() else show_settings)
 
 func _slider(text: String, value: float, low: float, high: float, callback: Callable) -> void:
 	var label = Label.new()
@@ -715,7 +779,8 @@ func _slider(text: String, value: float, low: float, high: float, callback: Call
 
 # The controls stay on screen, over the paused game when there is one, and
 # can be dragged and resized; the result is stored with the other settings.
-func show_layout_editor() -> void:
+func show_layout_editor(return_to: Callable = Callable()) -> void:
+	layout_return = return_to if return_to.is_valid() else show_controls
 	menu.visible = false
 	touch.reset()
 	touch.editing = true
@@ -730,7 +795,10 @@ func close_layout_editor() -> void:
 	preferences.set_value("touch", "layout", touch.custom)
 	preferences.set_value("touch", "opacity", touch.opacity)
 	preferences.save(save_path)
-	show_controls()
+	if layout_return.is_valid():
+		layout_return.call()
+	else:
+		show_controls()
 
 func show_credits() -> void:
 	_clear_menu("Credits", "doodleshooter-port · unofficial native adaptation")
