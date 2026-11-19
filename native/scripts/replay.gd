@@ -25,7 +25,8 @@ func attach(parent: Node3D) -> void:
 	camera = Camera3D.new()
 	camera.name = "MenuReplayCamera"
 	camera.fov = 75.0
-	camera.far = 260.0
+	camera.near = 0.1
+	camera.far = 600.0
 	parent.add_child(camera)
 
 func start_recording() -> void:
@@ -103,8 +104,8 @@ func build_default(level: Node3D, map_key: String = "district") -> void:
 	var count = 180
 	for i in count:
 		var t = TAU * float(i) / float(count)
-		var eye = center + Vector3(sin(t) * 10.0, 1.2 + sin(t * 2.0) * 0.8, cos(t) * 10.0)
-		var look = center + Vector3(sin(t + 0.5) * 3.0, 0.2, cos(t + 0.5) * 3.0)
+		var eye = center + Vector3(sin(t) * 16.0, 9.5 + sin(t * 2.0) * 1.5, cos(t) * 16.0)
+		var look = center + Vector3(sin(t + 0.4) * 3.0, 0.5, cos(t + 0.4) * 3.0)
 		var dir = (look - eye).normalized()
 		var yaw = atan2(-dir.x, -dir.z)
 		var pitch = asin(clampf(dir.y, -0.95, 0.95))

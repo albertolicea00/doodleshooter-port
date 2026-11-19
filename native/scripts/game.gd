@@ -77,6 +77,7 @@ var hurt_overlay: ColorRect
 var ui: Control
 var preferences = ConfigFile.new()
 var use_touch = OS.has_feature("mobile") or "--touch" in OS.get_cmdline_user_args()
+var fullscreen = false
 var starting = false
 var save_path = "user://progress.cfg"
 var particles: DoodleParticles
@@ -262,6 +263,9 @@ func _setup_ui() -> void:
 	screen_effects = preferences.get_value("video", "screen_effects", true)
 	shading = clampi(int(preferences.get_value("video", "shading", 1)), 0, 1)
 	ReferenceAssets.set_style(float(shading))
+	fullscreen = bool(preferences.get_value("video", "fullscreen", false))
+	if not OS.has_feature("mobile") and DisplayServer.get_name() != "headless" and not "--smoke" in OS.get_cmdline_user_args() and not capture_mode:
+		apply_fullscreen(fullscreen)
 	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 3)
 	wave_size = clampi(int(preferences.get_value("survival", "wave_size", 0)), 0, 2)
 	bot_minutes = clampi(int(preferences.get_value("bots", "minutes", 10)), DoodleBotMatch.MIN_MINUTES, DoodleBotMatch.MAX_MINUTES)
@@ -764,6 +768,8 @@ func show_settings() -> void:
 	_choices(["Original hatching", "Coloured pencil"], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
+	if not OS.has_feature("mobile"):
+		_toggle("Fullscreen", fullscreen, func(value): apply_fullscreen(value); save_settings())
 	_card_wrap(start, split)
 	if paused:
 		_back_button(pause_menu, "BACK TO PAUSE")
@@ -778,6 +784,10 @@ func apply_quality(level: int) -> void:
 	get_viewport().msaa_3d = [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][quality]
 	get_viewport().scaling_3d_scale = [0.7, 1.0, 1.0][quality]
 	ReferenceAssets.set_detail(float(quality))
+
+func apply_fullscreen(enabled: bool) -> void:
+	fullscreen = enabled
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 
 func show_controls(return_to: Callable = Callable(), return_label: String = "") -> void:
 	_clear_menu("Controls", "")
@@ -1281,15 +1291,11 @@ func _process(delta: float) -> void:
 			if auto_scroll_pos >= max_scroll:
 				auto_scroll = false
 	if not playing:
-		var has_map_strip = menu_items.find_child("OnlineMaps", true, false) == null and (menu_items.get_child_count() > 1 and menu_items.get_child(1) is HBoxContainer and menu_items.get_child(1).get_child_count() >= 9)
-		if menu.visible and not paused and not starting and not has_map_strip:
+		if menu.visible and not paused and not starting:
 			if is_instance_valid(region):
 				region.visible = true
-			get_viewport().scaling_3d_scale = 0.65
 			replay.step_playback(delta, true)
 		else:
-			if is_instance_valid(region) and not paused and not starting:
-				region.visible = false
 			replay.step_playback(0.0, false)
 		return
 	if is_instance_valid(region):
@@ -2149,6 +2155,7 @@ func save_settings() -> void:
 	preferences.set_value("video", "fps", show_fps)
 	preferences.set_value("video", "screen_effects", screen_effects)
 	preferences.set_value("video", "shading", shading)
+	preferences.set_value("video", "fullscreen", fullscreen)
 	preferences.set_value("survival", "difficulty", difficulty)
 	preferences.set_value("survival", "wave_size", wave_size)
 	preferences.set_value("bots", "minutes", bot_minutes)

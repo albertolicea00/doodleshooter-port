@@ -108,6 +108,16 @@ make ios
 
 The initial export attempt stopped because `App Store Team ID` was missing. No iOS build has been produced or tested.
 
+## Desktop (Windows, Linux, macOS)
+
+The shared project in `native/` also runs on desktop with mouse + keyboard or controllers (`use_touch` defaults to off outside mobile), and includes a desktop **Fullscreen** toggle in Settings (`video/fullscreen`). `native/project.godot` enables `import_s3tc_bptc` alongside `import_etc2_astc` for desktop VRAM texture compression.
+
+`native/export_presets.cfg` defines three desktop presets (requiring the Godot 4.6.3 export templates):
+
+- **Windows Desktop** (`x86_64`, embedded PCK) → `builds/windows/doodleshooter-port.exe`
+- **Linux** (`x86_64`, embedded PCK) → `builds/linux/doodleshooter-port.x86_64`
+- **macOS** (`universal`, bundle ID `com.doodleshooter.port`, unsigned / `codesign=0`) → `builds/macos/doodleshooter-port.zip`
+
 ## Verification
 
 ```sh
