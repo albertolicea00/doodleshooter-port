@@ -277,7 +277,7 @@ func _setup_ui() -> void:
 	menu_hint.add_theme_color_override("default_color", Color(DoodlePen.INK, 0.8))
 	menu_hint.text = "[center][color=#%s]A / X[/color] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B / O[/color] Back[/center]" % [red_hex, red_hex]
 	var update_hint = func(_val = 0.0):
-		menu_hint.visible = menu.visible and menu_scroll.scroll_vertical <= 2
+		menu_hint.visible = menu.visible and (menu_scroll == null or menu_scroll.scroll_vertical <= 2)
 	menu.visibility_changed.connect(func():
 		menu_backdrop.visible = menu.visible
 		update_hint.call())
