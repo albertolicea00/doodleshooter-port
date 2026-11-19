@@ -1941,11 +1941,12 @@ func show_offline_menu() -> void:
 func _bot_count_selector() -> void:
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	menu_items.add_child(row)
 	var count = Label.new()
 	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	count.custom_minimum_size.x = 120
 	var decrease = _button("−", func(): pass, "AltButton")
 	decrease.tooltip_text = "Fewer bots"
 	decrease.custom_minimum_size.x = 64

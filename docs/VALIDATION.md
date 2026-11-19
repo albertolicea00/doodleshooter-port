@@ -99,3 +99,9 @@ The follow-up applies the same four-tier scale to offline bots: Normal retains f
 ## Bot count selector (November 19)
 
 Replaced the offline bot count dropdown with a centered count between minus and plus buttons. The decrement button is disabled at 1 and increment at 9. `python3 tools/check.py` passed in full. A temporary graphical harness emitted button signals to increase from 1 to 9 and decrease back to 1, verifying the count, singular/plural labels, and disabled limits. Desktop screenshots of both endpoints were inspected at 1280×720 using macOS OpenGL Compatibility; captures are `/private/tmp/doodleshooter-bot-selector/bot-count-1.png` and `bot-count-9.png`. This verifies desktop layout and callbacks, not physical touch input or Android behavior.
+
+## Expanded bot count and compact selector (November 19)
+
+Offline matches now allow 1–30 bots (up to 31 participants including the player). The centered minus/count/plus group uses a fixed 120-pixel counter so the buttons sit close to the number. A red inline performance warning appears at 20 bots; at 30 it changes to a stronger playful warning. Both warnings allow starting the match.
+
+A temporary graphical harness verified increasing/decreasing the count, clamping at 1 and 30, showing the warning at 20, hiding it again at 19, and changing its text at 30 and back at 29. The final desktop layout at 30 bots was rendered and inspected at 1280×720 using macOS OpenGL Compatibility (`/private/tmp/doodleshooter-bot-selector/bot-count-30-warning.png`). `python3 tools/check.py` passed with the expanded limit; its gameplay smoke scenario creates 30 bots and verifies 31 scoreboard entries before running the existing three-bot combat scenario. The final spacing adjustment was then verified with the graphical harness. No physical-device input, full 30-bot match, or frame-rate measurement was performed.
