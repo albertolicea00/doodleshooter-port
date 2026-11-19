@@ -539,13 +539,18 @@ func apply_quality(level: int) -> void:
 func show_controls() -> void:
 	_clear_menu("Controls", "")
 	menu_items.get_child(1).hide()
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
-	var columns = HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 36)
-	menu_items.add_child(columns)
-	_controls_column(columns, "MOUSE + KEYBOARD", [
+	_controls_column(menu_items, "TOUCH", [
+		"{Left thumb} move and sprint; drag up to the runner marker to keep running. {Drag elsewhere} look, even while firing.",
+		"{SLIDE} becomes {DASH} in the air. {Weapon bar} tap to switch, tap again or use reload. Customize in Settings under {Touch & aiming}."
+	])
+	var cards = HBoxContainer.new()
+	cards.add_theme_constant_override("separation", 24)
+	menu_items.add_child(cards)
+	_controls_column(cards, "MOUSE + KEYBOARD", [
 		"{WASD} move   {Mouse} look   {Shift} sprint",
 		"{LMB} fire / slash   {RMB} aim / block",
 		"{Space} jump · press against a wall to wall jump",
@@ -557,7 +562,7 @@ func show_controls() -> void:
 		"{G} grenade · hold to throw further   {H} smoke",
 		"{Tab} scoreboard (bot / network matches)   {Esc} pause",
 		"{LMB + RMB} charged katana execution in survival",
-		"{1–7 / Wheel} switch weapon: rifle · shotgun · sniper · katana · revolver · SMG · bazooka"
+		"{1–7 / Wheel} switch weapons"
 	])
 	var ps5_lines: Array[String] = [
 		"{L stick} move   {R stick} look   {L3} sprint",
@@ -572,29 +577,29 @@ func show_controls() -> void:
 		"{R3} grenade · hold to throw further",
 		"{Options} pause"
 	]
-	var controller = _controls_column(columns, "", ps5_lines)
+	var controller = _controls_column(cards, "", ps5_lines)
 	_controller_picker(controller, ps5_lines)
-	_credit_section("Touch", "Left thumb: move and sprint; drag up to the runner marker to keep running. Drag elsewhere to look, even while firing. SLIDE becomes DASH in the air. Tap a weapon to switch; tap it again or use reload to reload. Customize aiming and button layout in Settings under Touch & aiming.")
-	_button("BACK", pause_menu if paused else show_main_menu, "RedOutlineButton")
+	var back = _button("BACK", pause_menu if paused else show_main_menu, "RedOutlineButton")
+	back.custom_minimum_size.x = 240
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
-func _controls_column(columns: HBoxContainer, title: String, lines: Array[String]) -> VBoxContainer:
+func _controls_column(parent: Container, title: String, lines: Array[String]) -> VBoxContainer:
+	var card = PanelContainer.new()
+	card.add_theme_stylebox_override("panel", DoodlePen.box(Color(0.98, 0.972, 0.933, 0.95), DoodlePen.INK, 3.0, -0.35, Vector2(24, 16)))
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(card)
 	var column = VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 8)
-	columns.add_child(column)
+	card.add_child(column)
 	var heading = Label.new()
 	heading.text = title
 	heading.add_theme_font_size_override("font_size", 26)
 	column.add_child(heading)
-	var rule = ColorRect.new()
-	rule.color = DoodlePen.INK
-	rule.custom_minimum_size.y = 2
-	column.add_child(rule)
 	var legend = RichTextLabel.new()
 	legend.bbcode_enabled = true
 	legend.fit_content = true
 	legend.scroll_active = false
-	legend.custom_minimum_size.x = 480
 	legend.mouse_filter = Control.MOUSE_FILTER_PASS
 	legend.add_theme_font_size_override("normal_font_size", 22)
 	legend.add_theme_constant_override("line_separation", 2)
@@ -618,8 +623,7 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 		for binding in bindings:
 			translated = translated.replace(binding, bindings[binding])
 		xbox_lines.append(translated)
-	var legend = column.get_child(2) as RichTextLabel
-	column.get_child(0).free()
+	var legend = column.get_child(1) as RichTextLabel
 	column.get_child(0).free()
 	var picker = HBoxContainer.new()
 	picker.add_theme_constant_override("separation", 10)
