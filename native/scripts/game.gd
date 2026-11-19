@@ -1659,7 +1659,7 @@ func run_smoke() -> void:
 	await smoke_tap_button("BACK TO CREDITS")
 	await smoke_tap_button("BACK")
 	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
-	await smoke_tap_button("START")
+	await smoke_tap_button("START SOLO")
 	assert(menu_items.get_child(0).get_child(0).text == "Play offline", "A menu tap must open offline play")
 	Input.emulate_touch_from_mouse = false
 	var saved_difficulty = difficulty
