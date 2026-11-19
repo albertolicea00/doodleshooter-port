@@ -542,8 +542,8 @@ func _make_card(content: Array[Node], align_bottom: bool = false) -> PanelContai
 		child.reparent(items)
 	return card
 
-func _back_button(callback: Callable) -> void:
-	var back = _button("BACK", callback, "RedOutlineButton")
+func _back_button(callback: Callable, label: String = "BACK") -> void:
+	var back = _button(label, callback, "RedOutlineButton")
 	back.custom_minimum_size.x = 240
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
@@ -854,8 +854,11 @@ func show_credit_notices() -> void:
 
 func show_license(title: String, text: String) -> void:
 	_clear_menu(title, "Attribution and license notices")
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var start = menu_items.get_child_count()
 	_credit_section("", text)
-	_button("BACK TO CREDITS", show_credits, "AltButton")
+	_card_wrap(start)
+	_back_button(show_credits, "BACK TO CREDITS")
 
 func start_game(first_wave: int) -> void:
 	if starting:
