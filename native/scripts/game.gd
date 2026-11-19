@@ -260,28 +260,46 @@ func _setup_ui() -> void:
 	# Toolbar for the touch layout editor.
 	editor_bar = PanelContainer.new()
 	editor_bar.add_theme_stylebox_override("panel", DoodlePen.box(Color(DoodlePen.PAPER, 0.95), DoodlePen.INK, 2.5, 0.0, Vector2(14, 8)))
-	editor_bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	editor_bar.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	editor_bar.offset_top = 10
+	# Free-floating: it opens in the middle of the screen and its top line drags it,
+	# so controls can be placed where it first appears.
+	editor_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	editor_bar.visible = false
 	ui.add_child(editor_bar)
 	var editor_rows = VBoxContainer.new()
 	editor_bar.add_child(editor_rows)
+	var editor_handle = Label.new()
+	editor_handle.text = "~ drag this line to move the bar ~"
+	editor_handle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	editor_handle.add_theme_font_size_override("font_size", 18)
+	editor_handle.add_theme_color_override("font_color", DoodlePen.RED)
+	editor_handle.mouse_filter = Control.MOUSE_FILTER_STOP
+	editor_handle.mouse_default_cursor_shape = Control.CURSOR_MOVE
+	editor_handle.gui_input.connect(func(event):
+		if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
+			editor_bar.position = (editor_bar.position + event.relative).clamp(Vector2.ZERO, ui.size - editor_bar.size))
+	editor_rows.add_child(editor_handle)
 	var editor_hint = Label.new()
-	editor_hint.text = "Drag a control to move it · tap one, then resize it"
+	editor_hint.text = "Drag a control to move it · tap one to resize, copy or delete it"
 	editor_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	editor_hint.add_theme_font_size_override("font_size", 20)
 	editor_rows.add_child(editor_hint)
-	var editor_tools = HBoxContainer.new()
-	editor_tools.add_theme_constant_override("separation", 8)
-	editor_rows.add_child(editor_tools)
-	for tool in [["SMALLER", func(): touch.resize_selected(-0.1), "AltButton"], ["BIGGER", func(): touch.resize_selected(0.1), "AltButton"], ["FAINTER", func(): touch.fade(-0.1), "AltButton"], ["BOLDER", func(): touch.fade(0.1), "AltButton"], ["RESET", func(): touch.restore_defaults(), "RedButton"], ["DONE", close_layout_editor, ""]]:
-		var button = Button.new()
-		button.text = tool[0]
-		button.theme_type_variation = tool[2]
-		button.add_theme_font_size_override("font_size", 20)
-		button.pressed.connect(tool[1])
-		editor_tools.add_child(button)
+	var tool_rows = [
+		[["SMALLER", func(): touch.resize_selected(-0.1), "AltButton"], ["BIGGER", func(): touch.resize_selected(0.1), "AltButton"], ["DUPLICATE", func(): touch.duplicate_selected(), "AltButton"], ["DELETE", func(): touch.delete_selected(), "RedButton"]],
+		[["FAINTER", func(): touch.fade(-0.1), "AltButton"], ["BOLDER", func(): touch.fade(0.1), "AltButton"], ["RESET", func(): touch.restore_defaults(), "RedButton"], ["DONE", close_layout_editor, ""]]]
+	for row in tool_rows:
+		var editor_tools = HBoxContainer.new()
+		editor_tools.add_theme_constant_override("separation", 8)
+		editor_tools.alignment = BoxContainer.ALIGNMENT_CENTER
+		editor_rows.add_child(editor_tools)
+		for tool in row:
+			var button = Button.new()
+			button.text = tool[0]
+			button.theme_type_variation = tool[2]
+			button.add_theme_font_size_override("font_size", 20)
+			button.pressed.connect(tool[1])
+			editor_tools.add_child(button)
+			if tool[0] == "DELETE":
+				touch.delete_button = button
 	touch.toolbar = editor_bar
 	scope = ColorRect.new()
 	scope.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -543,6 +561,9 @@ func show_layout_editor() -> void:
 	touch.selected = ""
 	touch.visible = true
 	editor_bar.visible = true
+	editor_bar.reset_size()
+	await get_tree().process_frame
+	editor_bar.position = ((ui.size - editor_bar.size) * 0.5).floor()
 
 func close_layout_editor() -> void:
 	preferences.set_value("touch", "layout", touch.custom)
@@ -1264,6 +1285,25 @@ func run_smoke() -> void:
 	touch.custom = {}
 	touch.layout()
 	assert(moved[0].is_equal_approx(touch.buttons.fire[0] + Vector2(-40, -30)) and moved[1] > touch.buttons.fire[1], "A saved layout must move and resize its control")
+	touch.selected = "fire"
+	assert(not touch.can_delete(), "The only fire button must not be deletable")
+	touch.duplicate_selected()
+	touch.layout()
+	assert(touch.buttons.has("fire#2") and touch.selected == "fire#2" and touch.can_delete(), "Duplicating must add a deletable copy")
+	assert(not touch.buttons["fire#2"][0].is_equal_approx(touch.buttons.fire[0]), "A copy must not sit on top of its original")
+	var copy_finger = InputEventScreenTouch.new()
+	copy_finger.index = 7
+	copy_finger.pressed = true
+	copy_finger.position = touch.buttons["fire#2"][0]
+	touch._press(copy_finger)
+	assert(Input.is_action_pressed("fire"), "A copied fire button must fire")
+	copy_finger.pressed = false
+	touch._input(copy_finger)
+	assert(not Input.is_action_pressed("fire"), "Lifting the copied button must stop firing")
+	touch.delete_selected()
+	touch.layout()
+	assert(not touch.buttons.has("fire#2") and touch.buttons.has("fire"), "Deleting a copy must keep the original")
+	touch.custom = {}
 	var fire_finger = InputEventScreenTouch.new()
 	fire_finger.index = 5
 	touch.layout()

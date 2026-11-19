@@ -28,6 +28,7 @@ var selected = ""
 var dragging = false
 var grab = Vector2.ZERO
 var toolbar: Control
+var delete_button: Button
 # Player preferences, edited under Settings and stored with the layout.
 var options = {"look": 1.0, "aim_look": 0.6, "invert_y": false, "gyro": 0, "gyro_speed": 1.0, "auto_fire": false, "left_fire": false, "reload_button": true, "aim_hold": false, "fixed_stick": false, "stick_sprint": true, "run_lock": true}
 var auto_firing = false
@@ -41,6 +42,8 @@ func _process(delta: float) -> void:
 		return
 	modulate.a = opacity
 	queue_redraw()
+	if editing and delete_button != null:
+		delete_button.disabled = not can_delete()
 	if editing or not is_instance_valid(player) or not player.alive or not player.game.playing:
 		return
 	# Gyroscope aiming: rotation rate around the screen's vertical axis turns,
@@ -99,9 +102,13 @@ func layout() -> void:
 	if show_score or editing:
 		buttons["scoreboard"] = [Vector2(r - 112, inset[1] + 44), 26.0, "SCORE"]
 	if options.reload_button:
-		buttons["reload"] = [Vector2(r - 92, b - 108), 24.0, "RELOAD"]
+		buttons["reload"] = [Vector2(r - 275, b - 128), 28.0, "RELOAD"]
 	if options.left_fire:
 		buttons["fire_left"] = [Vector2(inset[0] + 60, b - 360), 40.0, "FIRE"]
+	# Copies the player added in the editor ("fire#2"): same action, own spot and size.
+	for key in custom:
+		if "#" in key and buttons.has(_base(key)):
+			buttons[key] = buttons[_base(key)].duplicate()
 	for action in buttons:
 		var button: Array = buttons[action]
 		button[1] *= _tweak(action)[2]
@@ -123,6 +130,13 @@ func layout() -> void:
 			buttons.aim[2] = "BLOCK"
 			if buttons.has("fire_left"):
 				buttons.fire_left[2] = "SLASH"
+		for key in buttons:
+			if "#" in key:
+				buttons[key][2] = buttons[_base(key)][2]
+
+# The action a control triggers: a copy such as "fire#2" acts as "fire".
+static func _base(key: String) -> String:
+	return key.get_slice("#", 0)
 
 func _input(event: InputEvent) -> void:
 	if not visible:
@@ -165,8 +179,9 @@ func _press(event: InputEventScreenTouch) -> void:
 			held[event.index] = ""
 			get_viewport().set_input_as_handled()
 			return
-	for action in buttons:
-		var b: Array = buttons[action]
+	for key in buttons:
+		var b: Array = buttons[key]
+		var action = _base(key)
 		if event.position.distance_to(b[0]) < b[1] + 8:
 			if action == "aim" and not options.aim_hold and not (is_instance_valid(player) and player.weapon_index == 3):
 				# Aim latches so the same thumb stays free to look and fire;
@@ -260,6 +275,30 @@ func resize_selected(step: float) -> void:
 		return
 	var tweak = _tweak(selected)
 	custom[selected] = [tweak[0], tweak[1], clampf(tweak[2] + step, 0.6, 1.6)]
+
+# Adds a copy of the selected button next to it, so a player can have, say, two fire buttons.
+func duplicate_selected() -> void:
+	if not buttons.has(selected):
+		return
+	var base = _base(selected)
+	var n = 2
+	while custom.has("%s#%d" % [base, n]):
+		n += 1
+	var key = "%s#%d" % [base, n]
+	var gap = buttons[selected][1] * 2.3
+	var shift = Vector2(-gap, 0) if buttons[selected][0].x > size.x * 0.5 else Vector2(gap, 0)
+	var offset: Vector2 = buttons[selected][0] + shift - defaults[base]
+	custom[key] = [offset.x, offset.y, _tweak(selected)[2]]
+	selected = key
+
+# Only copies can be removed, so every action always keeps at least one button.
+func can_delete() -> bool:
+	return "#" in selected
+
+func delete_selected() -> void:
+	if can_delete():
+		custom.erase(selected)
+		selected = ""
 
 func fade(step: float) -> void:
 	opacity = clampf(opacity + step, 0.3, 1.0)
@@ -380,7 +419,8 @@ func _draw() -> void:
 	var mark = Color(DoodlePen.RED, 0.9)
 	for action in buttons:
 		var b: Array = buttons[action]
-		var down = held.values().has("fire" if action == "fire_left" else action) or (action == "aim" and aim_locked)
+		var base = _base(action)
+		var down = held.values().has("fire" if base == "fire_left" else base) or (base == "aim" and aim_locked)
 		var tone = mark if editing and action == selected else ink
 		draw_circle(b[0], b[1], Color(DoodlePen.INK, 0.28) if down else Color(DoodlePen.PAPER, 0.55))
 		DoodlePen.sketch_circle(self, b[0], b[1], tone, 3.0 if action == "fire" else 2.5)
