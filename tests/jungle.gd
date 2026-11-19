@@ -53,6 +53,6 @@ func run() -> void:
 	game.show_main_menu()
 	game._clear_world()
 	game.sound.stop_all()
-	await create_timer(0.1).timeout
+	await create_timer(0.3).timeout
 	print("JUNGLE PASS: survival/arena, 647 colliders, spawns, ground ray, 25 original animations at three times, moving grapple targets, palette reset")
 	quit()
