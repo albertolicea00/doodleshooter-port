@@ -12,10 +12,10 @@ Doodle District, Doodle Jungle, and Doodle Mexico come from the original game. J
 
 | | | |
 | --- | --- | --- |
-| ![Doodle District](docs/screenshots/district.jpg) Doodle District (original) | ![Doodle Mexico](docs/screenshots/mexico.jpg) Doodle Mexico (original) | ![Doodle Castle](docs/screenshots/castle.jpg) Doodle Castle (port) |
-| ![Doodle Harbor](docs/screenshots/harbor.jpg) Doodle Harbor (port) | ![Doodle Pyramid](docs/screenshots/pyramid.jpg) Doodle Pyramid (port) | ![Doodle Station](docs/screenshots/station.jpg) Doodle Station (port) |
-| ![Doodle Forest](docs/screenshots/forest.jpg) Doodle Forest (port) | ![Doodle School](docs/screenshots/school.jpg) Doodle School (port) | ![Doodle Base](docs/screenshots/military.jpg) Doodle Base (port) |
-| ![Doodle Jungle](docs/screenshots/jungle.jpg) Doodle Jungle (original) | | |
+| ![Doodle District](docs/screenshots/district.jpg) Doodle District (original) | ![Doodle Jungle](docs/screenshots/jungle.jpg) Doodle Jungle (original) | ![Doodle Mexico](docs/screenshots/mexico.jpg) Doodle Mexico (original) |
+| ![Doodle Castle](docs/screenshots/castle.jpg) Doodle Castle (port) | ![Doodle Harbor](docs/screenshots/harbor.jpg) Doodle Harbor (port) | ![Doodle Pyramid](docs/screenshots/pyramid.jpg) Doodle Pyramid (port) |
+| ![Doodle Station](docs/screenshots/station.jpg) Doodle Station (port) | ![Doodle Forest](docs/screenshots/forest.jpg) Doodle Forest (port) | ![Doodle School](docs/screenshots/school.jpg) Doodle School (port) |
+| ![Doodle Base](docs/screenshots/military.jpg) Doodle Base (port) | | |
 
 Regenerate them with `make screenshots` (desktop renders, converted with macOS `sips`).
 
