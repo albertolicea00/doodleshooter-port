@@ -13,12 +13,13 @@ ANDROID_APK := builds/android/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-deb
 ANDROID_RELEASE_APK := builds/android/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-release.apk
 ANDROID_RELEASE_UNSIGNED := $(ANDROID_RELEASE_APK:.apk=-unsigned.apk)
 IOS_ZIP := builds/ios/doodleshooter-port-v$(VERSION).zip
-WINDOWS_EXE := builds/windows/doodleshooter-port-v$(VERSION).exe
+WINDOWS_EXE := builds/windows/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-release.exe
 LINUX_BIN := builds/linux/doodleshooter-port-v$(VERSION).x86_64
 MACOS_ZIP := builds/macos/doodleshooter-port-v$(VERSION).zip
+MACOS_DMG := builds/macos/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-release.dmg
 SERVER_PYTHON := .venv/bin/python
 
-.PHONY: ipa help import run touch check build android android-release ios windows linux macos \
+.PHONY: ipa dmg help import run touch check build android android-release ios windows linux macos \
 	version bump-patch bump-minor bump-major \
 	install-android server-deps server test-server capture-menus maps map-previews screenshots \
 	assets-reference audio-deps assets-audio clean
@@ -34,8 +35,9 @@ help:
 	  'make android-release  Export the release APK (...-release.apk; signed with keys/release.properties)' \
 	  'make ipa              Export the signed iOS IPA (team from keys/ios.properties)' \
 	  'make ios              Export the iOS project once signing is configured' \
-	  'make windows          Export the Windows Desktop executable' \
+	  'make windows          Export builds/windows/doodleshooter-port-v<version>-<code>-release.exe' \
 	  'make linux            Export the Linux x86_64 executable' \
+	  'make dmg              Export builds/macos/doodleshooter-port-v<version>-<code>-release.dmg' \
 	  'make macos            Export the unsigned macOS universal archive' \
 	  'make version          Show the current version and version code' \
 	  'make bump-patch       Bump patch version and increment version code' \
@@ -96,6 +98,11 @@ windows: import
 linux: import
 	mkdir -p "$(dir $(LINUX_BIN))"
 	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release Linux "$(CURDIR)/$(LINUX_BIN)"
+
+# Ad-hoc signed by Godot (no Developer ID): another Mac opens it the first time with right-click → Open.
+dmg: import
+	mkdir -p "$(dir $(MACOS_DMG))"
+	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release macOS "$(CURDIR)/$(MACOS_DMG)"
 
 macos: import
 	mkdir -p "$(dir $(MACOS_ZIP))"

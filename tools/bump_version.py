@@ -60,11 +60,13 @@ def update_files(new_version: str, new_code: int) -> None:
         elif line.startswith("application/short_version="):
             line = f'application/short_version="{new_version}"\n'
         elif line.startswith("application/product_version="):
-            line = f'application/product_version="{new_version}"\n'
+            # Windows versions have four numbers; the fourth carries the version code.
+            line = f'application/product_version="{new_version}.{new_code}"\n'
         elif line.startswith("application/file_version="):
-            line = f'application/file_version="{new_version}"\n'
+            line = f'application/file_version="{new_version}.{new_code}"\n'
         elif line.startswith("application/version="):
-            if current_platform == "iOS":
+            # iOS and macOS read this as the build number (CFBundleVersion).
+            if current_platform in ("iOS", "macOS"):
                 line = f'application/version="{new_code}"\n'
             else:
                 line = f'application/version="{new_version}"\n'
