@@ -186,15 +186,19 @@ The port plans the same approach: first a port-only mode with its own ID prefix,
 
 ## 🍎 iOS
 
-**Deferred at the user's request.** The `iOS` preset uses the same scene and controls, with bundle identifier `com.doodleshooter.port`.
+- **Bundle identifier**: `com.doodleshooter.port` (`iOS` preset).
+- **Prerequisites**: Xcode signed in to your Apple ID and the Godot 4.6.3 export templates.
 
-When resuming iOS work, install **Xcode** and the Godot export templates on macOS, then set your **Apple Team ID** in `native/export_presets.cfg` or **Project → Export → iOS**:
+`make ipa` writes `builds/ios/doodleshooter-port-v<version>-<build>-release.ipa`, signed through Xcode:
 
-```sh
-make ios   # builds/ios/doodleshooter-port-v<version>.zip
-```
+1. Godot exports the iOS preset as an Xcode project (release template).
+2. `xcodebuild` archives it in Release and exports the IPA with automatic signing.
 
-*The initial export attempt stopped because `App Store Team ID` was missing. No iOS build has been produced or tested.*
+- **Team:** `DEVELOPMENT_TEAM` in `keys/ios.properties` (git-ignored; copy `keys/ios.properties.example`), or `TEAM=<id>`. `tools/export_ipa.sh` writes it into the iOS preset only for the export, together with `application/export_project_only=true`, and always restores `native/export_presets.cfg` afterwards, so the team id never reaches git.
+- **Version:** `application/short_version` and `application/version` in the `iOS` preset, kept in step with Android by `make bump-patch|minor|major`.
+- **Export method:** `IPA_METHOD=debugging` (default with a free personal team), `release-testing` (Ad Hoc) or `app-store-connect` (default with a paid team). A free personal team only allows `debugging`: the IPA installs on your own registered devices and stops opening after 7 days. Ad Hoc, TestFlight and the App Store need the paid Apple Developer Program.
+
+`make ios` still writes the plain Xcode project to `builds/ios/doodleshooter-port-v<version>.zip`.
 
 ## 💻 Desktop (Windows, Linux, macOS)
 

@@ -32,6 +32,7 @@ help:
 	  'make build            Export the Android debug APK' \
 	  'make android          Export the Android debug APK (doodleshooter-port-v<version>-<code>-debug.apk)' \
 	  'make android-release  Export the release APK (...-release.apk; signed with keys/release.properties)' \
+	  'make ipa              Export the signed iOS IPA (team from keys/ios.properties)' \
 	  'make ios              Export the iOS project once signing is configured' \
 	  'make windows          Export the Windows Desktop executable' \
 	  'make linux            Export the Linux x86_64 executable' \
