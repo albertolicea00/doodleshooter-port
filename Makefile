@@ -11,6 +11,7 @@ VERSION := $(shell "$(PYTHON)" tools/bump_version.py --version)
 VERSION_CODE := $(shell "$(PYTHON)" tools/bump_version.py --code)
 ANDROID_APK := builds/android/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-debug.apk
 ANDROID_RELEASE_APK := builds/android/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-release.apk
+ANDROID_RELEASE_UNSIGNED := $(ANDROID_RELEASE_APK:.apk=-unsigned.apk)
 IOS_ZIP := builds/ios/doodleshooter-port-v$(VERSION).zip
 WINDOWS_EXE := builds/windows/doodleshooter-port-v$(VERSION).exe
 LINUX_BIN := builds/linux/doodleshooter-port-v$(VERSION).x86_64
@@ -30,7 +31,7 @@ help:
 	  'make check            Run gameplay and LAN checks' \
 	  'make build            Export the Android debug APK' \
 	  'make android          Export the Android debug APK (doodleshooter-port-v<version>-<code>-debug.apk)' \
-	  'make android-release  Export the release APK (...-release.apk; requires release signing)' \
+	  'make android-release  Export the release APK (...-release.apk; signed with keys/release.properties)' \
 	  'make ios              Export the iOS project once signing is configured' \
 	  'make windows          Export the Windows Desktop executable' \
 	  'make linux            Export the Linux x86_64 executable' \
@@ -70,9 +71,13 @@ android: import
 	mkdir -p "$(dir $(ANDROID_APK))"
 	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-debug Android "$(CURDIR)/$(ANDROID_APK)"
 
+# Godot cannot sign with passwords that contain shell characters, so it exports the unsigned
+# "Android Release (arm64)" preset and tools/sign_apk.py signs it with keys/release.properties.
 android-release: import
 	mkdir -p "$(dir $(ANDROID_RELEASE_APK))"
-	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release Android "$(CURDIR)/$(ANDROID_RELEASE_APK)"
+	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release "Android Release (arm64)" "$(CURDIR)/$(ANDROID_RELEASE_UNSIGNED)"
+	"$(PYTHON)" tools/sign_apk.py "$(ANDROID_RELEASE_UNSIGNED)" "$(ANDROID_RELEASE_APK)" keys/release.properties
+	rm -f "$(ANDROID_RELEASE_UNSIGNED)"
 
 ios: import
 	mkdir -p "$(dir $(IOS_ZIP))"
