@@ -23,6 +23,7 @@ secrets.properties
 *.secret
 keys/google-services.json
 keys/release.properties
+keys/ios.properties
 *.jks
 *.keystore
 keystore.properties
