@@ -101,10 +101,12 @@ Touch controls appear automatically on mobile (*menus use mouse emulation; gamep
 | Command | Output |
 |---|---|
 | `make android` (or `make build`) | debug APK `builds/android/doodleshooter-port-v<version>-<versionCode>-debug.apk` |
-| `make android-release` | release APK `builds/android/doodleshooter-port-v<version>-<versionCode>-release.apk` |
+| `make android-release` | release APK `builds/android/doodleshooter-port-v<version>-<versionCode>-release.apk`, signed with `keys/release.properties` |
 | `make install-android` | installs the current debug APK on an `adb`-connected device |
 
-For example, version `2.0.1` with version code `1` gives `doodleshooter-port-v2.0.1-1-debug.apk`. Both targets export the `Android` preset; the `Android Release (arm64)` preset is not used by the `Makefile`. `AAB` exports require a Gradle build and are not set up.
+For example, version `2.0.1` with version code `1` gives `doodleshooter-port-v2.0.1-1-debug.apk`. The debug APK uses the `Android` preset (`ARM64` and `x86_64`); the release APK uses the `Android Release (arm64)` preset (`ARM64` only), exported unsigned and signed afterwards. `bump_version.py` keeps both presets' versions in step. `AAB` exports require a Gradle build and are not set up.
+
+Run one Godot export at a time, also across projects: parallel exports share Godot's temporary APK in its global cache and fail with "Could not unzip temporary unaligned APK" or produce a broken APK.
 
 ### Version and version code
 
@@ -117,12 +119,20 @@ make bump-patch   # or bump-minor / bump-major: new version, version code + 1
 
 ### Release signing
 
-`make android-release` signs with the **release keystore configured in Godot**, not with a file in `keys/`. Nothing in the build reads `keys/release.properties` yet, and `native/export_presets.cfg` contains no release keystore. Configure it in one of two ways:
+`make android-release` exports the unsigned `Android Release (arm64)` preset and then runs `tools/sign_apk.py`, which aligns it with `zipalign` (16 KB pages on build-tools 35+) and signs it with `apksigner` using `keys/release.properties` (git-ignored; copy `keys/release.properties.example`):
 
-- **Project → Export → Android → Keystore**: set *Release*, *Release User* and *Release Password*. Godot keeps these secrets in `native/.godot/export_credentials.cfg` (git-ignored), not in `export_presets.cfg`. `make clean` deletes `native/.godot`, so enter them again after a clean.
-- **Environment variables**, read by Godot at export time: `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `GODOT_ANDROID_KEYSTORE_RELEASE_USER` and `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD`. Only shell quoting applies; single-quote values that contain `$`, `\` or spaces.
+```properties
+storeFile=release.jks
+storePassword=...
+keyAlias=key0
+keyPassword=...
+```
 
-Godot's config files are not Java properties: if you edit a value by hand, it is a double-quoted string where a literal `\` is written `\\` and a `"` is written `\"`. Without a release keystore the release export fails. Never commit keystores or passwords.
+- `storeFile` is relative to `keys/`.
+- The file follows Java Properties rules: a literal backslash is written `\\`; other characters (`= : # ! $`, quotes) go as they are, without quotes.
+- The passwords reach `apksigner` through environment variables and are never printed.
+
+Godot is not left to sign the release itself because it passes the keystore password through a shell: a password with shell characters (such as `$`, `!`, `|`, `\`, `"`, `` ` ``, `&`, `<`, `>`) makes its export fail with a shell syntax error or "Release Username and/or Password is invalid". The script needs Python 3 and the Android SDK build-tools (found through `ANDROID_HOME`, `ANDROID_SDK_ROOT` or `~/Library/Android/sdk`). Never commit keystores or passwords.
 
 ## 🎮 Offline play
 
