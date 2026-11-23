@@ -18,7 +18,7 @@ LINUX_BIN := builds/linux/doodleshooter-port-v$(VERSION).x86_64
 MACOS_ZIP := builds/macos/doodleshooter-port-v$(VERSION).zip
 SERVER_PYTHON := .venv/bin/python
 
-.PHONY: help import run touch check build android android-release ios windows linux macos \
+.PHONY: ipa help import run touch check build android android-release ios windows linux macos \
 	version bump-patch bump-minor bump-major \
 	install-android server-deps server test-server capture-menus maps map-previews screenshots \
 	assets-reference audio-deps assets-audio clean
@@ -78,6 +78,11 @@ android-release: import
 	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release "Android Release (arm64)" "$(CURDIR)/$(ANDROID_RELEASE_UNSIGNED)"
 	"$(PYTHON)" tools/sign_apk.py "$(ANDROID_RELEASE_UNSIGNED)" "$(ANDROID_RELEASE_APK)" keys/release.properties
 	rm -f "$(ANDROID_RELEASE_UNSIGNED)"
+
+# Signed IPA from the iOS preset: builds/ios/doodleshooter-port-v<version>-<build>-release.ipa.
+# Team from keys/ios.properties; IPA_METHOD=debugging|release-testing|app-store-connect.
+ipa: import
+	GODOT_BIN="$(GODOT_BIN)" tools/export_ipa.sh "$(PROJECT)" doodleshooter-port
 
 ios: import
 	mkdir -p "$(dir $(IOS_ZIP))"
