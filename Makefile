@@ -99,7 +99,7 @@ linux: import
 	mkdir -p "$(dir $(LINUX_BIN))"
 	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release Linux "$(CURDIR)/$(LINUX_BIN)"
 
-# Ad-hoc signed by Godot (no Developer ID): another Mac opens it the first time with right-click → Open.
+# Ad-hoc signed by Godot (no Developer ID), not notarized; see the docs for opening it on another Mac (Gatekeeper).
 dmg: import
 	mkdir -p "$(dir $(MACOS_DMG))"
 	"$(GODOT_BIN)" --headless --path "$(PROJECT)" --export-release macOS "$(CURDIR)/$(MACOS_DMG)"

@@ -210,7 +210,15 @@ The shared project in `native/` runs on desktop with mouse + keyboard or control
 - 🐧 **Linux** (`x86_64`, embedded PCK) → `builds/linux/doodleshooter-port-v<version>.x86_64` (`make linux`)
 - 🍏 **macOS** (`universal`, bundle ID `com.doodleshooter.port`, ad-hoc signed / `codesign=1`) → `builds/macos/doodleshooter-port-v<version>-<code>-release.dmg` (`make dmg`), or the plain `builds/macos/doodleshooter-port-v<version>.zip` (`make macos`)
 
-`make bump-patch|minor|major` writes the version code as the macOS build number (`application/version`) and as the fourth number of the Windows `file_version`/`product_version` (`2.0.2.2`). There is no Developer ID or notarization, so another Mac opens the `.dmg` app the first time with right-click → Open.
+`make bump-patch|minor|major` writes the version code as the macOS build number (`application/version`) and as the fourth number of the Windows `file_version`/`product_version` (`2.0.2.2`).
+
+**First launch on another Mac (Gatekeeper).** The app is ad-hoc signed but not notarized, so macOS blocks a copy that was downloaded (web, AirDrop, chat apps) with "cannot verify the developer". To open it:
+
+- **macOS 15 Sequoia or later:** try to open it once, then System Settings → Privacy & Security → **Open Anyway**. Right-click → Open no longer bypasses the check.
+- **macOS 14 or earlier:** right-click the app → **Open**, then confirm.
+- **Any version, from Terminal:** `xattr -dr com.apple.quarantine "/Applications/doodleshooter-port.app"`
+
+The Mac that built it opens it directly. Only a Developer ID certificate plus Apple notarization (paid Apple Developer Program) removes the warning. The disk image has no Applications shortcut: drag the app to Applications, or run it from the image.
 
 ## ✅ Verification
 
