@@ -80,12 +80,16 @@ def main() -> None:
     parser.add_argument("kind", nargs="?", choices=["major", "minor", "patch"], help="Version component to bump")
     parser.add_argument("--show", action="store_true", help="Print the current version and version code")
     parser.add_argument("--version", action="store_true", help="Print only the current X.Y.Z version")
+    parser.add_argument("--code", action="store_true", help="Print only the current version code")
     args = parser.parse_args()
 
     current, code = read_current()
     current_str = ".".join(str(part) for part in current)
     if args.version:
         print(current_str)
+        return
+    if args.code:
+        print(code)
         return
     if args.show or not args.kind:
         print(f"version={current_str} version_code={code}")

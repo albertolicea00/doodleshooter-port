@@ -8,8 +8,9 @@ NPM ?= npm
 
 PROJECT := native
 VERSION := $(shell "$(PYTHON)" tools/bump_version.py --version)
-ANDROID_APK := builds/android/doodleshooter-port-v$(VERSION)-debug.apk
-ANDROID_RELEASE_APK := builds/android/doodleshooter-port-v$(VERSION)-release.apk
+VERSION_CODE := $(shell "$(PYTHON)" tools/bump_version.py --code)
+ANDROID_APK := builds/android/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-debug.apk
+ANDROID_RELEASE_APK := builds/android/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-release.apk
 IOS_ZIP := builds/ios/doodleshooter-port-v$(VERSION).zip
 WINDOWS_EXE := builds/windows/doodleshooter-port-v$(VERSION).exe
 LINUX_BIN := builds/linux/doodleshooter-port-v$(VERSION).x86_64
@@ -28,8 +29,8 @@ help:
 	  'make touch            Run with touch controls visible' \
 	  'make check            Run gameplay and LAN checks' \
 	  'make build            Export the Android debug APK' \
-	  'make android          Export the Android debug APK' \
-	  'make android-release  Export a release APK (requires release signing)' \
+	  'make android          Export the Android debug APK (doodleshooter-port-v<version>-<code>-debug.apk)' \
+	  'make android-release  Export the release APK (...-release.apk; requires release signing)' \
 	  'make ios              Export the iOS project once signing is configured' \
 	  'make windows          Export the Windows Desktop executable' \
 	  'make linux            Export the Linux x86_64 executable' \

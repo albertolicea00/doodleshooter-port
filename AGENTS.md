@@ -7,5 +7,6 @@
 - Keep reproducing and verifying the original game's behavior. The user asked for extra maps, weapons, and options before parity was reached; always label such port additions as not part of the original in the game, `docs/PARITY.md`, and the credits.
 - Preserve clear original-game attribution in the game and in `CREDITS.md` / `native/CREDITS.txt`.
 - Keep `reference/upstream/` unchanged as a historical snapshot, including its original localization and embedded license notices. It is not shipped in the native app. Convert display strings to English when extracting native data.
+- Build commands, output names and release signing are documented in `README.md` (Android, iOS, Desktop). Exported Android APKs are named `doodleshooter-port-v<version>-<versionCode>-<debug|release>.apk`; the version (`native/project.godot`) and version code (`native/export_presets.cfg`) are read by `tools/bump_version.py`. Change them only with `make bump-patch|bump-minor|bump-major`, never by hand.
 - iOS export/signing work is deferred at the user's request. Do not invent Apple signing credentials.
 - Run `python3 tools/check.py` after gameplay changes. Keep `docs/PARITY.md` and `docs/VALIDATION.md` accurate; do not claim visual or device verification from headless tests.

@@ -92,21 +92,37 @@ Touch controls appear automatically on mobile (*menus use mouse emulation; gamep
 
 ## 🤖 Android
 
-- **Development APK**: `builds/android/doodleshooter-port-debug.apk`
 - **Application ID**: `com.doodleshooter.port`
-- **ABIs & signing**: `ARM64` and `x86_64` binaries, debug signing key (*not published to Google Play*).
-- **Status**: APK signature and bundled resources were verified on November 10, 2026; *physical-device play remains unverified*.
+- **ABIs**: `ARM64` and `x86_64` (`Android` preset in `native/export_presets.cfg`).
+- **Status**: APK signature and bundled resources were verified on November 10, 2026; *physical-device play remains unverified*. Not published to Google Play.
 
-To rebuild, install the **Godot 4.6.3** export templates and configure **Java 17**, the **Android SDK**, and a debug keystore in the editor settings:
+**Prerequisites**: the **Godot 4.6.3** export templates, plus **Java 17**, the **Android SDK**, and a debug keystore set in Godot's **Editor Settings → Export → Android**.
+
+| Command | Output |
+|---|---|
+| `make android` (or `make build`) | debug APK `builds/android/doodleshooter-port-v<version>-<versionCode>-debug.apk` |
+| `make android-release` | release APK `builds/android/doodleshooter-port-v<version>-<versionCode>-release.apk` |
+| `make install-android` | installs the current debug APK on an `adb`-connected device |
+
+For example, version `2.0.1` with version code `1` gives `doodleshooter-port-v2.0.1-1-debug.apk`. Both targets export the `Android` preset; the `Android Release (arm64)` preset is not used by the `Makefile`. `AAB` exports require a Gradle build and are not set up.
+
+### Version and version code
+
+The version comes from `config/version` in `native/project.godot` and the version code from `version/code` in `native/export_presets.cfg`. `tools/bump_version.py` reads both (`--version`, `--code`, `--show`) and the `Makefile` names the APKs from them, so never edit the file names by hand:
 
 ```sh
-make android
+make version      # version=X.Y.Z version_code=N
+make bump-patch   # or bump-minor / bump-major: new version, version code + 1
 ```
 
-- `make build` also exports the debug APK.
-- `make install-android` installs that APK on an `adb`-connected device.
-- `make android-release` exports a separate release APK after release signing is configured.
-- `AAB` exports require a Gradle build.
+### Release signing
+
+`make android-release` signs with the **release keystore configured in Godot**, not with a file in `keys/`. Nothing in the build reads `keys/release.properties` yet, and `native/export_presets.cfg` contains no release keystore. Configure it in one of two ways:
+
+- **Project → Export → Android → Keystore**: set *Release*, *Release User* and *Release Password*. Godot keeps these secrets in `native/.godot/export_credentials.cfg` (git-ignored), not in `export_presets.cfg`. `make clean` deletes `native/.godot`, so enter them again after a clean.
+- **Environment variables**, read by Godot at export time: `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `GODOT_ANDROID_KEYSTORE_RELEASE_USER` and `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD`. Only shell quoting applies; single-quote values that contain `$`, `\` or spaces.
+
+Godot's config files are not Java properties: if you edit a value by hand, it is a double-quoted string where a literal `\` is written `\\` and a `"` is written `\"`. Without a release keystore the release export fails. Never commit keystores or passwords.
 
 ## 🎮 Offline play
 
@@ -165,7 +181,7 @@ The port plans the same approach: first a port-only mode with its own ID prefix,
 When resuming iOS work, install **Xcode** and the Godot export templates on macOS, then set your **Apple Team ID** in `native/export_presets.cfg` or **Project → Export → iOS**:
 
 ```sh
-make ios
+make ios   # builds/ios/doodleshooter-port-v<version>.zip
 ```
 
 *The initial export attempt stopped because `App Store Team ID` was missing. No iOS build has been produced or tested.*
@@ -176,9 +192,9 @@ The shared project in `native/` runs on desktop with mouse + keyboard or control
 
 `native/export_presets.cfg` defines three desktop presets (*requires Godot 4.6.3 export templates*):
 
-- 🪟 **Windows Desktop** (`x86_64`, embedded PCK) → `builds/windows/doodleshooter-port.exe`
-- 🐧 **Linux** (`x86_64`, embedded PCK) → `builds/linux/doodleshooter-port.x86_64`
-- 🍏 **macOS** (`universal`, bundle ID `com.doodleshooter.port`, unsigned / `codesign=0`) → `builds/macos/doodleshooter-port.zip`
+- 🪟 **Windows Desktop** (`x86_64`, embedded PCK) → `builds/windows/doodleshooter-port-v<version>.exe` (`make windows`)
+- 🐧 **Linux** (`x86_64`, embedded PCK) → `builds/linux/doodleshooter-port-v<version>.x86_64` (`make linux`)
+- 🍏 **macOS** (`universal`, bundle ID `com.doodleshooter.port`, unsigned / `codesign=0`) → `builds/macos/doodleshooter-port-v<version>.zip` (`make macos`)
 
 ## ✅ Verification
 
