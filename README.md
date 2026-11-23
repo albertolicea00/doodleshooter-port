@@ -206,9 +206,11 @@ The shared project in `native/` runs on desktop with mouse + keyboard or control
 
 `native/export_presets.cfg` defines three desktop presets (*requires Godot 4.6.3 export templates*):
 
-- 🪟 **Windows Desktop** (`x86_64`, embedded PCK) → `builds/windows/doodleshooter-port-v<version>.exe` (`make windows`)
+- 🪟 **Windows Desktop** (`x86_64`, embedded PCK) → `builds/windows/doodleshooter-port-v<version>-<code>-release.exe` (`make windows`)
 - 🐧 **Linux** (`x86_64`, embedded PCK) → `builds/linux/doodleshooter-port-v<version>.x86_64` (`make linux`)
-- 🍏 **macOS** (`universal`, bundle ID `com.doodleshooter.port`, unsigned / `codesign=0`) → `builds/macos/doodleshooter-port-v<version>.zip` (`make macos`)
+- 🍏 **macOS** (`universal`, bundle ID `com.doodleshooter.port`, ad-hoc signed / `codesign=1`) → `builds/macos/doodleshooter-port-v<version>-<code>-release.dmg` (`make dmg`), or the plain `builds/macos/doodleshooter-port-v<version>.zip` (`make macos`)
+
+`make bump-patch|minor|major` writes the version code as the macOS build number (`application/version`) and as the fourth number of the Windows `file_version`/`product_version` (`2.0.2.2`). There is no Developer ID or notarization, so another Mac opens the `.dmg` app the first time with right-click → Open.
 
 ## ✅ Verification
 
