@@ -64,6 +64,7 @@ var previous_ground = false
 var step_distance = 0.0
 var last_attack = "rifle"
 var blood_level = 0.0
+var resume_frames = 0
 
 func _ready() -> void:
 	collision_layer = 2
@@ -223,7 +224,10 @@ func _physics_process(delta: float) -> void:
 		horizontal += wish * 6.0 * delta
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
-	jump_buffer = 0.15 if Input.is_action_just_pressed("jump") else jump_buffer - delta
+	var allow_menu_buttons = resume_frames <= 0
+	if resume_frames > 0:
+		resume_frames -= 1
+	jump_buffer = 0.15 if allow_menu_buttons and Input.is_action_just_pressed("jump") else jump_buffer - delta
 	if jump_buffer > 0:
 		if grapple_active:
 			detach_grapple(true)
@@ -245,7 +249,7 @@ func _physics_process(delta: float) -> void:
 			jumps -= 1
 			jump_buffer = 0
 			game.sound.play_effect("jump")
-	if Input.is_action_just_pressed("dash") and dash_cd <= 0:
+	if allow_menu_buttons and Input.is_action_just_pressed("dash") and dash_cd <= 0:
 		var direction = wish.normalized() if wish.length() > 0.1 else -global_basis.z
 		if is_on_floor():
 			if horizontal.length() > 4.0:

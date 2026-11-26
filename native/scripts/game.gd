@@ -189,7 +189,7 @@ func _setup_inputs() -> void:
 		var event = InputEventMouseButton.new()
 		event.button_index = button
 		InputMap.action_add_event("next_weapon", event)
-	var joy = {"jump": JOY_BUTTON_A, "dash": JOY_BUTTON_B, "reload": JOY_BUTTON_X, "next_weapon": JOY_BUTTON_Y, "grapple": JOY_BUTTON_LEFT_SHOULDER, "slash": JOY_BUTTON_RIGHT_SHOULDER, "grenade": JOY_BUTTON_RIGHT_STICK, "pause": JOY_BUTTON_START, "sprint": JOY_BUTTON_LEFT_STICK}
+	var joy = {"jump": JOY_BUTTON_A, "dash": JOY_BUTTON_B, "reload": JOY_BUTTON_X, "next_weapon": JOY_BUTTON_Y, "grapple": JOY_BUTTON_LEFT_SHOULDER, "slash": JOY_BUTTON_RIGHT_SHOULDER, "grenade": JOY_BUTTON_RIGHT_STICK, "pause": JOY_BUTTON_START, "sprint": JOY_BUTTON_LEFT_STICK, "ui_accept": JOY_BUTTON_A, "ui_cancel": JOY_BUTTON_B}
 	for action in joy:
 		var event = InputEventJoypadButton.new()
 		event.button_index = joy[action]
@@ -1177,8 +1177,11 @@ func resume_game() -> void:
 	Input.emulate_mouse_from_touch = false
 	paused = false
 	playing = true
-	if is_instance_valid(player) and is_instance_valid(player.camera):
-		player.camera.make_current()
+	if is_instance_valid(player):
+		player.resume_frames = 2
+		player.jump_buffer = 0.0
+		if is_instance_valid(player.camera):
+			player.camera.make_current()
 	apply_quality(quality)
 	menu.visible = false
 	hud.visible = true
@@ -1209,7 +1212,7 @@ func _notification(what: int) -> void:
 
 func _find_back_button(node: Node) -> Button:
 	if node is Button and node.is_visible_in_tree() and not node.disabled:
-		if node.text == "RESUME" or node.text.begins_with("BACK"):
+		if node.text in ["RESUME", "CANCEL", "LEAVE LOBBY"] or node.text.begins_with("BACK"):
 			return node
 	for child in node.get_children():
 		var found = _find_back_button(child)
@@ -1731,6 +1734,12 @@ func _exit_tree() -> void:
 
 func run_smoke() -> void:
 	assert(Input.emulate_mouse_from_touch, "Menus need touch-to-mouse conversion")
+	var credits_button = await smoke_menu_button("CREDITS")
+	credits_button.grab_focus()
+	await smoke_joy_press(JOY_BUTTON_A)
+	assert(menu_items.get_child(0).get_child(0).text == "Credits", "Controller A/Cross must activate the focused menu button")
+	await smoke_joy_press(JOY_BUTTON_B)
+	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Controller B/Circle must return from a submenu")
 	# Make Godot enable touchscreen scrolling in the headless display server.
 	Input.emulate_touch_from_mouse = true
 	await smoke_tap_button("CREDITS")
@@ -1919,6 +1928,20 @@ func run_smoke() -> void:
 	smoke_touch(pause_point, false)
 	await smoke_tap_button("RESUME")
 	assert(playing and not paused)
+	await smoke_joy_press(JOY_BUTTON_START)
+	assert(not playing and paused, "Controller Start/Options must open the pause menu")
+	await smoke_joy_press(JOY_BUTTON_A)
+	assert(playing and not paused, "Controller A/Cross must activate RESUME")
+	for i in 2:
+		await get_tree().physics_frame
+	assert(player.velocity.y <= 0.01 and player.slide_time <= 0.0, "Confirming RESUME on controller must not jump or slide")
+	await smoke_joy_press(JOY_BUTTON_START)
+	assert(not playing and paused)
+	await smoke_joy_press(JOY_BUTTON_B)
+	assert(playing and not paused, "Controller B/Circle must close the pause menu")
+	for i in 2:
+		await get_tree().physics_frame
+	assert(player.slide_time <= 0.0 and player.dash_cd <= 0.0, "Closing pause with B/Circle must not slide or dash")
 	throw_grenade(player.camera.global_position, Vector3.UP)
 	assert(grenades.size() == 1)
 	release_smoke(Vector3(0, 0, 10))
@@ -2149,6 +2172,16 @@ func smoke_touch(point: Vector2, down: bool) -> void:
 	event.pressed = down
 	Input.parse_input_event(event)
 	Input.flush_buffered_events()
+
+func smoke_joy_press(button_index: JoyButton) -> void:
+	for down in [true, false]:
+		var event = InputEventJoypadButton.new()
+		event.button_index = button_index
+		event.pressed = down
+		Input.parse_input_event(event)
+		Input.flush_buffered_events()
+		await get_tree().process_frame
+	await get_tree().process_frame
 
 func smoke_touch_drag(point: Vector2, offset: Vector2) -> void:
 	var transform_to_screen = get_viewport().get_screen_transform()
