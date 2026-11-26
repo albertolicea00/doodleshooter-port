@@ -1026,19 +1026,19 @@ func show_controller_settings(return_to: Callable = Callable(), return_label: St
 	menu.offset_right = 580
 	var start = menu_items.get_child_count()
 	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
-	_credit_section("Right stick", "Shared with touch look sensitivity.")
+	_credit_section("Right stick", "")
 	_slider("Look sensitivity", touch.options.look, 0.3, 2.5, option.call("look"))
 	_slider("Sensitivity while aiming", touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
 	_toggle("Invert vertical look", touch.options.invert_y, option.call("invert_y"))
+	_credit_section("Light bar", "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready.")
+	_toggle("Controller light bar", controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
+	var split = menu_items.get_child_count()
 	_credit_section("Gyroscope", "Tilt your motion controller (DualShock / DualSense) or phone to aim.")
 	_choices(["Off", "While aiming", "Always"], touch.options.gyro, option.call("gyro"))
 	_slider("Gyroscope sensitivity", touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
-	var split = menu_items.get_child_count()
 	_credit_section("Vibration", "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts.")
 	_toggle("Controller vibration", controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
 	_button("TEST VIBRATION", func(): rumble(0.65, 0.55, 160), "AltButton")
-	_credit_section("Light bar", "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready.")
-	_toggle("Controller light bar", controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
 	_card_wrap(start, split)
 	if return_to.is_valid():
 		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
@@ -1573,10 +1573,21 @@ func game_over() -> void:
 		replay.start_recording()
 	save_progress()
 	_clear_menu("You got erased", "%d waves · %d kills · %d points\nBest score: %d" % [wave, kills, score, best])
-	_button("DRAW AGAIN", func(): start_game(1))
+	_menu_gap(4)
+	var again = _button("DRAW AGAIN", func(): start_game(1), "StartButton")
+	again.custom_minimum_size = Vector2(420, 68)
+	again.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	again.rotation_degrees = -1.0
+	again.resized.connect(func(): again.pivot_offset = again.size * 0.5)
 	if checkpoint >= 5:
-		_button("FROM CHECKPOINT", func(): start_game(checkpoint))
-	_button("MAIN MENU", show_main_menu)
+		var from_cp = _button("FROM CHECKPOINT", func(): start_game(checkpoint), "AltButton")
+		from_cp.custom_minimum_size = Vector2(260, 42)
+		from_cp.add_theme_font_size_override("font_size", 20)
+		from_cp.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var main_btn = _button("MAIN MENU", show_main_menu, "RedOutlineButton")
+	main_btn.custom_minimum_size = Vector2(260, 42)
+	main_btn.add_theme_font_size_override("font_size", 20)
+	main_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 func make_line(ink: int = 0, radius: float = 0.025) -> MeshInstance3D:
 	var node = MeshInstance3D.new()
@@ -2479,6 +2490,16 @@ func run_smoke() -> void:
 		assert(player.is_on_floor() or player.position.y < 1.0, key + ": the player must start on the ground")
 	show_main_menu()
 	map_key = "mexico"
+	var prev_cp = checkpoint
+	checkpoint = 5
+	game_over()
+	var draw_again_btn = await smoke_menu_button("DRAW AGAIN")
+	var cp_btn = await smoke_menu_button("FROM CHECKPOINT")
+	var over_main_btn = await smoke_menu_button("MAIN MENU")
+	assert(draw_again_btn.theme_type_variation == "StartButton" and draw_again_btn.size.x > cp_btn.size.x and draw_again_btn.size.y > cp_btn.size.y, "DRAW AGAIN must be larger than secondary game-over buttons")
+	assert(over_main_btn.theme_type_variation == "RedOutlineButton" and is_equal_approx(cp_btn.size.x, over_main_btn.size.x), "FROM CHECKPOINT and MAIN MENU must share compact width with red-outline MAIN MENU")
+	checkpoint = prev_cp
+	show_main_menu()
 	print("SMOKE PASS: mexico collision, destructibles, checkpoint, boss queue, enemy hitboxes, offline bot combat, respawn, pause, match limit")
 	_clear_world()
 	sound.stop_all()
