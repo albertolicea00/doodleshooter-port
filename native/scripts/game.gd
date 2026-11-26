@@ -618,9 +618,28 @@ func show_main_menu() -> void:
 		info_btn.custom_minimum_size = Vector2(420, 44)
 		info_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_menu_gap(6)
-	var exit = _button("QUIT GAME", func(): get_tree().quit(), "RedOutlineButton")
-	exit.custom_minimum_size.x = 240
-	exit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	if not OS.has_feature("mobile"):
+		var bottom_row = HBoxContainer.new()
+		bottom_row.add_theme_constant_override("separation", 10)
+		bottom_row.custom_minimum_size.x = 460
+		bottom_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		menu_items.add_child(bottom_row)
+		var fs_btn = _button("FULLSCREEN: ON" if fullscreen else "FULLSCREEN: OFF", func(): pass, "AltButton")
+		fs_btn.toggle_mode = true
+		fs_btn.button_pressed = fullscreen
+		fs_btn.toggled.connect(func(on: bool):
+			fs_btn.text = "FULLSCREEN: ON" if on else "FULLSCREEN: OFF"
+			apply_fullscreen(on)
+			save_settings())
+		fs_btn.reparent(bottom_row)
+		fs_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var exit_btn = _button("QUIT GAME", func(): get_tree().quit(), "RedOutlineButton")
+		exit_btn.reparent(bottom_row)
+		exit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	else:
+		var exit = _button("QUIT GAME", func(): get_tree().quit(), "RedOutlineButton")
+		exit.custom_minimum_size.x = 240
+		exit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 func map_info(key: String) -> Dictionary:
 	for info in MAPS:
@@ -766,20 +785,12 @@ func show_settings() -> void:
 	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_row.add_theme_constant_override("separation", 16)
 	menu_items.add_child(top_row)
-	if not OS.has_feature("mobile"):
-		_toggle("Fullscreen", fullscreen, func(value): apply_fullscreen(value); save_settings())
-		var fs_button = menu_items.get_child(-1) as Button
-		fs_button.custom_minimum_size.x = 210
-		fs_button.reparent(top_row)
 	var touch_button = _button("TOUCH & AIMING", show_touch_settings)
-	touch_button.custom_minimum_size.x = 240
+	touch_button.custom_minimum_size.x = 250
 	touch_button.reparent(top_row)
 	var controller_button = _button("CONTROLLER & MOTION", show_controller_settings)
-	controller_button.custom_minimum_size.x = 265
+	controller_button.custom_minimum_size.x = 270
 	controller_button.reparent(top_row)
-	var controls_button = _button("CONTROLS", func(): show_controls(show_settings, "BACK TO SETTINGS"), "RedOutlineButton")
-	controls_button.custom_minimum_size.x = 200
-	controls_button.reparent(top_row)
 	var start = menu_items.get_child_count()
 	_credit_section("Sound", "")
 	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
@@ -810,7 +821,8 @@ func apply_quality(level: int) -> void:
 
 func apply_fullscreen(enabled: bool) -> void:
 	fullscreen = enabled
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
+	if not OS.has_feature("mobile") and DisplayServer.get_name() != "headless" and not "--smoke" in OS.get_cmdline_user_args() and not capture_mode:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 
 func show_controls(return_to: Callable = Callable(), return_label: String = "") -> void:
 	_clear_menu("Controls", "")
@@ -978,9 +990,6 @@ func show_touch_settings(return_to: Callable = Callable(), return_label: String 
 	var touch_toggle = menu_items.get_child(-1) as Button
 	touch_toggle.custom_minimum_size.x = 280
 	touch_toggle.reparent(top_row)
-	var layout_button = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(func(): show_touch_settings(return_to, return_label)), "RedOutlineButton")
-	layout_button.custom_minimum_size.x = 260
-	layout_button.reparent(top_row)
 	var start = menu_items.get_child_count()
 	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
 	_credit_section("Looking", "Applies to touch controls and the controller right stick.")
@@ -1025,7 +1034,7 @@ func show_controller_settings(return_to: Callable = Callable(), return_label: St
 	_credit_section("Vibration", "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts.")
 	_toggle("Controller vibration", controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
 	_button("TEST VIBRATION", func(): rumble(0.65, 0.55, 160), "AltButton")
-	_credit_section("Light bar", "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready. Port addition · not part of the original game.")
+	_credit_section("Light bar", "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready.")
 	_toggle("Controller light bar", controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
 	_card_wrap(start, split)
 	if return_to.is_valid():
@@ -1898,10 +1907,17 @@ func run_smoke() -> void:
 	await smoke_tap_button("BACK TO MAIN MENU")
 	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
 	await smoke_tap_button("SETTINGS")
+	for child in menu_items.find_children("*", "Button", true, false):
+		assert(not child.text.begins_with("Fullscreen"), "Fullscreen must not appear inside Settings")
 	await smoke_tap_button("CONTROLLER & MOTION")
 	assert(menu_items.get_child(0).get_child(0).text == "Controller & motion", "CONTROLLER & MOTION must open its dedicated settings screen")
 	await smoke_tap_button("BACK TO SETTINGS")
 	await smoke_tap_button("BACK TO MAIN MENU")
+	if not OS.has_feature("mobile"):
+		await smoke_tap_button("FULLSCREEN: OFF")
+		assert(fullscreen, "Main menu Fullscreen button must enable fullscreen")
+		await smoke_tap_button("FULLSCREEN: ON")
+		assert(not fullscreen, "Main menu Fullscreen button must return to windowed mode")
 	await smoke_tap_button("START SOLO")
 	assert(menu_items.get_child(0).get_child(0).text == "Play offline", "A menu tap must open offline play")
 	Input.emulate_touch_from_mouse = false
