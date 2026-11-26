@@ -115,6 +115,13 @@ var lan_bot_count = 1
 var lan_bot_difficulty = 1
 var lan_minutes = 10
 var controls_xbox = false
+var controller_vibration = true
+var controller_light = true
+var last_joy_light = Color(-1, -1, -1, -1)
+var joy_light_timer = 0.0
+var rumble_until_msec = 0
+var rumble_power = 0.0
+var last_rumble = Vector3.ZERO
 var layout_return: Callable = Callable()
 var lobby_return: Callable = Callable()
 var lobby_map_row: HBoxContainer
@@ -269,6 +276,9 @@ func _setup_ui() -> void:
 	difficulty = clampi(int(preferences.get_value("survival", "difficulty", 1)), 0, 3)
 	wave_size = clampi(int(preferences.get_value("survival", "wave_size", 0)), 0, 2)
 	bot_minutes = clampi(int(preferences.get_value("bots", "minutes", 10)), DoodleBotMatch.MIN_MINUTES, DoodleBotMatch.MAX_MINUTES)
+	controller_vibration = bool(preferences.get_value("controller", "vibration", true))
+	controller_light = bool(preferences.get_value("controller", "light", true))
+	_update_controller_light(0.0, true)
 	hurt_overlay = ColorRect.new()
 	hurt_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -541,6 +551,7 @@ func _menu_gap(height: float) -> void:
 	menu_items.add_child(gap)
 
 func show_main_menu() -> void:
+	stop_rumble()
 	if not "--smoke" in OS.get_cmdline_user_args():
 		replay.save_recording(map_key)
 		replay.start_recording()
@@ -772,6 +783,10 @@ func show_settings() -> void:
 	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
+	_credit_section("Controller & motion", "")
+	_choices(["Gyro off", "Gyro while aiming", "Gyro always"], touch.options.gyro, func(index): touch.options.gyro = index; save_settings())
+	_toggle("Controller vibration", controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
+	_toggle("Controller light bar", controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
 	var split = menu_items.get_child_count()
 	_credit_section("Graphics detail", "")
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
@@ -840,7 +855,7 @@ func show_controls(return_to: Callable = Callable(), return_label: String = "") 
 		"{1–7 / Wheel} switch weapons"
 	])
 	var ps5_lines: Array[String] = [
-		"{L stick} move   {R stick} look   {L3} toggle sprint",
+		"{L stick} move   {R stick / Gyro} look   {L3} toggle sprint",
 		"{R2} fire / slash   {L2} aim / block",
 		"{×} jump / wall jump / double jump",
 		"{○} slide on the ground · air dash in the air",
@@ -896,7 +911,7 @@ func _controls_text(lines: Array[String]) -> String:
 
 func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void:
 	var xbox_lines: Array[String] = []
-	var bindings = {"{L stick}": "{LS}", "{R stick}": "{RS}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3 / D-pad Up}": "{RS click / D-pad Up}", "{Create}": "{View}", "{Options}": "{Menu}"}
+	var bindings = {"{L stick}": "{LS}", "{R stick / Gyro}": "{RS / Gyro}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3 / D-pad Up}": "{RS click / D-pad Up}", "{Create}": "{View}", "{Options}": "{Menu}"}
 	for line in ps5_lines:
 		var translated = line
 		for binding in bindings:
@@ -970,7 +985,7 @@ func show_touch_settings(return_to: Callable = Callable(), return_label: String 
 	_slider("Look sensitivity", touch.options.look, 0.3, 2.5, option.call("look"))
 	_slider("Sensitivity while aiming", touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
 	_toggle("Invert vertical look", touch.options.invert_y, option.call("invert_y"))
-	_credit_section("Gyroscope", "Turn the device to aim. Needs a motion sensor.")
+	_credit_section("Gyroscope", "Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden.")
 	_choices(["Off", "While aiming", "Always"], touch.options.gyro, option.call("gyro"))
 	_slider("Gyroscope sensitivity", touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
 	var split = menu_items.get_child_count()
@@ -1195,6 +1210,7 @@ func resume_game() -> void:
 func pause_menu() -> void:
 	if not is_instance_valid(player) or not player.alive:
 		return
+	stop_rumble()
 	paused = true
 	playing = false
 	var summary = "Wave %d · %d points" % [wave, score]
@@ -1304,8 +1320,62 @@ func _update_focus_pulse() -> void:
 	if is_instance_valid(pulsed_control):
 		pulsed_control.self_modulate.a = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
 
+func rumble(strong: float = 0.5, weak: float = 0.5, ms: float = 80.0) -> void:
+	if not controller_vibration or ms <= 0.0:
+		return
+	var power = maxf(strong, weak)
+	if power <= 0.0:
+		return
+	var now = Time.get_ticks_msec()
+	if now < rumble_until_msec and power < rumble_power * 0.85:
+		return
+	rumble_power = power
+	rumble_until_msec = now + int(ms)
+	last_rumble = Vector3(strong, weak, ms)
+	if capture_mode or "--smoke" in OS.get_cmdline_user_args():
+		return
+	for device in Input.get_connected_joypads():
+		Input.start_joy_vibration(device, clampf(weak, 0.0, 1.0), clampf(strong, 0.0, 1.0), ms * 0.001)
+
+func stop_rumble() -> void:
+	rumble_until_msec = 0
+	rumble_power = 0.0
+	if capture_mode or "--smoke" in OS.get_cmdline_user_args():
+		return
+	for device in Input.get_connected_joypads():
+		Input.stop_joy_vibration(device)
+
+func controller_light_color() -> Color:
+	if not controller_light:
+		return Color(0.08, 0.08, 0.10)
+	if playing and is_instance_valid(player):
+		if not player.alive or hurt_flash > 0.05:
+			return DoodlePen.RED
+		if player.hp < 36.0:
+			var pulse = 0.45 + 0.55 * (0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.012))
+			return Color(DoodlePen.RED.r * pulse, DoodlePen.RED.g * pulse, DoodlePen.RED.b * pulse, 1.0)
+		if player.weapon_index == 3 and player.katana_charge >= 1.0:
+			return DoodlePen.HIT
+	return DoodlePen.INK
+
+func _update_controller_light(delta: float, force: bool = false) -> void:
+	if capture_mode or "--smoke" in OS.get_cmdline_user_args():
+		return
+	joy_light_timer -= delta
+	if not force and joy_light_timer > 0.0:
+		return
+	joy_light_timer = 0.08
+	var target = controller_light_color()
+	if not force and absf(target.r - last_joy_light.r) + absf(target.g - last_joy_light.g) + absf(target.b - last_joy_light.b) < 0.02:
+		return
+	last_joy_light = target
+	for device in Input.get_connected_joypads():
+		if Input.has_joy_light(device):
+			Input.set_joy_light(device, target)
+
 func _process(delta: float) -> void:
 	_update_focus_pulse()
+	_update_controller_light(delta)
 	if menu.visible and auto_scroll:
 		if auto_scroll_wait > 0.0:
 			auto_scroll_wait -= delta
@@ -1432,6 +1502,7 @@ func save_progress() -> void:
 	preferences.save(save_path)
 
 func game_over() -> void:
+	stop_rumble()
 	if match_mode == "bots":
 		return
 	if network.in_match:
@@ -1599,6 +1670,10 @@ func explode(at: Vector3, radius: float, damage: float, friendly: bool = true) -
 	burst(at, 3, 48)
 	blood_pool(at, radius * 0.6, 3)
 	shake += 0.7
+	if is_instance_valid(player):
+		var blast_feel = clampf(1.0 - at.distance_to(player.global_position) / 22.0, 0.0, 1.0)
+		if blast_feel > 0.08:
+			rumble(0.9 * blast_feel, 0.9 * blast_feel, 220)
 	if network.in_match and friendly:
 		network.send_packet({"type": "blast", "position": [at.x, at.y, at.z]})
 	if not network.in_match and match_mode != "bots" and player.position.distance_to(at) < radius:
@@ -1743,6 +1818,7 @@ func _update_effects(delta: float) -> void:
 	effects = effects.filter(func(e): return e.life > 0)
 
 func _exit_tree() -> void:
+	stop_rumble()
 	ReferenceAssets.dispose()
 
 func run_smoke() -> void:
@@ -2037,6 +2113,45 @@ func run_smoke() -> void:
 	touch.options.look = 1.0
 	touch.options.invert_y = false
 	player.camera.rotation.x = 0.0
+	touch.visible = false
+	touch.options.gyro = 1
+	Input.set_gyroscope(Vector3(0.5, 0.6, 0.0))
+	for i in 2:
+		await get_tree().process_frame
+	assert(absf(player.camera.rotation.x) < 0.005, "While-aiming gyroscope mode must stay idle until aiming")
+	Input.action_press("aim")
+	var yaw_before_gyro = player.rotation.y
+	for i in 3:
+		await get_tree().physics_frame
+		await get_tree().process_frame
+	assert(player.camera.rotation.x > 0.008 and player.rotation.y > yaw_before_gyro + 0.008, "Gyroscope aiming must work even when touch controls are hidden")
+	Input.action_release("aim")
+	Input.set_gyroscope(Vector3.ZERO)
+	touch.options.gyro = 0
+	player.camera.rotation.x = 0.0
+	rumble_until_msec = 0
+	last_rumble = Vector3.ZERO
+	rumble(0.55, 0.6, 95)
+	assert(is_equal_approx(last_rumble.x, 0.55), "Controller vibration must record rumble events when enabled")
+	controller_vibration = false
+	rumble_until_msec = 0
+	last_rumble = Vector3.ZERO
+	rumble(0.8, 0.5, 160)
+	assert(last_rumble == Vector3.ZERO, "Disabling controller vibration must suppress rumble")
+	controller_vibration = true
+	hurt_flash = 0.0
+	assert(controller_light_color().is_equal_approx(DoodlePen.INK), "Controller light bar must use ink blue during normal play")
+	hurt_flash = 0.2
+	assert(controller_light_color().is_equal_approx(DoodlePen.RED), "Controller light bar must flash red on damage")
+	hurt_flash = 0.0
+	player.switch_weapon(3)
+	player.katana_charge = 1.0
+	assert(controller_light_color().is_equal_approx(DoodlePen.HIT), "Controller light bar must glow orange when focus slash is ready")
+	player.katana_charge = 0.0
+	player.switch_weapon(0)
+	controller_light = false
+	assert(controller_light_color().r < 0.1, "Disabling the controller light bar must dim it")
+	controller_light = true
 	throw_grenade(player.camera.global_position, Vector3.UP)
 	assert(grenades.size() == 1)
 	release_smoke(Vector3(0, 0, 10))
@@ -2325,6 +2440,8 @@ func save_settings() -> void:
 	preferences.set_value("survival", "difficulty", difficulty)
 	preferences.set_value("survival", "wave_size", wave_size)
 	preferences.set_value("bots", "minutes", bot_minutes)
+	preferences.set_value("controller", "vibration", controller_vibration)
+	preferences.set_value("controller", "light", controller_light)
 	preferences.save(save_path)
 
 func burst(at: Vector3, ink: int, count: int) -> void:

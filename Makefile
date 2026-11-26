@@ -22,7 +22,7 @@ SERVER_PYTHON := .venv/bin/python
 .PHONY: ipa dmg help import run touch check build android android-release ios windows linux macos \
 	version bump-patch bump-minor bump-major \
 	install-android server-deps server test-server capture-menus maps map-previews screenshots \
-	assets-reference audio-deps assets-audio clean
+	assets-reference audio-deps assets-audio controller-motion clean
 
 help:
 	@printf '%s\n' \
@@ -54,6 +54,7 @@ help:
 	  'make assets-reference Regenerate maps and models' \
 	  'make audio-deps       Install the audio extraction dependencies' \
 	  'make assets-audio     Regenerate the audio assets' \
+	  'make controller-motion Rebuild the macOS/iOS controller gyro GDExtension' \
 	  'make clean            Remove Godot import cache and exported packages'
 
 import:
@@ -162,6 +163,9 @@ audio-deps:
 
 assets-audio:
 	"$(NPM)" run audio --prefix tools
+
+controller-motion:
+	GODOT_BIN="$(GODOT_BIN)" tools/build_controller_motion.sh
 
 clean:
 	rm -rf "$(PROJECT)/.godot"

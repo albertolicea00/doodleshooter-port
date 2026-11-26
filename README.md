@@ -63,7 +63,7 @@ make touch
 | Action | Mouse + Keyboard | PlayStation / Xbox Controller |
 | --- | --- | --- |
 | Move | `W` `A` `S` `D` | Left Stick |
-| Look | Mouse | Right Stick *(uses Look / Aim sensitivity & Invert Y settings)* |
+| Look | Mouse | Right Stick · Gyroscope *(DualShock / DualSense on macOS & iOS, or mobile IMU; uses Look / Aim / Gyro settings)* |
 | Sprint | `Shift` *(hold)* | `L3` / `LS` *(toggle while moving forward)* |
 | Fire / Slash | `LMB` | `R2` / `RT` |
 | Aim / Block | `RMB` | `L2` / `LT` |
@@ -89,7 +89,7 @@ Touch controls appear automatically on mobile (*menus use mouse emulation; gamep
 - **Right-thumb cluster**: fire, jump, `SLIDE` / `DASH` (*slides on the ground, dashes in the air*), aim (*tap to latch*), grapple, quick slash, and grenade. Arena modes also add a **scoreboard** button.
 - **Weapons & reload**: empty magazines reload automatically; tap the active weapon chip to reload early, or tap another chip to switch weapons.
 - **Custom layout**: open **Controls & settings → Customize touch layout** to drag, resize, and adjust opacity for every button (*saved locally on the device*).
-- **Touch & aiming options**: configure look/aim sensitivity, inverted vertical look, **gyroscope aiming** (*off*, *while aiming*, or *always*), auto-fire on target, hold-to-aim, a second left-side fire button, a dedicated reload button, and a fixed joystick.
+- **Touch & aiming / Controller options**: configure look/aim sensitivity, inverted vertical look, **gyroscope aiming** (*off*, *while aiming*, or *always* — works for mobile sensors and DualShock / DualSense controllers even with touch controls hidden), **controller vibration** (*rumble*), **controller LED light bar** (*DualShock / DualSense reactive ink colours, port addition*), auto-fire on target, hold-to-aim, a second left-side fire button, a dedicated reload button, and a fixed joystick.
 
 ## 🤖 Android
 

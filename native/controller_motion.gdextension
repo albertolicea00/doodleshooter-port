@@ -1,0 +1,11 @@
+[configuration]
+
+entry_symbol = "controller_motion_library_init"
+compatibility_minimum = "4.5"
+
+[libraries]
+
+macos.debug = "res://bin/libcontroller_motion.macos.universal.dylib"
+macos.release = "res://bin/libcontroller_motion.macos.universal.dylib"
+ios.debug = "res://bin/libcontroller_motion.ios.arm64.dylib"
+ios.release = "res://bin/libcontroller_motion.ios.arm64.dylib"

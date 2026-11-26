@@ -42,16 +42,39 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _process(delta: float) -> void:
+	var active_play = not editing and is_instance_valid(player) and player.alive and player.game.playing
+	if active_play:
+		_update_gyro(delta)
 	if not visible:
 		return
 	modulate.a = opacity
 	queue_redraw()
 	if editing and delete_button != null:
 		delete_button.disabled = not can_delete()
-	if editing or not is_instance_valid(player) or not player.alive or not player.game.playing:
+	if not active_play:
 		return
-	# Gyroscope aiming: use hardware gyroscope when available, otherwise fall back
-	# to smoothed accelerometer tilt on devices without a gyro sensor.
+	# Auto fire: shoot while something that can be hurt is under the crosshair.
+	var reach = 3.2 if player.weapon_index == 3 else 18.0 if player.weapon_index == 1 else 120.0
+	var target = options.auto_fire and player.ray(reach).get("collider") != null and player.ray(reach).collider.has_method("take_damage")
+	if target and player.weapon_index in [1, 2, 4, 6] and auto_firing:
+		# Single-shot weapons need a fresh press for every shot.
+		target = false
+	if target != auto_firing:
+		auto_firing = target
+		if target:
+			Input.action_press("fire")
+		elif not held.values().has("fire"):
+			Input.action_release("fire")
+
+func _accel_tilt(accel: Vector3) -> Vector2:
+	var roll = atan2(accel.y, sqrt(accel.x * accel.x + accel.z * accel.z))
+	var pitch = atan2(accel.z, sqrt(accel.x * accel.x + accel.y * accel.y))
+	return Vector2(-roll, pitch)
+
+# Gyroscope aiming: works for handheld mobile sensors (with accelerometer fallback)
+# and motion controllers (DualShock / DualSense via the native GameController bridge),
+# even when on-screen touch controls are hidden.
+func _update_gyro(delta: float) -> void:
 	if options.gyro == 2 or (options.gyro == 1 and player.aiming):
 		var rate = Input.get_gyroscope()
 		if rate.length_squared() > 1e-6:
@@ -73,23 +96,6 @@ func _process(delta: float) -> void:
 						turn(move * options.gyro_speed * 1.4)
 	else:
 		accel_ready = false
-	# Auto fire: shoot while something that can be hurt is under the crosshair.
-	var reach = 3.2 if player.weapon_index == 3 else 18.0 if player.weapon_index == 1 else 120.0
-	var target = options.auto_fire and player.ray(reach).get("collider") != null and player.ray(reach).collider.has_method("take_damage")
-	if target and player.weapon_index in [1, 2, 4, 6] and auto_firing:
-		# Single-shot weapons need a fresh press for every shot.
-		target = false
-	if target != auto_firing:
-		auto_firing = target
-		if target:
-			Input.action_press("fire")
-		elif not held.values().has("fire"):
-			Input.action_release("fire")
-
-func _accel_tilt(accel: Vector3) -> Vector2:
-	var roll = atan2(accel.y, sqrt(accel.x * accel.x + accel.z * accel.z))
-	var pitch = atan2(accel.z, sqrt(accel.x * accel.x + accel.y * accel.y))
-	return Vector2(-roll, pitch)
 
 func turn(amount: Vector2) -> void:
 	if not is_instance_valid(player):

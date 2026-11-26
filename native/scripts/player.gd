@@ -266,12 +266,14 @@ func _physics_process(delta: float) -> void:
 				velocity += direction * clampf(12.8 - horizontal.length(), 0, 4.5)
 				slide_time = 0.9
 				game.sound.play_effect("slide")
+				game.rumble(0.3, 0.6, 70)
 		else:
 			dash_cd = 1.3
 			var along = velocity.dot(direction)
 			velocity += direction * (maxf(along + 6.0, 14.0) - along)
 			velocity.y = maxf(velocity.y, 2.0)
 			game.sound.play_effect("dash")
+			game.rumble(0.3, 0.6, 70)
 	var crouched = slide_time > 0 and is_on_floor()
 	if not crouched and capsule.shape.height < 1.75:
 		var check = PhysicsShapeQueryParameters3D.new()
@@ -296,6 +298,8 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and not previous_ground:
 		game.sound.play_effect("land")
 		game.shake = minf(1.0, absf(landing_speed) / 30.0)
+		if absf(landing_speed) > 12.0:
+			game.rumble(clampf(absf(landing_speed) / 30.0 * 0.4, 0.1, 0.45), 0.2, 80)
 	previous_ground = is_on_floor()
 	step_distance += Vector2(velocity.x, velocity.z).length() * delta
 	if is_on_floor() and step_distance > 2.0:
@@ -429,6 +433,7 @@ func fire() -> void:
 				position = hit.position + camera.global_basis.z * 2.0
 				hit.collider.take_damage(9999.0)
 				katana_charge = 0
+				game.rumble(0.9, 0.7, 140)
 		else:
 			slash()
 		return
@@ -451,6 +456,8 @@ func fire() -> void:
 	recoil = 0.045 if weapon_index in [0, 5] else 0.09
 	_trigger_muzzle_fx(config)
 	game.sound.play_effect(["shot", "shotgunFire", "sniperFire", "", "revolver", "shot", "shotgunFire"][weapon_index])
+	var shot_rumble: Array = [[0.22, 0.45, 50], [0.55, 0.6, 95], [0.6, 0.55, 105], [0.0, 0.0, 0], [0.38, 0.5, 70], [0.18, 0.4, 42], [0.75, 0.65, 130]][weapon_index]
+	game.rumble(shot_rumble[0], shot_rumble[1], shot_rumble[2])
 	if weapon_index == 6:
 		# The rocket is a friendly projectile that explodes on the first thing it touches.
 		game.fire_projectile(parts[6].muzzle.global_position, -camera.global_basis.z, 46.0, 160.0, true, 5.0)
@@ -533,6 +540,7 @@ func slash() -> void:
 				enemy.take_damage(55 if enemy.get_meta("remote", false) else 75, enemy.global_position + Vector3.UP)
 				game.sound.play_effect("katanaHit")
 				game.burst(enemy.global_position + Vector3.UP, 1, 14)
+				game.rumble(0.7, 0.4, 90)
 
 func take_damage(amount: float) -> void:
 	if not alive:
@@ -545,7 +553,7 @@ func take_damage(amount: float) -> void:
 	# Port addition: a heavy hit leaves the player dazed for a moment.
 	if amount >= 20.0:
 		game.daze = minf(1.0, game.daze + amount / 60.0)
-	Input.start_joy_vibration(0, 0.8, 0.5, 0.16)
+	game.rumble(0.8, 0.5, 160)
 	if hp <= 0:
 		alive = false
 		grapple_active = false
@@ -623,6 +631,7 @@ func update_grapple(delta: float, control: Vector2) -> void:
 				stamina -= 0.09
 				stamina_pause = 0.5
 				game.sound.play_effect("grappleFire")
+				game.rumble(0.15, 0.4, 40)
 	if not grapple_active:
 		return
 	if not is_instance_valid(grapple_body) or stamina <= 0:
@@ -637,9 +646,11 @@ func update_grapple(delta: float, control: Vector2) -> void:
 			if grapple_body.has_method("yank"):
 				grapple_body.yank(global_position)
 				game.score += 30
+				game.rumble(0.5, 0.5, 90)
 				detach_grapple()
 			else:
 				grapple_length = maxf(1.5, (global_position + Vector3.UP).distance_to(grapple_anchor) * 0.94)
+				game.rumble(0.3, 0.6, 60)
 				if is_on_floor():
 					velocity.y = maxf(velocity.y, 5.0)
 	else:
@@ -682,6 +693,7 @@ func try_deflect(direction: Vector3) -> int:
 	game.sound.play_effect("perfectParry" if perfect else "parry")
 	game.score += 60 if perfect else 15
 	game.burst(camera.global_position - camera.global_basis.z, 3, 12)
+	game.rumble(0.6 if perfect else 0.4, 0.6, 100 if perfect else 70)
 	return 2 if perfect or randf() < 0.35 else 1
 
 func try_block_melee(from: Vector3) -> bool:
@@ -692,6 +704,7 @@ func try_block_melee(from: Vector3) -> bool:
 	block_cd = 0.2
 	game.sound.play_effect("parry")
 	game.score += 40
+	game.rumble(0.6, 0.6, 100)
 	return true
 
 func find_grapple_target() -> Dictionary:
