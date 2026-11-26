@@ -70,6 +70,8 @@ var pulsed_control: Control = null
 var auto_scroll = false
 var auto_scroll_wait = 0.0
 var auto_scroll_pos = 0.0
+var menu_nav_last_action = ""
+var menu_nav_last_msec = -1000
 var replay := DoodleReplay.new()
 var hit_marker = 0.0
 var hurt_flash = 0.0
@@ -297,7 +299,7 @@ func _setup_ui() -> void:
 	menu_hint.offset_top = 8
 	menu_hint.add_theme_font_size_override("normal_font_size", 18)
 	menu_hint.add_theme_color_override("default_color", Color(DoodlePen.INK, 0.8))
-	menu_hint.text = "[center][color=#%s]A / X[/color] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B / O[/color] Back[/center]" % [red_hex, red_hex]
+	menu_hint.text = "[center][color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back[/center]" % [red_hex, red_hex]
 	menu_items = VBoxContainer.new()
 	menu_items.add_theme_constant_override("separation", 12)
 	menu_scroll = ScrollContainer.new()
@@ -1221,17 +1223,29 @@ func _find_back_button(node: Node) -> Button:
 
 func _input(event: InputEvent) -> void:
 	if menu.visible:
+		var focused_edit = get_viewport().gui_get_focus_owner() is LineEdit and event is InputEventKey and not event.is_echo()
+		if not focused_edit:
+			for nav_action in ["ui_up", "ui_down", "ui_left", "ui_right", "ui_accept", "ui_cancel"]:
+				if event.is_action_pressed(nav_action, true):
+					var now = Time.get_ticks_msec()
+					var min_gap = 185 if event.is_echo() else 150
+					if nav_action == menu_nav_last_action and now - menu_nav_last_msec < min_gap:
+						get_viewport().set_input_as_handled()
+						return
+					menu_nav_last_action = nav_action
+					menu_nav_last_msec = now
+					break
 		if event.is_action_pressed("ui_cancel"):
 			var back_btn = _find_back_button(menu_items)
 			if back_btn != null:
 				back_btn.emit_signal("pressed")
 				get_viewport().set_input_as_handled()
 				return
-		if event.is_action_pressed("ui_down") or event.is_action_pressed("ui_up"):
+		if event.is_action_pressed("ui_down", true) or event.is_action_pressed("ui_up", true):
 			var bar = menu_scroll.get_v_scroll_bar()
 			if bar.max_value > menu_scroll.size.y:
 				var focused = get_viewport().gui_get_focus_owner()
-				var side = SIDE_BOTTOM if event.is_action_pressed("ui_down") else SIDE_TOP
+				var side = SIDE_BOTTOM if event.is_action_pressed("ui_down", true) else SIDE_TOP
 				if focused == null or focused.find_valid_focus_neighbor(side) == null:
 					auto_scroll = false
 					menu_scroll.scroll_vertical += 120 if side == SIDE_BOTTOM else -120
@@ -1733,6 +1747,26 @@ func _exit_tree() -> void:
 
 func run_smoke() -> void:
 	assert(Input.emulate_mouse_from_touch, "Menus need touch-to-mouse conversion")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert((get_viewport().gui_get_focus_owner() as Button).text == "START SOLO")
+	smoke_joy_button(JOY_BUTTON_DPAD_DOWN, true)
+	var dup_down = InputEventKey.new()
+	dup_down.keycode = KEY_DOWN
+	dup_down.pressed = true
+	Input.parse_input_event(dup_down)
+	var echo_down = InputEventKey.new()
+	echo_down.keycode = KEY_DOWN
+	echo_down.pressed = true
+	echo_down.echo = true
+	Input.parse_input_event(echo_down)
+	Input.flush_buffered_events()
+	await get_tree().process_frame
+	assert((get_viewport().gui_get_focus_owner() as Button).text == "PLAY ONLINE", "Duplicate or rapid-echo Down events must advance menu focus by one item")
+	smoke_joy_button(JOY_BUTTON_DPAD_DOWN, false)
+	dup_down.pressed = false
+	Input.parse_input_event(dup_down)
+	Input.flush_buffered_events()
 	var credits_button = await smoke_menu_button("CREDITS")
 	credits_button.grab_focus()
 	await smoke_joy_press(JOY_BUTTON_A)
