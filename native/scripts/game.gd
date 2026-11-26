@@ -769,13 +769,16 @@ func show_settings() -> void:
 	if not OS.has_feature("mobile"):
 		_toggle("Fullscreen", fullscreen, func(value): apply_fullscreen(value); save_settings())
 		var fs_button = menu_items.get_child(-1) as Button
-		fs_button.custom_minimum_size.x = 220
+		fs_button.custom_minimum_size.x = 210
 		fs_button.reparent(top_row)
 	var touch_button = _button("TOUCH & AIMING", show_touch_settings)
-	touch_button.custom_minimum_size.x = 260
+	touch_button.custom_minimum_size.x = 240
 	touch_button.reparent(top_row)
+	var controller_button = _button("CONTROLLER & MOTION", show_controller_settings)
+	controller_button.custom_minimum_size.x = 265
+	controller_button.reparent(top_row)
 	var controls_button = _button("CONTROLS", func(): show_controls(show_settings, "BACK TO SETTINGS"), "RedOutlineButton")
-	controls_button.custom_minimum_size.x = 220
+	controls_button.custom_minimum_size.x = 200
 	controls_button.reparent(top_row)
 	var start = menu_items.get_child_count()
 	_credit_section("Sound", "")
@@ -783,10 +786,6 @@ func show_settings() -> void:
 	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
 	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
 	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
-	_credit_section("Controller & motion", "")
-	_choices(["Gyro off", "Gyro while aiming", "Gyro always"], touch.options.gyro, func(index): touch.options.gyro = index; save_settings())
-	_toggle("Controller vibration", controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
-	_toggle("Controller light bar", controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
 	var split = menu_items.get_child_count()
 	_credit_section("Graphics detail", "")
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
@@ -832,10 +831,13 @@ func show_controls(return_to: Callable = Callable(), return_label: String = "") 
 	touch_card.move_child(touch_header, 0)
 	touch_heading.reparent(touch_header)
 	var touch_settings_button = _button("TOUCH & AIMING", func(): show_touch_settings(func(): show_controls(return_to, return_label), "BACK TO CONTROLS"))
-	touch_settings_button.custom_minimum_size = Vector2(220, 42)
+	touch_settings_button.custom_minimum_size = Vector2(210, 42)
 	touch_settings_button.reparent(touch_header)
+	var controller_settings_button = _button("CONTROLLER & MOTION", func(): show_controller_settings(func(): show_controls(return_to, return_label), "BACK TO CONTROLS"))
+	controller_settings_button.custom_minimum_size = Vector2(245, 42)
+	controller_settings_button.reparent(touch_header)
 	var customize_touch = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(func(): show_controls(return_to, return_label)), "RedOutlineButton")
-	customize_touch.custom_minimum_size = Vector2(220, 42)
+	customize_touch.custom_minimum_size = Vector2(210, 42)
 	customize_touch.reparent(touch_header)
 	var cards = HBoxContainer.new()
 	cards.add_theme_constant_override("separation", 24)
@@ -998,6 +1000,33 @@ func show_touch_settings(return_to: Callable = Callable(), return_label: String 
 	_toggle("Hold to aim", touch.options.aim_hold, option.call("aim_hold"))
 	_toggle("Second fire button on the left", touch.options.left_fire, option.call("left_fire"))
 	_toggle("Reload button", touch.options.reload_button, option.call("reload_button"))
+	_card_wrap(start, split)
+	if return_to.is_valid():
+		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
+	else:
+		_back_button(show_settings, "BACK TO SETTINGS")
+
+func show_controller_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
+	_clear_menu("Controller & motion", "Controller aiming, motion sensor and feedback · saved on this device")
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var start = menu_items.get_child_count()
+	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
+	_credit_section("Right stick", "Shared with touch look sensitivity.")
+	_slider("Look sensitivity", touch.options.look, 0.3, 2.5, option.call("look"))
+	_slider("Sensitivity while aiming", touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
+	_toggle("Invert vertical look", touch.options.invert_y, option.call("invert_y"))
+	_credit_section("Gyroscope", "Tilt your motion controller (DualShock / DualSense) or phone to aim.")
+	_choices(["Off", "While aiming", "Always"], touch.options.gyro, option.call("gyro"))
+	_slider("Gyroscope sensitivity", touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
+	var split = menu_items.get_child_count()
+	_credit_section("Vibration", "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts.")
+	_toggle("Controller vibration", controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
+	_button("TEST VIBRATION", func(): rumble(0.65, 0.55, 160), "AltButton")
+	_credit_section("Light bar", "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready. Port addition · not part of the original game.")
+	_toggle("Controller light bar", controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
 	_card_wrap(start, split)
 	if return_to.is_valid():
 		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
@@ -1868,6 +1897,11 @@ func run_smoke() -> void:
 	await smoke_tap_button("BACK TO CREDITS")
 	await smoke_tap_button("BACK TO MAIN MENU")
 	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
+	await smoke_tap_button("SETTINGS")
+	await smoke_tap_button("CONTROLLER & MOTION")
+	assert(menu_items.get_child(0).get_child(0).text == "Controller & motion", "CONTROLLER & MOTION must open its dedicated settings screen")
+	await smoke_tap_button("BACK TO SETTINGS")
+	await smoke_tap_button("BACK TO MAIN MENU")
 	await smoke_tap_button("START SOLO")
 	assert(menu_items.get_child(0).get_child(0).text == "Play offline", "A menu tap must open offline play")
 	Input.emulate_touch_from_mouse = false
