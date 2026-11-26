@@ -176,7 +176,7 @@ func update(delta: float) -> void:
 	game.scope.visible = game.player.weapon_index == 2 and game.player.aiming
 	game.hit_marker = maxf(0, game.hit_marker - delta)
 	game.hurt_flash = maxf(0, game.hurt_flash - delta)
-	game.hurt_overlay.color.a = game.hurt_flash
+	game.hurt_overlay.color.a = game.hurt_flash * game.flash_scale
 	for dot in game.trajectory_nodes:
 		dot.visible = game.player.charging
 	game._update_effects(delta)

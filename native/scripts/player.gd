@@ -4,6 +4,7 @@ extends CharacterBody3D
 var game: Node3D
 var camera: Camera3D
 var rig: Node3D
+var outline_material: ShaderMaterial
 var capsule: CollisionShape3D
 var hp = 120.0
 var alive = true
@@ -89,9 +90,12 @@ func _ready() -> void:
 	post.mesh = quad
 	post.extra_cull_margin = 16384
 	post.position.z = -1
-	var post_material = ShaderMaterial.new()
-	post_material.shader = preload("res://shaders/outline.gdshader")
-	post.material_override = post_material
+	outline_material = ShaderMaterial.new()
+	outline_material.shader = preload("res://shaders/outline.gdshader")
+	outline_material.set_shader_parameter("ink", ReferenceAssets.outline_ink())
+	if game != null:
+		outline_material.set_shader_parameter("width_scale", 1.75 if game.outline_bold == 1 else 1.0)
+	post.material_override = outline_material
 	camera.add_child(post)
 	rig = Node3D.new()
 	camera.add_child(rig)

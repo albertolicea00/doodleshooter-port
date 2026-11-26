@@ -60,6 +60,18 @@ var feel_overlay: ColorRect
 var screen_effects = true
 # 0: the original's crossed hatching, 1: the port's coloured-pencil shading.
 var shading = 1
+# Port-only visual comfort & accessibility settings.
+var paper_theme = 0
+var paper_brightness = 1.0
+var edge_shadow = 0.0
+var paper_lines = true
+var colorblind_mode = false
+var shake_scale = 1.0
+var flash_scale = 1.0
+var crosshair_style = 0
+var outline_bold = 0
+var paper_rect: ColorRect
+var vignette_overlay: ColorRect
 var enemy_smoke = 20.0
 # Port-only survival tuning; Hard keeps the former Normal numbers.
 var difficulty = 1
@@ -217,13 +229,13 @@ func _setup_ui() -> void:
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(ui)
 	ui.theme = DoodlePen.theme(load("res://assets/fonts/PatrickHand-Regular.ttf"))
-	var paper = ColorRect.new()
-	paper.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	paper_rect = ColorRect.new()
+	paper_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	paper_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var paper_mat = ShaderMaterial.new()
 	paper_mat.shader = preload("res://shaders/paper.gdshader")
-	paper.material = paper_mat
-	ui.add_child(paper)
+	paper_rect.material = paper_mat
+	ui.add_child(paper_rect)
 	# Drawn first so it smears the world but leaves the paper lines and HUD sharp.
 	feel_overlay = ColorRect.new()
 	feel_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -276,6 +288,15 @@ func _setup_ui() -> void:
 	screen_effects = preferences.get_value("video", "screen_effects", true)
 	shading = clampi(int(preferences.get_value("video", "shading", 1)), 0, 1)
 	ReferenceAssets.set_style(float(shading))
+	paper_theme = clampi(int(preferences.get_value("accessibility", "paper_theme", 0)), 0, 3)
+	paper_brightness = clampf(float(preferences.get_value("accessibility", "paper_brightness", 1.0)), 0.15, 1.0)
+	edge_shadow = clampf(float(preferences.get_value("accessibility", "edge_shadow", 0.0)), 0.0, 1.0)
+	paper_lines = bool(preferences.get_value("accessibility", "paper_lines", true))
+	colorblind_mode = bool(preferences.get_value("accessibility", "colorblind", false))
+	shake_scale = clampf(float(preferences.get_value("accessibility", "shake_scale", 1.0)), 0.0, 1.0)
+	flash_scale = clampf(float(preferences.get_value("accessibility", "flash_scale", 1.0)), 0.0, 1.0)
+	crosshair_style = clampi(int(preferences.get_value("accessibility", "crosshair_style", 0)), 0, 2)
+	outline_bold = clampi(int(preferences.get_value("accessibility", "outline_bold", 0)), 0, 1)
 	fullscreen = bool(preferences.get_value("video", "fullscreen", false))
 	if not OS.has_feature("mobile") and DisplayServer.get_name() != "headless" and not "--smoke" in OS.get_cmdline_user_args() and not capture_mode:
 		apply_fullscreen(fullscreen)
@@ -395,6 +416,15 @@ func _setup_ui() -> void:
 	scope.visible = false
 	ui.add_child(scope)
 	ui.move_child(scope, 1)
+	vignette_overlay = ColorRect.new()
+	vignette_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vignette_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var vignette_mat = ShaderMaterial.new()
+	vignette_mat.shader = preload("res://shaders/vignette.gdshader")
+	vignette_overlay.material = vignette_mat
+	vignette_overlay.visible = false
+	ui.add_child(vignette_overlay)
+	apply_visual_settings()
 
 func _clear_menu(title: String, subtitle: String) -> void:
 	menu.remove_theme_stylebox_override("panel")
@@ -793,6 +823,9 @@ func show_settings() -> void:
 	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_row.add_theme_constant_override("separation", 16)
 	menu_items.add_child(top_row)
+	var access_button = _button("ACCESSIBILITY", show_accessibility_settings)
+	access_button.custom_minimum_size.x = 240
+	access_button.reparent(top_row)
 	var touch_button = _button("TOUCH & AIMING", show_touch_settings)
 	touch_button.custom_minimum_size.x = 250
 	touch_button.reparent(top_row)
@@ -810,6 +843,8 @@ func show_settings() -> void:
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
 	_credit_section("Shading", "")
 	_choices(["Original hatching", "Coloured pencil"], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
+	_slider("Paper brightness", paper_brightness, 0.15, 1.0, func(value): paper_brightness = value; apply_visual_settings(); save_settings())
+	_slider("Edge shadow", edge_shadow, 0.0, 1.0, func(value): edge_shadow = value; apply_visual_settings(); save_settings())
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
 	_card_wrap(start, split)
@@ -826,6 +861,56 @@ func apply_quality(level: int) -> void:
 	get_viewport().msaa_3d = [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][quality]
 	get_viewport().scaling_3d_scale = [0.7, 1.0, 1.0][quality]
 	ReferenceAssets.set_detail(float(quality))
+
+func apply_visual_settings() -> void:
+	ReferenceAssets.paper_theme = paper_theme
+	ReferenceAssets.paper_brightness = paper_brightness
+	ReferenceAssets.colorblind = colorblind_mode
+	ReferenceAssets.refresh_visuals()
+	var eff_paper = ReferenceAssets.effective_paper()
+	RenderingServer.set_default_clear_color(eff_paper)
+	if is_instance_valid(paper_rect):
+		paper_rect.visible = paper_lines
+	if is_instance_valid(menu_backdrop):
+		menu_backdrop.color = Color(eff_paper, 0.55)
+	if is_instance_valid(vignette_overlay):
+		var dim = clampf((1.0 - paper_brightness) * 0.22 + (0.14 if paper_theme == 3 else 0.0), 0.0, 0.36)
+		var mat := vignette_overlay.material as ShaderMaterial
+		mat.set_shader_parameter("strength", edge_shadow)
+		mat.set_shader_parameter("dim", dim)
+		vignette_overlay.visible = edge_shadow > 0.005 or dim > 0.005
+	if is_instance_valid(player) and is_instance_valid(player.outline_material):
+		player.outline_material.set_shader_parameter("ink", ReferenceAssets.outline_ink())
+		player.outline_material.set_shader_parameter("width_scale", 1.75 if outline_bold == 1 else 1.0)
+	if is_instance_valid(hud):
+		hud.queue_redraw()
+
+func show_accessibility_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
+	_clear_menu("Accessibility", "Visual comfort, dark paper, motion reduction and readability")
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1160
+	menu.offset_left = -580
+	menu.offset_right = 580
+	var start = menu_items.get_child_count()
+	_credit_section("Paper & brightness", "Lower brightness or choose Dark board to rest your eyes; inks adapt automatically.")
+	_choices(["Original", "Warm sepia", "Soft slate", "Dark board"], paper_theme, func(index): paper_theme = index; apply_visual_settings(); save_settings())
+	_slider("Paper brightness", paper_brightness, 0.15, 1.0, func(value): paper_brightness = value; apply_visual_settings(); save_settings())
+	_slider("Edge shadow", edge_shadow, 0.0, 1.0, func(value): edge_shadow = value; apply_visual_settings(); save_settings())
+	_toggle("Ruled notebook lines", paper_lines, func(value): paper_lines = value; apply_visual_settings(); save_settings())
+	_toggle("Colorblind-safe enemy & pickup inks", colorblind_mode, func(value): colorblind_mode = value; apply_visual_settings(); save_settings())
+	var split = menu_items.get_child_count()
+	_credit_section("Motion & flashes", "")
+	_slider("Screen shake", shake_scale, 0.0, 1.0, func(value): shake_scale = value; save_settings())
+	_slider("Damage flash", flash_scale, 0.0, 1.0, func(value): flash_scale = value; save_settings())
+	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
+	_credit_section("Readability", "")
+	_choices(["Normal crosshair", "Large", "High contrast"], crosshair_style, func(index): crosshair_style = index; apply_visual_settings(); save_settings())
+	_choices(["Normal 3D outlines", "Bold 3D outlines"], outline_bold, func(index): outline_bold = index; apply_visual_settings(); save_settings())
+	_card_wrap(start, split)
+	if return_to.is_valid():
+		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
+	else:
+		_back_button(show_settings, "BACK TO SETTINGS")
 
 func apply_fullscreen(enabled: bool) -> void:
 	fullscreen = enabled
@@ -1166,6 +1251,7 @@ func start_game(first_wave: int) -> void:
 	level = DoodleLevel.new()
 	region.add_child(level)
 	level.load_map(map_key, network.in_match or match_mode == "bots")
+	apply_visual_settings()
 	sound.set_map(map_info(map_key).music)
 	region.bake_navigation_mesh(false)
 	player = DoodlePlayer.new()
@@ -1470,11 +1556,11 @@ func _process(delta: float) -> void:
 	if combo_timer <= 0:
 		combo = 0
 	shake = move_toward(shake, 0, delta * 3)
-	player.rig.position = Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * minf(shake, 1.2) * 0.025
+	player.rig.position = Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * minf(shake, 1.2) * 0.025 * shake_scale
 	scope.visible = player.weapon_index == 2 and player.aiming
 	hit_marker = maxf(0, hit_marker - delta)
 	hurt_flash = maxf(0, hurt_flash - delta)
-	hurt_overlay.color.a = hurt_flash
+	hurt_overlay.color.a = hurt_flash * flash_scale
 	hud.score_text = "Score %d" % score
 	hud.combo_text = "Combo x%d" % combo if combo > 1 else ""
 	hud.info = [["Wave %d" % wave, false]]
@@ -1941,6 +2027,17 @@ func run_smoke() -> void:
 	await smoke_tap_button("SETTINGS")
 	for child in menu_items.find_children("*", "Button", true, false):
 		assert(not child.text.begins_with("Fullscreen"), "Fullscreen must not appear inside Settings")
+	await smoke_tap_button("ACCESSIBILITY")
+	assert(menu_items.get_child(0).get_child(0).text == "Accessibility", "ACCESSIBILITY must open its dedicated settings screen")
+	paper_brightness = 0.2
+	edge_shadow = 0.6
+	apply_visual_settings()
+	assert(ReferenceAssets.effective_paper().get_luminance() < 0.25 and ReferenceAssets.effective_ink(2).get_luminance() > 0.7 and vignette_overlay.visible, "Lowering paper brightness must darken paper, lighten dark inks, and show the vignette overlay")
+	paper_brightness = 1.0
+	edge_shadow = 0.0
+	apply_visual_settings()
+	assert(not vignette_overlay.visible and ReferenceAssets.effective_paper().is_equal_approx(ReferenceAssets.map_paper), "Restoring default visual settings must restore original paper and hide vignette")
+	await smoke_tap_button("BACK TO SETTINGS")
 	await smoke_tap_button("TOUCH & AIMING")
 	for child in menu_items.find_children("*", "Button", true, false):
 		assert(not child.text.begins_with("Touch controls"), "Manual Touch controls toggle must not appear in Touch & aiming")
@@ -2587,6 +2684,15 @@ func save_settings() -> void:
 	preferences.set_value("bots", "minutes", bot_minutes)
 	preferences.set_value("controller", "vibration", controller_vibration)
 	preferences.set_value("controller", "light", controller_light)
+	preferences.set_value("accessibility", "paper_theme", paper_theme)
+	preferences.set_value("accessibility", "paper_brightness", paper_brightness)
+	preferences.set_value("accessibility", "edge_shadow", edge_shadow)
+	preferences.set_value("accessibility", "paper_lines", paper_lines)
+	preferences.set_value("accessibility", "colorblind", colorblind_mode)
+	preferences.set_value("accessibility", "shake_scale", shake_scale)
+	preferences.set_value("accessibility", "flash_scale", flash_scale)
+	preferences.set_value("accessibility", "crosshair_style", crosshair_style)
+	preferences.set_value("accessibility", "outline_bold", outline_bold)
 	preferences.save(save_path)
 
 func burst(at: Vector3, ink: int, count: int) -> void:
@@ -3042,7 +3148,7 @@ func update_online(delta: float) -> void:
 	scope.visible = player.weapon_index == 2 and player.aiming
 	hit_marker = maxf(0, hit_marker - delta)
 	hurt_flash = maxf(0, hurt_flash - delta)
-	hurt_overlay.color.a = hurt_flash
+	hurt_overlay.color.a = hurt_flash * flash_scale
 	if not player.alive:
 		death_timer -= delta
 		center_text.text = "You got erased · respawn in %d" % maxi(0, ceili(death_timer))

@@ -11,6 +11,52 @@ static var models: Dictionary = {}
 static var detail = 1.0
 # 0: the original's crossed hatching, 1: the port's coloured-pencil shading.
 static var style = 1.0
+# Port-only visual comfort & accessibility overrides (raw map_colors/map_paper stay untouched).
+static var paper_theme = 0
+static var paper_brightness = 1.0
+static var colorblind = false
+
+static func effective_paper() -> Color:
+	var base = map_paper
+	match paper_theme:
+		1:
+			base = map_paper * Color(0.91, 0.85, 0.73)
+		2:
+			base = map_paper.lerp(Color(0.68, 0.73, 0.80), 0.68)
+		3:
+			base = Color(0.12, 0.14, 0.18)
+	var t = clampf((paper_brightness - 0.15) / 0.85, 0.0, 1.0)
+	return Color(0.08, 0.09, 0.13).lerp(base, t)
+
+static func effective_ink(index: int) -> Color:
+	var base: Color = map_colors[index]
+	if colorblind:
+		if index == 1:
+			base = Color(0.95, 0.44, 0.04)
+		elif index == 4:
+			base = Color(0.06, 0.64, 0.88)
+	var lum = effective_paper().get_luminance()
+	if lum < 0.48:
+		var dark = clampf((0.48 - lum) / 0.32, 0.0, 1.0)
+		match index:
+			0:
+				base = base.lerp(Color(0.56, 0.75, 0.98), dark)
+			1:
+				base = base.lerp(Color(1.0, 0.58, 0.18) if colorblind else Color(1.0, 0.42, 0.45), dark)
+			2:
+				base = base.lerp(Color(0.84, 0.87, 0.92), dark)
+			_:
+				base = base.lightened(0.32 * dark)
+	return base
+
+static func outline_ink() -> Color:
+	return effective_ink(0)
+
+static func refresh_visuals() -> void:
+	var paper = effective_paper()
+	for mat in materials.values():
+		mat.set_shader_parameter("ink", effective_ink(int(mat.get_meta("ink_index"))))
+		mat.set_shader_parameter("paper_color", paper)
 
 static func read_json(file: String) -> Variant:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://data/" + file + ".json"))
@@ -24,8 +70,8 @@ static func material(ink: int = 0, solid: bool = false, shade: Array = [1.0, 0.0
 		var mat = ShaderMaterial.new()
 		mat.shader = preload("res://shaders/ink.gdshader")
 		mat.set_meta("ink_index", ink)
-		mat.set_shader_parameter("ink", map_colors[ink])
-		mat.set_shader_parameter("paper_color", map_paper)
+		mat.set_shader_parameter("ink", effective_ink(ink))
+		mat.set_shader_parameter("paper_color", effective_paper())
 		mat.set_shader_parameter("solid", solid)
 		mat.set_shader_parameter("shade_scale", float(shade[0]))
 		mat.set_shader_parameter("shade_bias", float(shade[1]))
@@ -80,9 +126,7 @@ static func set_map_style(settings: Dictionary) -> void:
 		map_colors[i] = Color(palette[i][0], palette[i][1], palette[i][2])
 	var paper: Array = settings.get("paper", [0.97, 0.96, 0.91])
 	map_paper = Color(paper[0], paper[1], paper[2])
-	for mat in materials.values():
-		mat.set_shader_parameter("ink", map_colors[int(mat.get_meta("ink_index"))])
-		mat.set_shader_parameter("paper_color", map_paper)
+	refresh_visuals()
 
 static func set_detail(level: float) -> void:
 	detail = level

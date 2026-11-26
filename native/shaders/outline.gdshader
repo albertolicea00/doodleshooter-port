@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled, fog_disabled;
 uniform sampler2D depth_texture : hint_depth_texture, repeat_disable, filter_nearest;
 uniform vec4 ink : source_color = vec4(0.10, 0.19, 0.76, 1.0);
+uniform float width_scale = 1.0;
 float inverse_depth(vec2 uv, mat4 inverse_projection) {
     float depth = texture(depth_texture, uv).r;
     vec3 ndc = vec3(uv, depth) * 2.0 - 1.0;
@@ -10,7 +11,7 @@ float inverse_depth(vec2 uv, mat4 inverse_projection) {
 }
 void vertex() { POSITION = vec4(VERTEX.xy, 1.0, 1.0); }
 void fragment() {
-    vec2 px = 1.25 / VIEWPORT_SIZE;
+    vec2 px = (1.25 * width_scale) / VIEWPORT_SIZE;
     float center = inverse_depth(SCREEN_UV, INV_PROJECTION_MATRIX);
     float left = inverse_depth(SCREEN_UV - vec2(px.x, 0.0), INV_PROJECTION_MATRIX);
     float right = inverse_depth(SCREEN_UV + vec2(px.x, 0.0), INV_PROJECTION_MATRIX);
