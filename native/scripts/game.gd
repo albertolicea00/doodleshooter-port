@@ -79,6 +79,7 @@ var hurt_overlay: ColorRect
 var ui: Control
 var preferences = ConfigFile.new()
 var use_touch = OS.has_feature("mobile") or "--touch" in OS.get_cmdline_user_args()
+var controller_hiding_touch = false
 var fullscreen = false
 var starting = false
 var save_path = "user://progress.cfg"
@@ -982,14 +983,6 @@ func show_touch_settings(return_to: Callable = Callable(), return_label: String 
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
-	var top_row = HBoxContainer.new()
-	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	top_row.add_theme_constant_override("separation", 16)
-	menu_items.add_child(top_row)
-	_toggle("Touch controls", use_touch, func(value): use_touch = value)
-	var touch_toggle = menu_items.get_child(-1) as Button
-	touch_toggle.custom_minimum_size.x = 280
-	touch_toggle.reparent(top_row)
 	var start = menu_items.get_child_count()
 	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
 	_credit_section("Looking", "Applies to touch controls and the controller right stick.")
@@ -1237,13 +1230,26 @@ func resume_game() -> void:
 		if is_instance_valid(player.camera):
 			player.camera.make_current()
 	apply_quality(quality)
+	var show_touch_ui = use_touch and not controller_hiding_touch
 	menu.visible = false
 	hud.visible = true
-	hud.touch_mode = use_touch
+	hud.touch_mode = show_touch_ui
 	center_text.visible = true
 	touch.show_score = network.in_match or match_mode == "bots"
-	touch.visible = use_touch
+	touch.visible = show_touch_ui
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if use_touch or capture_mode else Input.MOUSE_MODE_CAPTURED
+
+func set_controller_hiding_touch(hidden: bool) -> void:
+	if controller_hiding_touch == hidden:
+		return
+	controller_hiding_touch = hidden
+	var show_touch_ui = use_touch and not controller_hiding_touch
+	hud.touch_mode = show_touch_ui
+	hud.queue_redraw()
+	if playing and not touch.editing:
+		if touch.visible and not show_touch_ui:
+			touch.reset()
+		touch.visible = show_touch_ui
 
 func pause_menu() -> void:
 	if not is_instance_valid(player) or not player.alive:
@@ -1276,6 +1282,11 @@ func _find_back_button(node: Node) -> Button:
 	return null
 
 func _input(event: InputEvent) -> void:
+	if use_touch:
+		if (event is InputEventJoypadButton and event.pressed) or (event is InputEventJoypadMotion and absf(event.axis_value) > 0.25):
+			set_controller_hiding_touch(true)
+		elif (event is InputEventScreenTouch and event.pressed) or event is InputEventScreenDrag:
+			set_controller_hiding_touch(false)
 	if menu.visible:
 		var focused_edit = get_viewport().gui_get_focus_owner() is LineEdit and event is InputEventKey and not event.is_echo()
 		if not focused_edit:
@@ -1909,6 +1920,10 @@ func run_smoke() -> void:
 	await smoke_tap_button("SETTINGS")
 	for child in menu_items.find_children("*", "Button", true, false):
 		assert(not child.text.begins_with("Fullscreen"), "Fullscreen must not appear inside Settings")
+	await smoke_tap_button("TOUCH & AIMING")
+	for child in menu_items.find_children("*", "Button", true, false):
+		assert(not child.text.begins_with("Touch controls"), "Manual Touch controls toggle must not appear in Touch & aiming")
+	await smoke_tap_button("BACK TO SETTINGS")
 	await smoke_tap_button("CONTROLLER & MOTION")
 	assert(menu_items.get_child(0).get_child(0).text == "Controller & motion", "CONTROLLER & MOTION must open its dedicated settings screen")
 	await smoke_tap_button("BACK TO SETTINGS")
@@ -2202,6 +2217,21 @@ func run_smoke() -> void:
 	controller_light = false
 	assert(controller_light_color().r < 0.1, "Disabling the controller light bar must dim it")
 	controller_light = true
+	use_touch = true
+	controller_hiding_touch = false
+	resume_game()
+	assert(touch.visible and hud.touch_mode, "Mobile touch mode must show touch controls by default")
+	smoke_joy_button(JOY_BUTTON_X, true)
+	smoke_joy_button(JOY_BUTTON_X, false)
+	assert(not touch.visible and not hud.touch_mode, "Controller input on mobile must auto-hide touch controls")
+	smoke_touch(Vector2(100, touch.size.y - 100), true)
+	assert(touch.visible and hud.touch_mode and touch.move_finger == 0, "Touching the screen must immediately restore and process touch controls")
+	smoke_touch(Vector2(100, touch.size.y - 100), false)
+	touch.reset()
+	use_touch = false
+	controller_hiding_touch = false
+	touch.visible = false
+	hud.touch_mode = false
 	throw_grenade(player.camera.global_position, Vector3.UP)
 	assert(grenades.size() == 1)
 	release_smoke(Vector3(0, 0, 10))

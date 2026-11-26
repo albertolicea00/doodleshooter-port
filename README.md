@@ -82,7 +82,7 @@ make touch
 
 ### 📱 Touch & gyroscope
 
-Touch controls appear automatically on mobile (*menus use mouse emulation; gameplay uses dedicated multitouch input*):
+Touch controls appear automatically on mobile — hiding seamlessly while a controller is used and reappearing as soon as you touch the screen (*menus use mouse emulation; gameplay uses dedicated multitouch input*):
 
 - **Movement & sprint**: push the left joystick fully forward to sprint; drag up to the `RUN` marker to auto-run with your thumb lifted.
 - **Camera**: drag anywhere outside the joystick to turn the camera — *including while holding fire*.

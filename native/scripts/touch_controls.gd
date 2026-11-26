@@ -187,6 +187,9 @@ static func _base(key: String) -> String:
 	return key.get_slice("#", 0)
 
 func _input(event: InputEvent) -> void:
+	if not visible and is_instance_valid(player) and player.game.playing and player.game.use_touch and player.game.controller_hiding_touch:
+		if (event is InputEventScreenTouch and event.pressed) or event is InputEventScreenDrag:
+			player.game.set_controller_hiding_touch(false)
 	if not visible:
 		return
 	if editing:
