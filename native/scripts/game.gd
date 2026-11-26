@@ -197,7 +197,7 @@ func _setup_inputs() -> void:
 		event.button_index = entry[1]
 		InputMap.action_add_event(entry[0], event)
 	InputMap.add_action("sprint_toggle")
-	for entry in [["jump", JOY_BUTTON_A], ["dash", JOY_BUTTON_B], ["reload", JOY_BUTTON_X], ["next_weapon", JOY_BUTTON_Y], ["next_weapon", JOY_BUTTON_DPAD_RIGHT], ["prev_weapon", JOY_BUTTON_DPAD_LEFT], ["grapple", JOY_BUTTON_LEFT_SHOULDER], ["slash", JOY_BUTTON_RIGHT_SHOULDER], ["grenade", JOY_BUTTON_RIGHT_STICK], ["grenade", JOY_BUTTON_DPAD_UP], ["smoke", JOY_BUTTON_DPAD_DOWN], ["scoreboard", JOY_BUTTON_BACK], ["scoreboard", JOY_BUTTON_TOUCHPAD], ["pause", JOY_BUTTON_START], ["sprint_toggle", JOY_BUTTON_LEFT_STICK], ["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
+	for entry in [["jump", JOY_BUTTON_A], ["dash", JOY_BUTTON_B], ["reload", JOY_BUTTON_X], ["next_weapon", JOY_BUTTON_Y], ["next_weapon", JOY_BUTTON_DPAD_DOWN], ["prev_weapon", JOY_BUTTON_DPAD_UP], ["grapple", JOY_BUTTON_LEFT_SHOULDER], ["slash", JOY_BUTTON_RIGHT_SHOULDER], ["grenade", JOY_BUTTON_RIGHT_STICK], ["grenade", JOY_BUTTON_DPAD_LEFT], ["smoke", JOY_BUTTON_DPAD_RIGHT], ["scoreboard", JOY_BUTTON_BACK], ["scoreboard", JOY_BUTTON_TOUCHPAD], ["pause", JOY_BUTTON_START], ["sprint_toggle", JOY_BUTTON_LEFT_STICK], ["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
 		var event = InputEventJoypadButton.new()
 		event.button_index = entry[1]
 		InputMap.action_add_event(entry[0], event)
@@ -886,9 +886,9 @@ func show_controls(return_to: Callable = Callable(), return_label: String = "") 
 		"{L2 + R2} charged katana execution in survival",
 		"{R1} quick katana slash, then back to your gun",
 		"{□} reload   {△} next weapon",
-		"{D-pad Left / Right} previous / next weapon",
+		"{D-pad Up / Down} previous / next weapon",
 		"{Touchpad swipe} radial weapon wheel (1–7)",
-		"{R3 / D-pad Up} grenade · hold to throw   {D-pad Down} smoke",
+		"{R3 / D-pad Left} grenade · hold to throw   {D-pad Right} smoke",
 		"{Touchpad click / Create} scoreboard   {Options} pause"
 	]
 	var controller = _controls_column(cards, "", ps5_lines)
@@ -934,7 +934,7 @@ func _controls_text(lines: Array[String]) -> String:
 
 func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void:
 	var xbox_lines: Array[String] = []
-	var bindings = {"{L stick}": "{LS}", "{R stick / Gyro}": "{RS / Gyro}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3 / D-pad Up}": "{RS click / D-pad Up}", "{Touchpad click / Create}": "{View}", "{Options}": "{Menu}"}
+	var bindings = {"{L stick}": "{LS}", "{R stick / Gyro}": "{RS / Gyro}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3 / D-pad Left}": "{RS click / D-pad Left}", "{Touchpad click / Create}": "{View}", "{Options}": "{Menu}"}
 	for line in ps5_lines:
 		if line.begins_with("{Touchpad swipe}"):
 			continue
@@ -2127,12 +2127,12 @@ func run_smoke() -> void:
 		await get_tree().physics_frame
 	assert(player.slide_time <= 0.0 and player.dash_cd <= 0.0, "Closing pause with B/Circle must not slide or dash")
 	player.switch_weapon(0)
-	await smoke_joy_press(JOY_BUTTON_DPAD_RIGHT)
-	assert(player.weapon_index == 1, "D-pad Right must switch to the next weapon")
-	await smoke_joy_press(JOY_BUTTON_DPAD_LEFT)
-	await smoke_joy_press(JOY_BUTTON_DPAD_LEFT)
-	assert(player.weapon_index == 6, "D-pad Left must wrap to the previous weapon")
-	await smoke_joy_press(JOY_BUTTON_DPAD_RIGHT)
+	await smoke_joy_press(JOY_BUTTON_DPAD_DOWN)
+	assert(player.weapon_index == 1, "D-pad Down must switch to the next weapon")
+	await smoke_joy_press(JOY_BUTTON_DPAD_UP)
+	await smoke_joy_press(JOY_BUTTON_DPAD_UP)
+	assert(player.weapon_index == 6, "D-pad Up must wrap to the previous weapon")
+	await smoke_joy_press(JOY_BUTTON_DPAD_DOWN)
 	assert(player.weapon_index == 0)
 	smoke_mouse_wheel(MOUSE_BUTTON_WHEEL_DOWN)
 	await get_tree().process_frame
@@ -2142,19 +2142,19 @@ func run_smoke() -> void:
 	assert(player.weapon_index == 0, "Mouse wheel up must select the previous weapon")
 	var saved_smokes = player.smokes
 	var saved_frags = player.grenades
-	await smoke_joy_press(JOY_BUTTON_DPAD_DOWN)
+	await smoke_joy_press(JOY_BUTTON_DPAD_RIGHT)
 	await get_tree().physics_frame
-	assert(player.smokes == saved_smokes - 1 and grenades.size() == 1 and grenades[-1].smoke, "D-pad Down must throw a smoke grenade")
+	assert(player.smokes == saved_smokes - 1 and grenades.size() == 1 and grenades[-1].smoke, "D-pad Right must throw a smoke grenade")
 	grenades.pop_back().node.free()
 	player.smokes = saved_smokes
-	smoke_joy_button(JOY_BUTTON_DPAD_UP, true)
+	smoke_joy_button(JOY_BUTTON_DPAD_LEFT, true)
 	for i in 2:
 		await get_tree().physics_frame
-	assert(player.charging, "Holding D-pad Up must charge a frag grenade")
-	smoke_joy_button(JOY_BUTTON_DPAD_UP, false)
+	assert(player.charging, "Holding D-pad Left must charge a frag grenade")
+	smoke_joy_button(JOY_BUTTON_DPAD_LEFT, false)
 	for i in 2:
 		await get_tree().physics_frame
-	assert(not player.charging and player.grenades == saved_frags - 1 and grenades.size() == 1 and not grenades[-1].smoke, "Releasing D-pad Up must throw a frag grenade")
+	assert(not player.charging and player.grenades == saved_frags - 1 and grenades.size() == 1 and not grenades[-1].smoke, "Releasing D-pad Left must throw a frag grenade")
 	grenades.pop_back().node.free()
 	player.grenades = saved_frags
 	Input.action_press("forward")

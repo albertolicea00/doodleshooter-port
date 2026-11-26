@@ -73,9 +73,9 @@ make touch
 | Grapple *(tap swing, hold reel, press again to release)* | `Q` (`Space` to launch) | `L1` / `LB` (`×` / `A` to launch) |
 | Quick katana slash | `F` | `R1` / `RB` |
 | Reload | `R` | `□` / `X` |
-| Switch weapons | `1`–`7` / Mouse Wheel Up & Down | `△` / `Y` *(next)* · `D-pad Left / Right` *(prev / next)* · `Touchpad swipe` *(7-weapon radial wheel, port)* |
-| Grenade *(hold to throw further)* | `G` | `R3` / `RS` or `D-pad Up` |
-| Smoke grenade *(port)* | `H` | `D-pad Down` |
+| Switch weapons | `1`–`7` / Mouse Wheel Up & Down | `△` / `Y` *(next)* · `D-pad Up / Down` *(prev / next)* · `Touchpad swipe` *(7-weapon radial wheel, port)* |
+| Grenade *(hold to throw further)* | `G` | `R3` / `RS` or `D-pad Left` |
+| Smoke grenade *(port)* | `H` | `D-pad Right` |
 | Scoreboard *(bot / network matches)* | `Tab` | `Touchpad click` or `Create` / `View` |
 | Pause | `Esc` | `Options` / `Menu` |
 | Menu navigate / Select / Back | Arrows · `Enter` · `Esc` | D-pad / Left Stick · `×` / `A` · `○` / `B` |
