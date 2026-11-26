@@ -63,8 +63,8 @@ make touch
 | Action | Mouse + Keyboard | PlayStation / Xbox Controller |
 | --- | --- | --- |
 | Move | `W` `A` `S` `D` | Left Stick |
-| Look | Mouse | Right Stick |
-| Sprint | `Shift` | `L3` / `LS` |
+| Look | Mouse | Right Stick *(uses Look / Aim sensitivity & Invert Y settings)* |
+| Sprint | `Shift` *(hold)* | `L3` / `LS` *(toggle while moving forward)* |
 | Fire / Slash | `LMB` | `R2` / `RT` |
 | Aim / Block | `RMB` | `L2` / `LT` |
 | Charged katana execution *(survival)* | `LMB` + `RMB` | `L2` + `R2` / `LT` + `RT` |
@@ -73,11 +73,12 @@ make touch
 | Grapple *(tap swing, hold reel, press again to release)* | `Q` (`Space` to launch) | `L1` / `LB` (`×` / `A` to launch) |
 | Quick katana slash | `F` | `R1` / `RB` |
 | Reload | `R` | `□` / `X` |
-| Switch weapons | `1`–`7` / Mouse Wheel | `△` / `Y` *(next weapon)* |
-| Grenade *(hold to throw further)* | `G` | `R3` / `RS` |
-| Smoke grenade *(port)* | `H` | — |
-| Scoreboard *(bot / network matches)* | `Tab` | — |
+| Switch weapons | `1`–`7` / Mouse Wheel Up & Down | `△` / `Y` *(next)* · `D-pad Left / Right` *(prev / next)* |
+| Grenade *(hold to throw further)* | `G` | `R3` / `RS` or `D-pad Up` |
+| Smoke grenade *(port)* | `H` | `D-pad Down` |
+| Scoreboard *(bot / network matches)* | `Tab` | `Create` / `View` |
 | Pause | `Esc` | `Options` / `Menu` |
+| Menu navigate / Select / Back | Arrows · `Enter` · `Esc` | D-pad / Left Stick · `×` / `A` · `○` / `B` |
 
 ### 📱 Touch & gyroscope
 

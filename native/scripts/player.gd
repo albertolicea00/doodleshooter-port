@@ -65,6 +65,7 @@ var step_distance = 0.0
 var last_attack = "rifle"
 var blood_level = 0.0
 var resume_frames = 0
+var pad_sprint = false
 
 func _ready() -> void:
 	collision_layer = 2
@@ -127,8 +128,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		look(event.relative * 0.0024)
+	if event.is_action_pressed("sprint_toggle"):
+		pad_sprint = not pad_sprint
 	if event.is_action_pressed("next_weapon"):
 		switch_weapon((weapon_index + 1) % weapon_names.size())
+	elif event.is_action_pressed("prev_weapon"):
+		switch_weapon((weapon_index - 1 + weapon_names.size()) % weapon_names.size())
 	for i in weapon_names.size():
 		if event.is_action_pressed("weapon_" + str(i)):
 			switch_weapon(i)
@@ -170,12 +175,17 @@ func _physics_process(delta: float) -> void:
 	if game.touch != null:
 		control += game.touch.move_vector
 	control = control.limit_length()
-	var stick = Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
-	if stick.length() > 0.15:
-		look(stick * delta * 2.5)
 	aiming = Input.is_action_pressed("aim")
+	var stick = Input.get_vector("look_left", "look_right", "look_up", "look_down", 0.15)
+	if stick.length_squared() > 0.0:
+		if game.touch != null:
+			game.touch.turn(stick * delta * 2.5 * float(game.touch.options.look))
+		else:
+			look(stick * delta * 2.5)
+	if control.y > -0.1:
+		pad_sprint = false
 	var wish = global_basis * Vector3(control.x, 0, control.y)
-	var speed = 10.6 if Input.is_action_pressed("sprint") or (game.touch != null and game.touch.sprinting) else 6.6
+	var speed = 10.6 if Input.is_action_pressed("sprint") or pad_sprint or (game.touch != null and game.touch.sprinting) else 6.6
 	if aiming:
 		speed = 4.2
 	fire_cd -= delta
