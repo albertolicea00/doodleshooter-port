@@ -134,6 +134,10 @@ static func theme(font: Font) -> Theme:
 	theme.default_font_size = 24
 	theme.set_color("font_color", "Label", INK)
 	theme.set_color("default_color", "RichTextLabel", INK)
+	var italic = FontVariation.new()
+	italic.base_font = font
+	italic.variation_transform = Transform2D(Vector2(1.0, 0.0), Vector2(-0.22, 1.0), Vector2.ZERO)
+	theme.set_font("italics_font", "RichTextLabel", italic)
 	# Filled ink buttons (.bigbtn), outlined buttons (.alt / .mapbtn), the red second button and the big start button.
 	_button_styles(theme, "Button", INK, PAPER, -0.6)
 	for variation in ["AltButton", "BlackButton", "RedButton", "RedOutlineButton", "GreenButton", "StartButton"]:

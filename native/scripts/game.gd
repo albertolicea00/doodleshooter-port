@@ -62,8 +62,8 @@ var screen_effects = true
 var shading = 1
 # Port-only visual comfort & accessibility settings.
 var paper_theme = 0
-var paper_brightness = 1.0
-var edge_shadow = 0.0
+var paper_brightness = 0.95
+var edge_shadow = 0.05
 var paper_lines = true
 var colorblind_mode = false
 var shake_scale = 1.0
@@ -79,6 +79,8 @@ var wave_size = 0
 var health_modifier = 1.0
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
+var menu_pad: MarginContainer
+var menu_hint: RichTextLabel
 var menu_items: VBoxContainer
 var pulsed_control: Control = null
 var auto_scroll = false
@@ -289,8 +291,8 @@ func _setup_ui() -> void:
 	shading = clampi(int(preferences.get_value("video", "shading", 1)), 0, 1)
 	ReferenceAssets.set_style(float(shading))
 	paper_theme = clampi(int(preferences.get_value("accessibility", "paper_theme", 0)), 0, 3)
-	paper_brightness = clampf(float(preferences.get_value("accessibility", "paper_brightness", 1.0)), 0.15, 1.0)
-	edge_shadow = clampf(float(preferences.get_value("accessibility", "edge_shadow", 0.0)), 0.0, 1.0)
+	paper_brightness = clampf(float(preferences.get_value("accessibility", "paper_brightness", 0.95)), 0.15, 1.0)
+	edge_shadow = clampf(float(preferences.get_value("accessibility", "edge_shadow", 0.05)), 0.0, 1.0)
 	paper_lines = bool(preferences.get_value("accessibility", "paper_lines", true))
 	colorblind_mode = bool(preferences.get_value("accessibility", "colorblind", false))
 	shake_scale = clampf(float(preferences.get_value("accessibility", "shake_scale", 1.0)), 0.0, 1.0)
@@ -324,8 +326,7 @@ func _setup_ui() -> void:
 	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	menu.position = Vector2(-340, -328)
 	menu.custom_minimum_size = Vector2(680, 0)
-	var menu_hint = RichTextLabel.new()
-	var red_hex = DoodlePen.RED.to_html(false)
+	menu_hint = RichTextLabel.new()
 	menu_hint.bbcode_enabled = true
 	menu_hint.fit_content = true
 	menu_hint.scroll_active = false
@@ -333,10 +334,12 @@ func _setup_ui() -> void:
 	menu_hint.focus_mode = Control.FOCUS_NONE
 	menu_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	menu_hint.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	menu_hint.offset_top = 8
+	menu_hint.offset_top = 5
 	menu_hint.add_theme_font_size_override("normal_font_size", 18)
+	menu_hint.add_theme_font_size_override("italics_font_size", 15)
+	menu_hint.add_theme_constant_override("line_separation", -2)
 	menu_hint.add_theme_color_override("default_color", Color(DoodlePen.INK, 0.8))
-	menu_hint.text = "[center][color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back[/center]" % [red_hex, red_hex]
+	_refresh_menu_hint(false)
 	menu_items = VBoxContainer.new()
 	menu_items.add_theme_constant_override("separation", 12)
 	menu_scroll = ScrollContainer.new()
@@ -354,7 +357,7 @@ func _setup_ui() -> void:
 		update_hint.call())
 	ui.add_child(menu)
 	ui.add_child(menu_hint)
-	var menu_pad = MarginContainer.new()
+	menu_pad = MarginContainer.new()
 	menu_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for side in ["margin_left", "margin_right", "margin_bottom"]:
 		menu_pad.add_theme_constant_override(side, 12)
@@ -471,9 +474,22 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	touch.reset()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
+func _refresh_menu_hint(show_back_note: bool) -> void:
+	if menu_hint == null:
+		return
+	var red_hex = DoodlePen.RED.to_html(false)
+	var sub_hex = Color(DoodlePen.INK, 0.62).to_html(true)
+	var top_line = "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back" % [red_hex, red_hex]
+	var second_line = "\n[color=#%s][i]The Back button is at the very bottom[/i][/color]" % sub_hex if show_back_note else ""
+	menu_hint.text = "[center]%s%s[/center]" % [top_line, second_line]
+	if menu_pad != null:
+		menu_pad.add_theme_constant_override("margin_top", 40 if show_back_note else 28)
+
 # Short screens shrink the sheet to their content; long ones scroll to the screen edges.
 func _fit_menu() -> void:
 	_prepare_menu_controls(menu_items)
+	var back_btn = _find_back_button(menu_items)
+	_refresh_menu_hint(back_btn != null and back_btn.text.begins_with("BACK"))
 	menu_scroll.follow_focus = false
 	var current_focus = get_viewport().gui_get_focus_owner()
 	if current_focus == null or not menu_items.is_ancestor_of(current_focus):
@@ -843,8 +859,6 @@ func show_settings() -> void:
 	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
 	_credit_section("Shading", "")
 	_choices(["Original hatching", "Coloured pencil"], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
-	_slider("Paper brightness", paper_brightness, 0.15, 1.0, func(value): paper_brightness = value; apply_visual_settings(); save_settings())
-	_slider("Edge shadow", edge_shadow, 0.0, 1.0, func(value): edge_shadow = value; apply_visual_settings(); save_settings())
 	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
 	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
 	_card_wrap(start, split)
@@ -2009,6 +2023,7 @@ func run_smoke() -> void:
 	Input.emulate_touch_from_mouse = true
 	await smoke_tap_button("CREDITS")
 	assert(menu_items.get_child(0).get_child(0).text == "Credits", "A menu tap must open the credits screen")
+	assert("[i]The Back button is at the very bottom[/i]" in menu_hint.text, "Submenus with a Back button must show the italic bottom-back hint")
 	await smoke_tap_button("FULL CREDITS & NOTICES", Vector2(0, 4))
 	assert(menu_items.get_child(0).get_child(0).text == "Full credits & notices")
 	assert(menu_scroll.scroll_vertical == 0, "Each menu screen must open at the top")
@@ -2029,6 +2044,7 @@ func run_smoke() -> void:
 		assert(not child.text.begins_with("Fullscreen"), "Fullscreen must not appear inside Settings")
 	await smoke_tap_button("ACCESSIBILITY")
 	assert(menu_items.get_child(0).get_child(0).text == "Accessibility", "ACCESSIBILITY must open its dedicated settings screen")
+	assert(is_equal_approx(paper_brightness, 0.95) and is_equal_approx(edge_shadow, 0.05), "Default paper brightness and edge shadow must be 95% and 5%")
 	paper_brightness = 0.2
 	edge_shadow = 0.6
 	apply_visual_settings()
@@ -2036,7 +2052,10 @@ func run_smoke() -> void:
 	paper_brightness = 1.0
 	edge_shadow = 0.0
 	apply_visual_settings()
-	assert(not vignette_overlay.visible and ReferenceAssets.effective_paper().is_equal_approx(ReferenceAssets.map_paper), "Restoring default visual settings must restore original paper and hide vignette")
+	assert(not vignette_overlay.visible and ReferenceAssets.effective_paper().is_equal_approx(ReferenceAssets.map_paper), "Zeroing dim and edge shadow must hide the vignette overlay")
+	paper_brightness = 0.95
+	edge_shadow = 0.05
+	apply_visual_settings()
 	await smoke_tap_button("BACK TO SETTINGS")
 	await smoke_tap_button("TOUCH & AIMING")
 	for child in menu_items.find_children("*", "Button", true, false):

@@ -13,7 +13,7 @@ static var detail = 1.0
 static var style = 1.0
 # Port-only visual comfort & accessibility overrides (raw map_colors/map_paper stay untouched).
 static var paper_theme = 0
-static var paper_brightness = 1.0
+static var paper_brightness = 0.95
 static var colorblind = false
 
 static func effective_paper() -> Color:
