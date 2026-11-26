@@ -167,7 +167,7 @@ func update(delta: float) -> void:
 	game.hud.info = [["%02d:%02d" % [int(remaining) / 60, int(remaining) % 60], true], ["%d bots · %s" % [bots.size(), ["Easy", "Normal", "Hard", "Insane"][difficulty]], false]]
 	var standings = sorted_scores()
 	game.scoreboard.text = "OFFLINE FREE FOR ALL\n" + "\n".join(standings.map(func(entry): return "%s     %d K / %d D" % [entry.name, entry.kills, entry.deaths]))
-	game.scoreboard.visible = Input.is_action_pressed("scoreboard")
+	game.scoreboard.visible = Input.is_action_pressed("scoreboard") or game.touchpad_scoreboard
 	game.center_text.text = ""
 	if not game.player.alive:
 		game.center_text.text = "You got erased · respawn in %d" % maxi(0, ceili(player_respawn))

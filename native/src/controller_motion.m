@@ -1,9 +1,8 @@
-// Native Apple GameController motion bridge for Godot 4.5+.
-// Reads GCMotion rotationRate + gravity from connected controllers (DualShock 4,
-// DualSense, etc.) and feeds gravity-aligned pitch and yaw into Input.set_gyroscope()
-// whenever a motion-capable controller is connected. When no motion controller is
-// connected (for example handheld iPhone/iPad touch play), Input's built-in device
-// gyroscope is left untouched.
+// Native Apple GameController motion & touchpad bridge for Godot 4.5+.
+// - Feeds gravity-aligned DualShock 4 / DualSense gyroscope rates into Input.set_gyroscope()
+//   when a motion controller is connected (leaving handheld mobile IMU untouched otherwise).
+// - Feeds DualShock 4 / DualSense touchpad state into Input.set_magnetometer(Vector3(x, y, state)),
+//   where x, y are in [-1, 1] (+y = up) and state is 0 (idle), 1 (touching), or 2 (clicked).
 
 #import <Foundation/Foundation.h>
 #import <GameController/GameController.h>
@@ -24,8 +23,10 @@ static GDExtensionInterfaceRegisterMainLoopCallbacks g_reg_callbacks = NULL;
 
 static GDExtensionObjectPtr g_input_singleton = NULL;
 static GDExtensionMethodBindPtr g_set_gyro_bind = NULL;
+static GDExtensionMethodBindPtr g_set_mag_bind = NULL;
 static bool g_skip_for_automated_run = false;
 static bool g_had_motion_controller = false;
+static bool g_had_touchpad_controller = false;
 
 static void controller_motion_startup(void) {
 	@autoreleasepool {
@@ -46,68 +47,116 @@ static void controller_motion_startup(void) {
 		}
 		GDExtensionPtrDestructor sn_dtor = g_get_dtor(GDEXTENSION_VARIANT_TYPE_STRING_NAME);
 		uint64_t sn_input[1] = {0};
-		uint64_t sn_method[1] = {0};
+		uint64_t sn_gyro[1] = {0};
+		uint64_t sn_mag[1] = {0};
 		g_sn_new((GDExtensionUninitializedStringNamePtr)sn_input, "Input", false);
-		g_sn_new((GDExtensionUninitializedStringNamePtr)sn_method, "set_gyroscope", false);
+		g_sn_new((GDExtensionUninitializedStringNamePtr)sn_gyro, "set_gyroscope", false);
+		g_sn_new((GDExtensionUninitializedStringNamePtr)sn_mag, "set_magnetometer", false);
 		g_input_singleton = g_get_singleton((GDExtensionConstStringNamePtr)sn_input);
 		if (g_input_singleton) {
-			// Input::set_gyroscope(Vector3) hash from Godot 4.6 extension_api.json.
-			g_set_gyro_bind = g_get_method_bind((GDExtensionConstStringNamePtr)sn_input, (GDExtensionConstStringNamePtr)sn_method, 3460891852LL);
+			// Input::set_gyroscope(Vector3) and Input::set_magnetometer(Vector3) share signature hash 3460891852.
+			g_set_gyro_bind = g_get_method_bind((GDExtensionConstStringNamePtr)sn_input, (GDExtensionConstStringNamePtr)sn_gyro, 3460891852LL);
+			g_set_mag_bind = g_get_method_bind((GDExtensionConstStringNamePtr)sn_input, (GDExtensionConstStringNamePtr)sn_mag, 3460891852LL);
 		}
 		if (sn_dtor) {
 			sn_dtor(sn_input);
-			sn_dtor(sn_method);
+			sn_dtor(sn_gyro);
+			sn_dtor(sn_mag);
 		}
 	}
 }
 
 static void controller_motion_frame(void) {
-	if (g_skip_for_automated_run || !g_input_singleton || !g_set_gyro_bind) {
+	if (g_skip_for_automated_run || !g_input_singleton) {
 		return;
 	}
 	@autoreleasepool {
 		NSArray<GCController *> *controllers = [GCController controllers];
-		for (GCController *controller in controllers) {
-			GCMotion *motion = controller.motion;
-			if (!motion) {
-				continue;
+		if (g_set_gyro_bind) {
+			bool found_motion = false;
+			for (GCController *controller in controllers) {
+				GCMotion *motion = controller.motion;
+				if (!motion) {
+					continue;
+				}
+				if (@available(macOS 11.0, iOS 14.0, *)) {
+					if (motion.sensorsRequireManualActivation && !motion.sensorsActive) {
+						motion.sensorsActive = YES;
+					}
+				}
+				GCRotationRate r = motion.rotationRate;
+				GCAcceleration g = motion.gravity;
+				double up_x = -g.x;
+				double up_y = -g.y;
+				double up_z = -g.z;
+				double up_len = sqrt(up_x * up_x + up_y * up_y + up_z * up_z);
+				double yaw_left = (up_len > 0.1)
+					? (r.x * (up_x / up_len) + r.y * (up_y / up_len) + r.z * (up_z / up_len))
+					: r.z;
+				double pitch_up = r.x;
+				double mag = sqrt(pitch_up * pitch_up + yaw_left * yaw_left);
+				const double deadzone = 0.018;
+				float gyro[3] = {0.0f, 0.0f, 0.0f};
+				if (mag > deadzone) {
+					double scale = (mag - deadzone) / mag;
+					gyro[0] = (float)(pitch_up * scale);
+					gyro[1] = (float)(yaw_left * scale);
+					gyro[2] = 0.0f;
+				}
+				const void *args[1] = { gyro };
+				g_ptrcall(g_set_gyro_bind, g_input_singleton, (const GDExtensionConstTypePtr *)args, NULL);
+				g_had_motion_controller = true;
+				found_motion = true;
+				break;
 			}
-			if (@available(macOS 11.0, iOS 14.0, *)) {
-				if (motion.sensorsRequireManualActivation && !motion.sensorsActive) {
-					motion.sensorsActive = YES;
+			if (!found_motion && g_had_motion_controller) {
+				float zero[3] = {0.0f, 0.0f, 0.0f};
+				const void *args[1] = { zero };
+				g_ptrcall(g_set_gyro_bind, g_input_singleton, (const GDExtensionConstTypePtr *)args, NULL);
+				g_had_motion_controller = false;
+			}
+		}
+
+		if (g_set_mag_bind) {
+			GCControllerButtonInput *tp_btn = nil;
+			GCControllerDirectionPad *tp_pad = nil;
+			for (GCController *controller in controllers) {
+				GCExtendedGamepad *gp = controller.extendedGamepad;
+				if (!gp) {
+					continue;
+				}
+				if (@available(macOS 11.3, iOS 14.5, *)) {
+					if ([gp isKindOfClass:[GCDualSenseGamepad class]]) {
+						GCDualSenseGamepad *ds = (GCDualSenseGamepad *)gp;
+						tp_btn = ds.touchpadButton;
+						tp_pad = ds.touchpadPrimary;
+						break;
+					}
+				}
+				if (@available(macOS 11.0, iOS 14.0, *)) {
+					if ([gp isKindOfClass:[GCDualShockGamepad class]]) {
+						GCDualShockGamepad *ds4 = (GCDualShockGamepad *)gp;
+						tp_btn = ds4.touchpadButton;
+						tp_pad = ds4.touchpadPrimary;
+						break;
+					}
 				}
 			}
-			GCRotationRate r = motion.rotationRate;
-			GCAcceleration g = motion.gravity;
-			// Player-space horizontal yaw: project rotationRate onto the world up vector (-gravity)
-			// so turning the controller horizontally works whether held flat, tilted, or upright.
-			double up_x = -g.x;
-			double up_y = -g.y;
-			double up_z = -g.z;
-			double up_len = sqrt(up_x * up_x + up_y * up_y + up_z * up_z);
-			double yaw_left = (up_len > 0.1)
-				? (r.x * (up_x / up_len) + r.y * (up_y / up_len) + r.z * (up_z / up_len))
-				: r.z;
-			double pitch_up = r.x;
-			double mag = sqrt(pitch_up * pitch_up + yaw_left * yaw_left);
-			const double deadzone = 0.018;
-			float gyro[3] = {0.0f, 0.0f, 0.0f};
-			if (mag > deadzone) {
-				double scale = (mag - deadzone) / mag;
-				gyro[0] = (float)(pitch_up * scale);
-				gyro[1] = (float)(yaw_left * scale);
-				gyro[2] = 0.0f;
+			if (tp_pad || tp_btn) {
+				float x = tp_pad ? tp_pad.xAxis.value : 0.0f;
+				float y = tp_pad ? tp_pad.yAxis.value : 0.0f;
+				bool clicked = tp_btn ? tp_btn.isPressed : false;
+				bool touching = (x != 0.0f || y != 0.0f);
+				float pad[3] = { x, y, clicked ? 2.0f : (touching ? 1.0f : 0.0f) };
+				const void *args[1] = { pad };
+				g_ptrcall(g_set_mag_bind, g_input_singleton, (const GDExtensionConstTypePtr *)args, NULL);
+				g_had_touchpad_controller = true;
+			} else if (g_had_touchpad_controller) {
+				float zero[3] = {0.0f, 0.0f, 0.0f};
+				const void *args[1] = { zero };
+				g_ptrcall(g_set_mag_bind, g_input_singleton, (const GDExtensionConstTypePtr *)args, NULL);
+				g_had_touchpad_controller = false;
 			}
-			const void *args[1] = { gyro };
-			g_ptrcall(g_set_gyro_bind, g_input_singleton, (const GDExtensionConstTypePtr *)args, NULL);
-			g_had_motion_controller = true;
-			return;
-		}
-		if (g_had_motion_controller) {
-			float zero[3] = {0.0f, 0.0f, 0.0f};
-			const void *args[1] = { zero };
-			g_ptrcall(g_set_gyro_bind, g_input_singleton, (const GDExtensionConstTypePtr *)args, NULL);
-			g_had_motion_controller = false;
 		}
 	}
 }
@@ -115,6 +164,7 @@ static void controller_motion_frame(void) {
 static void controller_motion_shutdown(void) {
 	g_input_singleton = NULL;
 	g_set_gyro_bind = NULL;
+	g_set_mag_bind = NULL;
 }
 
 static void on_initialize(void *p_userdata, GDExtensionInitializationLevel p_level) {

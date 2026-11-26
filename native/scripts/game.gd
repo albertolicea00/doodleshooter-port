@@ -25,6 +25,8 @@ var map_key = "district"
 var online_map_key = "district"
 var online_custom_map_key = ""
 var hud: DoodleHud
+var weapon_wheel: DoodleWeaponWheel
+var touchpad_scoreboard = false
 var center_text: Label
 var scoreboard: Label
 var menu_backdrop: ColorRect
@@ -195,7 +197,7 @@ func _setup_inputs() -> void:
 		event.button_index = entry[1]
 		InputMap.action_add_event(entry[0], event)
 	InputMap.add_action("sprint_toggle")
-	for entry in [["jump", JOY_BUTTON_A], ["dash", JOY_BUTTON_B], ["reload", JOY_BUTTON_X], ["next_weapon", JOY_BUTTON_Y], ["next_weapon", JOY_BUTTON_DPAD_RIGHT], ["prev_weapon", JOY_BUTTON_DPAD_LEFT], ["grapple", JOY_BUTTON_LEFT_SHOULDER], ["slash", JOY_BUTTON_RIGHT_SHOULDER], ["grenade", JOY_BUTTON_RIGHT_STICK], ["grenade", JOY_BUTTON_DPAD_UP], ["smoke", JOY_BUTTON_DPAD_DOWN], ["scoreboard", JOY_BUTTON_BACK], ["pause", JOY_BUTTON_START], ["sprint_toggle", JOY_BUTTON_LEFT_STICK], ["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
+	for entry in [["jump", JOY_BUTTON_A], ["dash", JOY_BUTTON_B], ["reload", JOY_BUTTON_X], ["next_weapon", JOY_BUTTON_Y], ["next_weapon", JOY_BUTTON_DPAD_RIGHT], ["prev_weapon", JOY_BUTTON_DPAD_LEFT], ["grapple", JOY_BUTTON_LEFT_SHOULDER], ["slash", JOY_BUTTON_RIGHT_SHOULDER], ["grenade", JOY_BUTTON_RIGHT_STICK], ["grenade", JOY_BUTTON_DPAD_UP], ["smoke", JOY_BUTTON_DPAD_DOWN], ["scoreboard", JOY_BUTTON_BACK], ["scoreboard", JOY_BUTTON_TOUCHPAD], ["pause", JOY_BUTTON_START], ["sprint_toggle", JOY_BUTTON_LEFT_STICK], ["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
 		var event = InputEventJoypadButton.new()
 		event.button_index = entry[1]
 		InputMap.action_add_event(entry[0], event)
@@ -253,6 +255,9 @@ func _setup_ui() -> void:
 	scoreboard.add_theme_stylebox_override("normal", DoodlePen.box(Color(DoodlePen.PAPER, 0.94), DoodlePen.INK, 3.0, -0.5))
 	scoreboard.visible = false
 	ui.add_child(scoreboard)
+	weapon_wheel = DoodleWeaponWheel.new()
+	weapon_wheel.game = self
+	ui.add_child(weapon_wheel)
 	touch = DoodleTouchControls.new()
 	ui.add_child(touch)
 	touch.visible = false
@@ -428,6 +433,8 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	center_text.visible = false
 	if scope != null:
 		scope.visible = false
+	if weapon_wheel != null:
+		weapon_wheel.reset()
 	touch.visible = false
 	touch.editing = false
 	editor_bar.visible = false
@@ -880,8 +887,9 @@ func show_controls(return_to: Callable = Callable(), return_label: String = "") 
 		"{R1} quick katana slash, then back to your gun",
 		"{□} reload   {△} next weapon",
 		"{D-pad Left / Right} previous / next weapon",
+		"{Touchpad swipe} radial weapon wheel (1–7)",
 		"{R3 / D-pad Up} grenade · hold to throw   {D-pad Down} smoke",
-		"{Create} scoreboard (bot / network)   {Options} pause"
+		"{Touchpad click / Create} scoreboard   {Options} pause"
 	]
 	var controller = _controls_column(cards, "", ps5_lines)
 	_controller_picker(controller, ps5_lines)
@@ -926,8 +934,10 @@ func _controls_text(lines: Array[String]) -> String:
 
 func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void:
 	var xbox_lines: Array[String] = []
-	var bindings = {"{L stick}": "{LS}", "{R stick / Gyro}": "{RS / Gyro}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3 / D-pad Up}": "{RS click / D-pad Up}", "{Create}": "{View}", "{Options}": "{Menu}"}
+	var bindings = {"{L stick}": "{LS}", "{R stick / Gyro}": "{RS / Gyro}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3 / D-pad Up}": "{RS click / D-pad Up}", "{Touchpad click / Create}": "{View}", "{Options}": "{Menu}"}
 	for line in ps5_lines:
+		if line.begins_with("{Touchpad swipe}"):
+			continue
 		var translated = line
 		for binding in bindings:
 			translated = translated.replace(binding, bindings[binding])
@@ -2397,6 +2407,40 @@ func run_smoke() -> void:
 	for i in 2:
 		await get_tree().process_frame
 	assert(not scoreboard.visible, "Releasing Create/View must hide the arena scoreboard")
+	# Touchpad click -> scoreboard without switching weapons.
+	player.switch_weapon(0)
+	Input.set_magnetometer(Vector3(0.7, 0.2, 1.0))
+	await get_tree().process_frame
+	Input.set_magnetometer(Vector3(0.7, 0.2, 2.0))
+	for i in 2:
+		await get_tree().process_frame
+	assert(scoreboard.visible and not weapon_wheel.visible and player.weapon_index == 0, "Clicking the touchpad must open the scoreboard and cancel the weapon wheel")
+	Input.set_magnetometer(Vector3(0.7, 0.2, 1.0))
+	await get_tree().process_frame
+	assert(not scoreboard.visible and not weapon_wheel.visible, "Releasing the touchpad click must not reopen the weapon wheel before lifting the finger")
+	Input.set_magnetometer(Vector3.ZERO)
+	for i in 3:
+		await get_tree().physics_frame
+	assert(player.weapon_index == 0)
+	# Touchpad hold & slide -> radial weapon wheel opens and equips the chosen weapon on release.
+	var katana_angle = -PI * 0.5 + TAU * 3.0 / 7.0
+	Input.set_magnetometer(Vector3(cos(katana_angle) * 0.85, -sin(katana_angle) * 0.85, 1.0))
+	for i in 5:
+		await get_tree().physics_frame
+	assert(weapon_wheel.open and weapon_wheel.visible and weapon_wheel.hovered == 3, "Sliding on the touchpad must open the radial wheel and highlight the target weapon")
+	Input.set_magnetometer(Vector3.ZERO)
+	for i in 3:
+		await get_tree().physics_frame
+	assert(not weapon_wheel.visible and player.weapon_index == 3, "Lifting off the touchpad must equip the highlighted weapon and close the wheel")
+	# Fast touchpad flick (<55 ms) -> equips target weapon immediately on lift.
+	var sniper_angle = -PI * 0.5 + TAU * 2.0 / 7.0
+	Input.set_magnetometer(Vector3(cos(sniper_angle) * 0.85, -sin(sniper_angle) * 0.85, 1.0))
+	await get_tree().physics_frame
+	Input.set_magnetometer(Vector3.ZERO)
+	for i in 3:
+		await get_tree().physics_frame
+	assert(player.weapon_index == 2, "A fast touchpad flick must also switch to the target weapon")
+	player.switch_weapon(0)
 	for i in 180:
 		await get_tree().physics_frame
 	bot_match.scores.player.kills = 19
@@ -2972,7 +3016,7 @@ func update_online(delta: float) -> void:
 	var standings = network.roster.duplicate()
 	standings.sort_custom(func(a, b): return int(a.kills) > int(b.kills))
 	scoreboard.text = "FREE FOR ALL\n" + "\n".join(standings.map(func(entry): return "%s     %d K / %d D" % [entry.name, entry.kills, entry.deaths]))
-	scoreboard.visible = Input.is_action_pressed("scoreboard")
+	scoreboard.visible = Input.is_action_pressed("scoreboard") or touchpad_scoreboard
 	center_text.text = ""
 	scope.visible = player.weapon_index == 2 and player.aiming
 	hit_marker = maxf(0, hit_marker - delta)

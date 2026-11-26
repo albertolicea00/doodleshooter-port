@@ -370,43 +370,49 @@ func _label(at: Vector2, text: String, font_size: int, color: Color) -> void:
 	draw_string(font, at + Vector2(-width * 0.5, font_size * 0.34), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 # Connected pen strokes; points are in icon units around the button centre.
-func _strokes(c: Vector2, u: float, tone: Color, width: float, paths: Array) -> void:
+static func draw_strokes(item: CanvasItem, c: Vector2, u: float, tone: Color, width: float, paths: Array) -> void:
 	for path in paths:
 		var points = PackedVector2Array()
 		for point in path:
 			points.append(c + point * u)
-		draw_polyline(points, tone, width, true)
+		item.draw_polyline(points, tone, width, true)
+
+func _strokes(c: Vector2, u: float, tone: Color, width: float, paths: Array) -> void:
+	draw_strokes(self, c, u, tone, width, paths)
 
 # Side view of each weapon, muzzle to the right, in icon units around the slot centre.
-func _weapon(index: int, c: Vector2, u: float, tone: Color) -> void:
+static func draw_weapon(item: CanvasItem, index: int, c: Vector2, u: float, tone: Color) -> void:
 	var w = maxf(2.0, u * 0.095)
 	var grip = func(x: float, y: float) -> Array: return [Vector2(x, y), Vector2(x - 0.08, y + 0.3), Vector2(x + 0.06, y + 0.3), Vector2(x + 0.12, y)]
 	match index:
 		0:
-			_strokes(c, u, tone, w, [[Vector2(-0.95, -0.15), Vector2(-0.55, -0.1), Vector2(-0.55, 0.15), Vector2(-0.95, 0.25), Vector2(-0.95, -0.15)],
+			draw_strokes(item, c, u, tone, w, [[Vector2(-0.95, -0.15), Vector2(-0.55, -0.1), Vector2(-0.55, 0.15), Vector2(-0.95, 0.25), Vector2(-0.95, -0.15)],
 				[Vector2(-0.55, -0.15), Vector2(0.35, -0.15), Vector2(0.35, 0.05), Vector2(-0.55, 0.05)], [Vector2(0.35, -0.08), Vector2(0.95, -0.08)],
 				[Vector2(0.0, 0.05), Vector2(0.06, 0.4), Vector2(0.21, 0.37), Vector2(0.18, 0.05)], grip.call(-0.35, 0.05), [Vector2(-0.12, -0.15), Vector2(-0.07, -0.28), Vector2(0.1, -0.28), Vector2(0.13, -0.15)]])
 		1:
-			_strokes(c, u, tone, w, [[Vector2(-0.95, -0.1), Vector2(-0.5, -0.08), Vector2(-0.5, 0.12), Vector2(-0.95, 0.28), Vector2(-0.95, -0.1)],
+			draw_strokes(item, c, u, tone, w, [[Vector2(-0.95, -0.1), Vector2(-0.5, -0.08), Vector2(-0.5, 0.12), Vector2(-0.95, 0.28), Vector2(-0.95, -0.1)],
 				[Vector2(-0.5, -0.12), Vector2(0.95, -0.12)], [Vector2(-0.5, 0.0), Vector2(0.95, 0.0)], [Vector2(0.2, 0.0), Vector2(0.6, 0.0), Vector2(0.6, 0.15), Vector2(0.2, 0.15), Vector2(0.2, 0.0)], grip.call(-0.4, 0.05)])
 		2:
-			_strokes(c, u, tone, w, [[Vector2(-0.98, -0.05), Vector2(-0.55, -0.02), Vector2(-0.55, 0.15), Vector2(-0.98, 0.28), Vector2(-0.98, -0.05)],
+			draw_strokes(item, c, u, tone, w, [[Vector2(-0.98, -0.05), Vector2(-0.55, -0.02), Vector2(-0.55, 0.15), Vector2(-0.98, 0.28), Vector2(-0.98, -0.05)],
 				[Vector2(-0.55, -0.05), Vector2(0.1, -0.05), Vector2(0.1, 0.08), Vector2(-0.55, 0.08)], [Vector2(0.1, 0.01), Vector2(1.0, 0.01)],
 				[Vector2(-0.42, -0.34), Vector2(0.12, -0.34), Vector2(0.12, -0.19), Vector2(-0.42, -0.19), Vector2(-0.42, -0.34)], [Vector2(-0.3, -0.19), Vector2(-0.3, -0.05)], [Vector2(0.0, -0.19), Vector2(0.0, -0.05)], grip.call(-0.38, 0.08)])
 		3:
-			_strokes(c, u, tone, w, [[Vector2(-0.95, 0.24), Vector2(-0.5, 0.15)], [Vector2(-0.52, 0.0), Vector2(-0.46, 0.32)],
+			draw_strokes(item, c, u, tone, w, [[Vector2(-0.95, 0.24), Vector2(-0.5, 0.15)], [Vector2(-0.52, 0.0), Vector2(-0.46, 0.32)],
 				[Vector2(-0.46, 0.12), Vector2(0.2, 0.0), Vector2(0.7, -0.13), Vector2(0.98, -0.27), Vector2(0.7, -0.06), Vector2(0.2, 0.07), Vector2(-0.46, 0.19)]])
 		4:
-			draw_arc(c + Vector2(-0.12, -0.04) * u, 0.17 * u, 0, TAU, 12, tone, w, true)
-			draw_arc(c + Vector2(-0.12, 0.2) * u, 0.12 * u, 0, PI, 8, tone, w, true)
-			_strokes(c, u, tone, w, [[Vector2(0.05, -0.17), Vector2(0.75, -0.17), Vector2(0.75, -0.02), Vector2(0.05, -0.02)], [Vector2(-0.3, -0.2), Vector2(-0.05, -0.2)],
+			item.draw_arc(c + Vector2(-0.12, -0.04) * u, 0.17 * u, 0, TAU, 12, tone, w, true)
+			item.draw_arc(c + Vector2(-0.12, 0.2) * u, 0.12 * u, 0, PI, 8, tone, w, true)
+			draw_strokes(item, c, u, tone, w, [[Vector2(0.05, -0.17), Vector2(0.75, -0.17), Vector2(0.75, -0.02), Vector2(0.05, -0.02)], [Vector2(-0.3, -0.2), Vector2(-0.05, -0.2)],
 				[Vector2(-0.3, -0.1), Vector2(-0.58, 0.38), Vector2(-0.4, 0.44), Vector2(-0.22, 0.1)], [Vector2(-0.38, -0.2), Vector2(-0.45, -0.3)]])
 		5:
-			_strokes(c, u, tone, w, [[Vector2(-0.5, -0.15), Vector2(0.45, -0.15), Vector2(0.45, 0.05), Vector2(-0.5, 0.05), Vector2(-0.5, -0.15)], [Vector2(0.45, -0.07), Vector2(0.8, -0.07)],
+			draw_strokes(item, c, u, tone, w, [[Vector2(-0.5, -0.15), Vector2(0.45, -0.15), Vector2(0.45, 0.05), Vector2(-0.5, 0.05), Vector2(-0.5, -0.15)], [Vector2(0.45, -0.07), Vector2(0.8, -0.07)],
 				[Vector2(0.05, 0.05), Vector2(0.05, 0.48), Vector2(0.2, 0.48), Vector2(0.2, 0.05)], grip.call(-0.3, 0.05), [Vector2(-0.5, -0.1), Vector2(-0.85, -0.05), Vector2(-0.85, 0.15), Vector2(-0.5, 0.05)]])
 		6:
-			_strokes(c, u, tone, w, [[Vector2(-0.95, -0.12), Vector2(0.8, -0.12)], [Vector2(-0.95, 0.12), Vector2(0.8, 0.12)], [Vector2(0.8, -0.12), Vector2(0.98, -0.21), Vector2(0.98, 0.21), Vector2(0.8, 0.12)],
+			draw_strokes(item, c, u, tone, w, [[Vector2(-0.95, -0.12), Vector2(0.8, -0.12)], [Vector2(-0.95, 0.12), Vector2(0.8, 0.12)], [Vector2(0.8, -0.12), Vector2(0.98, -0.21), Vector2(0.98, 0.21), Vector2(0.8, 0.12)],
 				[Vector2(-0.95, -0.17), Vector2(-0.95, 0.17)], [Vector2(-0.2, 0.12), Vector2(-0.25, 0.4)], [Vector2(0.15, 0.12), Vector2(0.12, 0.36)], [Vector2(0.0, -0.12), Vector2(0.0, -0.28), Vector2(0.1, -0.28)]])
+
+func _weapon(index: int, c: Vector2, u: float, tone: Color) -> void:
+	draw_weapon(self, index, c, u, tone)
 
 # Draws the picture for a control's label; false when there is none.
 func _icon(kind: String, c: Vector2, r: float, tone: Color) -> bool:
