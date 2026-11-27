@@ -1920,7 +1920,8 @@ func _process(delta: float) -> void:
 	if is_instance_valid(region):
 		region.visible = true
 	replay.step_playback(0.0, false)
-	replay.record_step(delta, player, enemies, bot_match.bots, remote_players)
+	if not replay_recorder:
+		replay.record_step(delta, player, enemies, bot_match.bots, remote_players)
 	update_feel(delta)
 	if network.in_match:
 		update_online(delta)
@@ -2271,6 +2272,8 @@ func _physics_process(delta: float) -> void:
 		for grenade in grenades:
 			grenade.node.freeze = true
 		return
+	if replay_recorder and replay.recorded.size() < replay.recording_frame_limit:
+		replay.record_step(delta, player, enemies, bot_match.bots, remote_players)
 	for grenade in grenades:
 		grenade.node.freeze = false
 		grenade.life -= delta
