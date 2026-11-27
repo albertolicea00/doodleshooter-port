@@ -442,6 +442,9 @@ msgstr "ПОЛНЫЙ ЭКРАН: ВЫКЛ."
 msgid "FULLSCREEN: ON"
 msgstr "ПОЛНЫЙ ЭКРАН: ВКЛ."
 
+msgid "Game speed"
+msgstr "Скорость игры"
+
 msgid "Godot Engine license"
 msgstr "Лицензия на движок Godot"
 

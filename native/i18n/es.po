@@ -440,6 +440,9 @@ msgstr "PANTALLA COMPLETA: NO"
 msgid "FULLSCREEN: ON"
 msgstr "PANTALLA COMPLETA: SÍ"
 
+msgid "Game speed"
+msgstr "Velocidad del juego"
+
 msgid "Godot Engine license"
 msgstr "Licencia de Godot Engine"
 

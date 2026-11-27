@@ -442,6 +442,9 @@ msgstr "SCHERMO INTERO: NO"
 msgid "FULLSCREEN: ON"
 msgstr "SCHERMO INTERO: SÌ"
 
+msgid "Game speed"
+msgstr "Velocità di gioco"
+
 msgid "Godot Engine license"
 msgstr "Licenza per il motore Godot"
 

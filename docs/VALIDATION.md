@@ -232,6 +232,8 @@ After extending the duration, an automated macOS windowed check verified the 10�
 
 The `Game speed` selector was inspected at 1280×720 on macOS. A windowed run capped at 30 FPS verified the normal-speed countdown and saved all 150 samples of a 10-second take at 5× in about 2.5 seconds after the countdown. The run verified that engine timing was restored before the save confirmation. A separate headless run saved a 45-frame direct take at 1×. The temporary takes were removed.
 
+The experimental offline `Game speed` control in the Survival and bot-match pause menus offers 1×, 1.5×, 2×, 2.5×, 3×, 4×, and 5×, shared with the recorder's selector. The headless smoke run verifies that resuming a bot match at 2.5× scales `Engine.time_scale` and the physics tick rate, and that pausing restores normal timing. The pause-menu layout with seven choices and the fractional speeds in the recorder have not been visually inspected. `python3 tools/check.py` passed.
+
 ## Normalized back buttons and desktop export presets (November 19)
 
 - **Back-button normalization (`native/scripts/game.gd`):** `_back_button` now defaults to `"BACK TO MAIN MENU"` (`RedButton`, red filled) when returning to the main menu. Submenus that return to an intermediate screen (`BACK TO PAUSE`, `BACK TO SETTINGS`, `BACK TO CONTROLS`, `BACK TO CREDITS`, `BACK TO LOBBY`, `BACK TO ONLINE`, `BACK TO LAN`) render the immediate back button on the left (`RedOutlineButton`) and `"BACK TO MAIN MENU"` (`RedButton`) on the right. `_find_back_button` matches `"RESUME"` or any `"BACK..."` label, and `run_smoke()` was updated to tap `"BACK TO MAIN MENU"`.

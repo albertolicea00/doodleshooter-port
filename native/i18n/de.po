@@ -442,6 +442,9 @@ msgstr "VOLLBILD: AUS"
 msgid "FULLSCREEN: ON"
 msgstr "VOLLBILD: AN"
 
+msgid "Game speed"
+msgstr "Spielgeschwindigkeit"
+
 msgid "Godot Engine license"
 msgstr "Lizenz für Godot Engine"
 

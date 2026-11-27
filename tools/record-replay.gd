@@ -6,7 +6,7 @@ const MIN_DIRECT_SECONDS := ceili(DoodleReplay.MIN_SAVE_FRAMES * DoodleReplay.SA
 const MAX_SECONDS := 120
 const DURATION_STEP := 5
 var banner: Label
-var recording_speed := 1
+var recording_speed := 1.0
 
 func _initialize() -> void:
 	_record.call_deferred()
@@ -73,14 +73,7 @@ func _show_map_picker(game: Node, take: String, seconds: int) -> void:
 	duration.value_changed.connect(func(value: float): duration_label.text = "Recording length: %d s" % int(value))
 	duration_row.add_child(duration)
 
-	game._choices(["1×", "2×", "3×", "4×", "5×"], 0, func(index: int): recording_speed = index + 1)
-	var speed_row: HBoxContainer = game.menu_items.get_child(-1)
-	speed_row.add_theme_constant_override("separation", 16)
-	var speed_label = Label.new()
-	speed_label.text = "Game speed"
-	speed_label.custom_minimum_size.x = 230
-	speed_row.add_child(speed_label)
-	speed_row.move_child(speed_label, 0)
+	game._game_speed_choices("Game speed", recording_speed, func(multiplier: float): recording_speed = multiplier)
 
 	var actions = HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -119,23 +112,16 @@ func _record_take(map_key: String, game: Node, take: String, seconds: int) -> vo
 		await create_timer(1.0).timeout
 	var target_frames = roundi(seconds / DoodleReplay.SAMPLE_INTERVAL)
 	game.replay.start_recording(target_frames)
-	var original_speed = Engine.time_scale
-	var original_ticks = Engine.physics_ticks_per_second
-	var original_step_limit = Engine.max_physics_steps_per_frame
-	# Keep the same game-time interval per physics tick at higher speeds.
-	Engine.physics_ticks_per_second = original_ticks * recording_speed
-	Engine.max_physics_steps_per_frame = original_step_limit * recording_speed
-	Engine.time_scale = original_speed * recording_speed
+	game.game_speed = recording_speed
+	game._apply_game_speed(recording_speed)
 	paused = false
 	while game.replay.recorded.size() < target_frames and (game.playing or game.paused):
 		var time_left = ceili((target_frames - game.replay.recorded.size()) * DoodleReplay.SAMPLE_INTERVAL)
-		banner.text = "Recording paused" if game.paused else "Recording · %02d:%02d · %d×" % [time_left / 60, time_left % 60, recording_speed]
+		banner.text = "Recording paused" if game.paused else "Recording · %02d:%02d · %s" % [time_left / 60, time_left % 60, game._game_speed_label(recording_speed)]
 		await process_frame
 
 	paused = true
-	Engine.time_scale = original_speed
-	Engine.physics_ticks_per_second = original_ticks
-	Engine.max_physics_steps_per_frame = original_step_limit
+	game._apply_game_speed(1)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	var code = 1
 	if FileAccess.file_exists(output):

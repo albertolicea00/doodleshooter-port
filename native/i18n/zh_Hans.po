@@ -442,6 +442,9 @@ msgstr "全屏：关"
 msgid "FULLSCREEN: ON"
 msgstr "全屏：开"
 
+msgid "Game speed"
+msgstr "游戏速度"
+
 msgid "Godot Engine license"
 msgstr "Godot Engine 授权"
 

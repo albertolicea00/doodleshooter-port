@@ -11,8 +11,18 @@ var projectiles: Array[Dictionary] = []
 var grenades: Array[Dictionary] = []
 var pickups: Array[Dictionary] = []
 var effects: Array[Dictionary] = []
-var playing = false
+var playing = false:
+	set(value):
+		playing = value
+		if not playing:
+			_apply_game_speed(1)
 var paused = false
+const GAME_SPEEDS: Array[float] = [1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0]
+var game_speed := 1.0
+var _active_game_speed := 1.0
+var _base_time_scale: float
+var _base_physics_ticks: int
+var _base_physics_step_limit: int
 var wave = 0
 var score = 0
 var kills = 0
@@ -621,6 +631,19 @@ func _choices(labels: Array, selected: int, callback: Callable, wrap_labels: boo
 		button.pressed.connect(callback.bind(i))
 		row.add_child(button)
 	menu_items.add_child(row)
+
+func _game_speed_label(multiplier: float) -> String:
+	return ("%d×" % multiplier) if is_equal_approx(multiplier, roundf(multiplier)) else ("%.1f×" % multiplier)
+
+func _game_speed_choices(label_text: String, selected: float, on_change: Callable) -> void:
+	_choices(GAME_SPEEDS.map(_game_speed_label), GAME_SPEEDS.find(selected), func(index: int): on_change.call(GAME_SPEEDS[index]))
+	var row = menu_items.get_child(-1)
+	row.add_theme_constant_override("separation", 16)
+	var label = Label.new()
+	label.text = label_text
+	label.custom_minimum_size.x = 230
+	row.add_child(label)
+	row.move_child(label, 0)
 
 func _toggle(text: String, value: bool, callback: Callable) -> void:
 	var button = _button("", func(): pass, "AltButton")
@@ -1606,6 +1629,8 @@ func start_game(first_wave: int) -> void:
 	if starting:
 		return
 	starting = true
+	game_speed = 1.0
+	_apply_game_speed(1.0)
 	_clear_menu(tr("Drawing the world…"), tr("Loading original geometry and native navigation"))
 	await get_tree().process_frame
 	_clear_world()
@@ -1690,11 +1715,29 @@ func _clear_world() -> void:
 	if is_instance_valid(region):
 		region.free()
 
+func _can_set_offline_speed() -> bool:
+	return not replay_recorder and not network.in_match and match_mode in ["survival", "bots"]
+
+func _apply_game_speed(multiplier: float) -> void:
+	if multiplier == _active_game_speed:
+		return
+	if _active_game_speed == 1:
+		_base_time_scale = Engine.time_scale
+		_base_physics_ticks = Engine.physics_ticks_per_second
+		_base_physics_step_limit = Engine.max_physics_steps_per_frame
+	_active_game_speed = multiplier
+	# Keep each physics tick the same length in game time.
+	Engine.physics_ticks_per_second = roundi(_base_physics_ticks * multiplier)
+	Engine.max_physics_steps_per_frame = ceili(_base_physics_step_limit * multiplier)
+	Engine.time_scale = _base_time_scale * Engine.physics_ticks_per_second / _base_physics_ticks
+
 func resume_game() -> void:
 	Input.emulate_mouse_from_touch = false
 	get_viewport().gui_release_focus()
 	paused = false
 	playing = true
+	if replay_recorder or _can_set_offline_speed():
+		_apply_game_speed(game_speed)
 	if is_instance_valid(player):
 		player.resume_frames = 2
 		player.jump_buffer = 0.0
@@ -1735,6 +1778,8 @@ func pause_menu() -> void:
 		summary = tr("Free for all · the match continues while this menu is open")
 	_clear_menu(tr("Paused"), summary)
 	_button("RESUME", resume_game, "StartButton")
+	if _can_set_offline_speed():
+		_game_speed_choices(tr("Game speed"), game_speed, func(multiplier: float): game_speed = multiplier)
 	_info_row()
 	_button("MAIN MENU", show_main_menu, "AltButton")
 
@@ -1920,7 +1965,7 @@ func _process(delta: float) -> void:
 	if is_instance_valid(region):
 		region.visible = true
 	replay.step_playback(0.0, false)
-	if not replay_recorder:
+	if not replay_recorder and _active_game_speed == 1.0:
 		replay.record_step(delta, player, enemies, bot_match.bots, remote_players)
 	update_feel(delta)
 	if network.in_match:
@@ -2272,7 +2317,7 @@ func _physics_process(delta: float) -> void:
 		for grenade in grenades:
 			grenade.node.freeze = true
 		return
-	if replay_recorder and replay.recorded.size() < replay.recording_frame_limit:
+	if (replay_recorder and replay.recorded.size() < replay.recording_frame_limit) or (not replay_recorder and _active_game_speed > 1.0):
 		replay.record_step(delta, player, enemies, bot_match.bots, remote_players)
 	for grenade in grenades:
 		grenade.node.freeze = false
@@ -2353,6 +2398,7 @@ func _update_effects(delta: float) -> void:
 	effects = effects.filter(func(e): return e.life > 0)
 
 func _exit_tree() -> void:
+	_apply_game_speed(1)
 	stop_rumble()
 	ReferenceAssets.dispose()
 
@@ -3021,6 +3067,13 @@ func run_smoke() -> void:
 	for i in 2:
 		await get_tree().process_frame
 	assert(bot_match.remaining == clock_before, "Pausing offline must stop the match clock")
+	var base_ticks = Engine.physics_ticks_per_second
+	game_speed = 2.5
+	resume_game()
+	assert(is_equal_approx(Engine.time_scale, 2.5) and Engine.physics_ticks_per_second == roundi(base_ticks * 2.5), "Resuming must apply the offline game speed")
+	pause_menu()
+	assert(is_equal_approx(Engine.time_scale, 1.0) and Engine.physics_ticks_per_second == base_ticks, "Pausing must restore normal engine timing")
+	game_speed = 1.0
 	resume_game()
 	smoke_joy_button(JOY_BUTTON_BACK, true)
 	for i in 2:

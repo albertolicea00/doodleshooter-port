@@ -242,7 +242,7 @@ make capture-menus
 
 Run `make record-replay` to open the desktop map picker. Choose a map, set the recording length from 10 to 120 seconds in five-second steps, and press `START` to begin the three-second countdown. The recording length starts at 30 seconds unless you set `REPLAY_SECONDS`. Each take is saved as a separate JSON file in `native/data/menu_replays/`.
 
-The `Game speed` selector sets how fast game time advances during the take, from 1× to 5×. A 20-second take at 4× records 20 seconds of game time in about five real seconds and plays back at normal speed. The countdown runs at normal speed. Direct recordings use 1×.
+The `Game speed` selector sets how fast game time advances during the take, from 1× to 5× (1×, 1.5×, 2×, 2.5×, 3×, 4×, 5×). A 20-second take at 4× records 20 seconds of game time in about five real seconds and plays back at normal speed. The countdown runs at normal speed. Direct recordings use 1×.
 
 ```sh
 make record-replay MAP=jungle TAKE=jungle-bridge REPLAY_SECONDS=20

@@ -442,6 +442,9 @@ msgstr "TELA CHEIA: NÃO"
 msgid "FULLSCREEN: ON"
 msgstr "TELA CHEIA: SIM"
 
+msgid "Game speed"
+msgstr "Velocidade do jogo"
+
 msgid "Godot Engine license"
 msgstr "Licença do motor Godot"
 
