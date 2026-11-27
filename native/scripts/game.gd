@@ -149,7 +149,7 @@ var bot_minutes = 10
 var lan_bot_count = 1
 var lan_bot_difficulty = 1
 var lan_minutes = 10
-var controls_xbox = false
+var controls_xbox = true
 var controller_vibration = true
 var controller_light = true
 var last_joy_light = Color(-1, -1, -1, -1)
@@ -472,6 +472,8 @@ func _clear_menu(title: String, subtitle: String, centered: bool = false) -> voi
 	menu_items.add_child(header)
 	var heading = Label.new()
 	heading.text = title
+	if centered:
+		heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	heading.add_theme_font_size_override("font_size", 60)
 	heading.add_theme_constant_override("line_spacing", -10)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -618,6 +620,7 @@ func _choices(labels: Array, selected: int, callback: Callable, wrap_labels: boo
 
 func _toggle(text: String, value: bool, callback: Callable) -> void:
 	var button = _button("", func(): pass, "AltButton")
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.toggle_mode = true
 	button.button_pressed = value
 	button.text = text + (tr(": on") if value else tr(": off"))
@@ -885,12 +888,15 @@ func _back_button(callback: Callable, label: String = "BACK TO MAIN MENU") -> vo
 	main_btn.custom_minimum_size.x = 240
 	main_btn.reparent(row)
 
-func show_settings() -> void:
-	_clear_menu(tr("Settings"), tr("Choose how you want to play"))
+func _clear_settings_menu(title: String, subtitle: String, width: float = 1160.0) -> void:
+	_clear_menu(title, subtitle, true)
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	menu.custom_minimum_size.x = 1160
-	menu.offset_left = -580
-	menu.offset_right = 580
+	menu.custom_minimum_size.x = width
+	menu.offset_left = -width * 0.5
+	menu.offset_right = width * 0.5
+
+func show_settings() -> void:
+	_clear_settings_menu(tr("Settings"), tr("Choose how you want to play"))
 	var top_row = HBoxContainer.new()
 	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_row.add_theme_constant_override("separation", 16)
@@ -907,6 +913,8 @@ func show_settings() -> void:
 	var controller_button = _button("CONTROLLER & MOTION", show_controller_settings)
 	controller_button.custom_minimum_size.x = 250
 	controller_button.reparent(top_row)
+	for button in [access_button, language_button, touch_button, controller_button]:
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var start = menu_items.get_child_count()
 	_credit_section(tr("Sound"), "")
 	_slider(tr("Music volume"), sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
@@ -915,9 +923,9 @@ func show_settings() -> void:
 	_toggle(tr("Original soundtrack"), sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
 	var split = menu_items.get_child_count()
 	_credit_section(tr("Graphics detail"), "")
-	_choices([tr("Low"), tr("Medium"), tr("High")], quality, func(index): apply_quality(index); save_settings())
+	_choices([tr("Low"), tr("Medium"), tr("High")], quality, func(index): apply_quality(index); save_settings(), true)
 	_credit_section(tr("Shading"), "")
-	_choices([tr("Original hatching"), tr("Coloured pencil")], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
+	_choices([tr("Original hatching"), tr("Coloured pencil")], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings(), true)
 	_toggle(tr("Frame rate counter"), show_fps, func(value): show_fps = value; save_settings())
 	_toggle(tr("Dizzy screen sway"), screen_effects, func(value): screen_effects = value; save_settings())
 	_card_wrap(start, split)
@@ -927,8 +935,7 @@ func show_settings() -> void:
 		_back_button(show_main_menu)
 
 func show_language_settings() -> void:
-	_clear_menu(tr("Language"), tr("Choose the language for menus and gameplay."), true)
-	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_clear_settings_menu(tr("Language"), tr("Choose the language for menus and gameplay."), 680.0)
 	var options_start = menu_items.get_child_count()
 	var grid = GridContainer.new()
 	grid.columns = 2
@@ -997,14 +1004,10 @@ func apply_visual_settings() -> void:
 		hud.queue_redraw()
 
 func show_accessibility_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu(tr("Accessibility"), tr("Visual comfort, dark paper, motion reduction and readability"))
-	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	menu.custom_minimum_size.x = 1160
-	menu.offset_left = -580
-	menu.offset_right = 580
+	_clear_settings_menu(tr("Accessibility"), tr("Visual comfort, dark paper, motion reduction and readability"))
 	var start = menu_items.get_child_count()
 	_credit_section(tr("Paper & brightness"), tr("Lower brightness or choose Dark board to rest your eyes; inks adapt automatically."))
-	_choices([tr("Original"), tr("Warm sepia"), tr("Soft slate"), tr("Dark board")], paper_theme, func(index): paper_theme = index; apply_visual_settings(); save_settings())
+	_choices([tr("Original"), tr("Warm sepia"), tr("Soft slate"), tr("Dark board")], paper_theme, func(index): paper_theme = index; apply_visual_settings(); save_settings(), true)
 	_slider(tr("Paper brightness"), paper_brightness, 0.15, 1.0, func(value): paper_brightness = value; apply_visual_settings(); save_settings())
 	_slider(tr("Edge shadow"), edge_shadow, 0.0, 1.0, func(value): edge_shadow = value; apply_visual_settings(); save_settings())
 	_toggle(tr("Ruled notebook lines"), paper_lines, func(value): paper_lines = value; apply_visual_settings(); save_settings())
@@ -1015,8 +1018,8 @@ func show_accessibility_settings(return_to: Callable = Callable(), return_label:
 	_slider(tr("Damage flash"), flash_scale, 0.0, 1.0, func(value): flash_scale = value; save_settings())
 	_toggle(tr("Dizzy screen sway"), screen_effects, func(value): screen_effects = value; save_settings())
 	_credit_section(tr("Readability"), "")
-	_choices([tr("Normal crosshair"), tr("Large"), tr("High contrast")], crosshair_style, func(index): crosshair_style = index; apply_visual_settings(); save_settings())
-	_choices([tr("Normal 3D outlines"), tr("Bold 3D outlines")], outline_bold, func(index): outline_bold = index; apply_visual_settings(); save_settings())
+	_choices([tr("Normal crosshair"), tr("Large"), tr("High contrast")], crosshair_style, func(index): crosshair_style = index; apply_visual_settings(); save_settings(), true)
+	_choices([tr("Normal 3D outlines"), tr("Bold 3D outlines")], outline_bold, func(index): outline_bold = index; apply_visual_settings(); save_settings(), true)
 	_card_wrap(start, split)
 	if return_to.is_valid():
 		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
@@ -1029,7 +1032,7 @@ func apply_fullscreen(enabled: bool) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 
 func show_controls(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu(tr("Controls"), "")
+	_clear_menu(tr("Controls"), "", true)
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
@@ -1043,15 +1046,10 @@ func show_controls(return_to: Callable = Callable(), return_label: String = "") 
 	var touch_heading = touch_card.get_child(0) as Label
 	touch_heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	touch_heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	touch_heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	touch_card.add_child(touch_header)
 	touch_card.move_child(touch_header, 0)
 	touch_heading.reparent(touch_header)
-	var touch_settings_button = _button("TOUCH & AIMING", func(): show_touch_settings(func(): show_controls(return_to, return_label), "BACK TO CONTROLS"))
-	touch_settings_button.custom_minimum_size = Vector2(210, 42)
-	touch_settings_button.reparent(touch_header)
-	var controller_settings_button = _button("CONTROLLER & MOTION", func(): show_controller_settings(func(): show_controls(return_to, return_label), "BACK TO CONTROLS"))
-	controller_settings_button.custom_minimum_size = Vector2(245, 42)
-	controller_settings_button.reparent(touch_header)
 	var customize_touch = _button("CUSTOMIZE LAYOUT", func(): show_layout_editor(func(): show_controls(return_to, return_label)), "RedOutlineButton")
 	customize_touch.custom_minimum_size = Vector2(210, 42)
 	customize_touch.reparent(touch_header)
@@ -1163,8 +1161,9 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 	var group = ButtonGroup.new()
 	var buttons: Array[Button] = []
 	for index in 2:
+		var xbox = index == 0
 		var button = Button.new()
-		button.text = [tr("PS CONTROLLER"), tr("XBOX CONTROLLER")][index]
+		button.text = tr("XBOX CONTROLLER") if xbox else tr("PS CONTROLLER")
 		button.flat = true
 		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 			button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
@@ -1177,9 +1176,9 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 		button.mouse_filter = Control.MOUSE_FILTER_PASS
 		button.toggle_mode = true
 		button.button_group = group
-		button.button_pressed = controls_xbox == (index == 1)
+		button.button_pressed = controls_xbox == xbox
 		button.pressed.connect(func():
-			controls_xbox = index == 1
+			controls_xbox = xbox
 			legend.text = xbox_text if controls_xbox else ps_text
 			rule.queue_redraw()
 			_fit_menu.call_deferred())
@@ -1196,11 +1195,7 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 
 # Every merged or assisted behaviour is optional, as in large mobile shooters.
 func show_touch_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu(tr("Touch & aiming"), tr("Changes apply immediately and are saved on this device"))
-	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	menu.custom_minimum_size.x = 1160
-	menu.offset_left = -580
-	menu.offset_right = 580
+	_clear_settings_menu(tr("Touch & aiming"), tr("Changes apply immediately and are saved on this device"))
 	var start = menu_items.get_child_count()
 	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
 	_credit_section(tr("Looking"), tr("Applies to touch controls and the controller right stick."))
@@ -1208,7 +1203,7 @@ func show_touch_settings(return_to: Callable = Callable(), return_label: String 
 	_slider(tr("Sensitivity while aiming"), touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
 	_toggle(tr("Invert vertical look"), touch.options.invert_y, option.call("invert_y"))
 	_credit_section(tr("Gyroscope"), tr("Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden."))
-	_choices([tr("Off"), tr("While aiming"), tr("Always")], touch.options.gyro, option.call("gyro"))
+	_choices([tr("Off"), tr("While aiming"), tr("Always")], touch.options.gyro, option.call("gyro"), true)
 	_slider(tr("Gyroscope sensitivity"), touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
 	var split = menu_items.get_child_count()
 	_credit_section(tr("Moving"), "")
@@ -1227,11 +1222,7 @@ func show_touch_settings(return_to: Callable = Callable(), return_label: String 
 		_back_button(show_settings, "BACK TO SETTINGS")
 
 func show_controller_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu(tr("Controller & motion"), tr("Controller aiming, motion sensor and feedback · saved on this device"))
-	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	menu.custom_minimum_size.x = 1160
-	menu.offset_left = -580
-	menu.offset_right = 580
+	_clear_settings_menu(tr("Controller & motion"), tr("Controller aiming, motion sensor and feedback · saved on this device"))
 	var start = menu_items.get_child_count()
 	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
 	_credit_section(tr("Right stick"), "")
@@ -1242,7 +1233,7 @@ func show_controller_settings(return_to: Callable = Callable(), return_label: St
 	_toggle(tr("Controller light bar"), controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
 	var split = menu_items.get_child_count()
 	_credit_section(tr("Gyroscope"), tr("Tilt your motion controller (DualShock / DualSense) or phone to aim."))
-	_choices([tr("Off"), tr("While aiming"), tr("Always")], touch.options.gyro, option.call("gyro"))
+	_choices([tr("Off"), tr("While aiming"), tr("Always")], touch.options.gyro, option.call("gyro"), true)
 	_slider(tr("Gyroscope sensitivity"), touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
 	_credit_section(tr("Vibration"), tr("Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts."))
 	_toggle(tr("Controller vibration"), controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
@@ -1256,6 +1247,7 @@ func show_controller_settings(return_to: Callable = Callable(), return_label: St
 func _slider(text: String, value: float, low: float, high: float, callback: Callable) -> void:
 	var label = Label.new()
 	label.text = "%s: %d%%" % [text, roundi(value * 100)]
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	menu_items.add_child(label)
 	var slider = HSlider.new()
 	slider.min_value = low
@@ -1584,13 +1576,19 @@ func _render_update_release(release: Dictionary) -> void:
 	_back_button(show_main_menu)
 
 func show_license(title: String, text: String) -> void:
-	_clear_menu(title, tr("Attribution and license notices"))
+	_clear_menu(title, tr("Attribution and license notices"), true)
+	var page_width = 920.0
+	menu.custom_minimum_size.x = page_width
+	menu.offset_left = -page_width * 0.5
+	menu.offset_right = page_width * 0.5
 	auto_scroll = true
 	auto_scroll_wait = 1.2
 	auto_scroll_pos = 0.0
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var start = menu_items.get_child_count()
-	_credit_section("", text)
+	var body = _credit_section("", text)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_card_wrap(start)
 	_back_button(show_credits, "BACK TO CREDITS")
 
@@ -2393,6 +2391,15 @@ func run_smoke() -> void:
 	await smoke_tap_button("BACK TO CREDITS")
 	await smoke_tap_button("BACK TO MAIN MENU")
 	assert(menu_items.get_child(0).get_child(0).get_child(0).text + menu_items.get_child(0).get_child(0).get_child(1).text == "DOODLE SHOOTER port", "Menu navigation must return to the main menu")
+	TranslationServer.set_locale("ru")
+	show_credit_notices()
+	for i in 4:
+		await get_tree().process_frame
+	var notices = menu_items.find_children("*", "RichTextLabel", true, false)[0] as RichTextLabel
+	assert(absf(notices.get_global_rect().get_center().x - ui.get_global_rect().get_center().x) <= 1.0 and notices.size.x < ui.size.x, "Russian credits must fit in a centered card")
+	assert(notices.get_content_width() <= notices.size.x and notices.horizontal_alignment == HORIZONTAL_ALIGNMENT_LEFT, "Full credits must wrap and align to the left")
+	TranslationServer.set_locale("en")
+	show_main_menu()
 	await smoke_tap_button("SETTINGS")
 	for child in menu_items.find_children("*", "Button", true, false):
 		assert(not child.text.begins_with("Fullscreen"), "Fullscreen must not appear inside Settings")
@@ -2461,6 +2468,15 @@ func run_smoke() -> void:
 	await smoke_tap_button("VOLVER AL MENÚ PRINCIPAL")
 	await smoke_tap_button("CONTROLES")
 	assert(menu_items.get_child(0).get_child(0).text == "Controles", "Controls must open in the selected language")
+	var customize_layout = await smoke_menu_button("PERSONALIZAR CONTROLES")
+	assert(customize_layout.get_parent().get_child_count() == 2 and customize_layout.autowrap_mode == TextServer.AUTOWRAP_OFF, "Customize Layout must be the only button in the touch heading and stay on one line")
+	var xbox_tab = await smoke_menu_button("MANDO XBOX")
+	var ps_tab = await smoke_menu_button("MANDO PS")
+	assert(xbox_tab.get_parent() == ps_tab.get_parent() and xbox_tab.get_index() == 0 and xbox_tab.button_pressed, "Xbox must be first and selected when Controls opens")
+	await smoke_tap_button("MANDO PS")
+	assert(ps_tab.button_pressed and not controls_xbox, "The PlayStation tab must show the PlayStation controls")
+	await smoke_tap_button("MANDO XBOX")
+	assert(xbox_tab.button_pressed and controls_xbox, "The Xbox tab must show the Xbox controls")
 	var xbox_legend = _controls_text(["{R2} fire / slash   {L2} aim / block"], {"{R2}": "{RT}", "{L2}": "{LT}"})
 	assert("RT" in xbox_legend and "disparar o cortar" in xbox_legend, "Translated controls must preserve the correct controller bindings")
 	await smoke_tap_button("VOLVER AL MENÚ PRINCIPAL")
