@@ -605,7 +605,7 @@ func _info_row() -> void:
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	menu_items.add_child(row)
-	for entry in [["CONTROLS", show_controls], ["SETTINGS", show_settings], ["CREDITS", show_credits]]:
+	for entry in [["CONTROLS", show_controls], ["SETTINGS", show_settings]]:
 		var button = _button(entry[0], entry[1], "AltButton")
 		button.reparent(row)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1781,7 +1781,7 @@ func pause_menu() -> void:
 	if _can_set_offline_speed():
 		_game_speed_choices(tr("Game speed"), game_speed, func(multiplier: float): game_speed = multiplier)
 	_info_row()
-	_button("MAIN MENU", show_main_menu, "AltButton")
+	_button("MAIN MENU", show_main_menu, "RedOutlineButton")
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and playing:
