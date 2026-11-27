@@ -226,6 +226,10 @@ The menu replay recorder produced separate three-second District and Jungle take
 
 On November 27, a headless startup check verified that the main menu loads all 450 frames from the bundled District take, starts the replay camera at the first recorded pose, and advances playback even when a usable personal replay is saved. The saved replay was unchanged. Windowed playback was not inspected.
 
+The desktop replay recorder's map picker was inspected at 1280×720 on macOS. An automated windowed check verified two rows of five maps and side-by-side `EXIT` and `START` buttons. Selecting Jungle left the recorder idle until `START` was pressed. Changing the duration from 20 to 4 seconds before starting produced a 60-frame Jungle take. Escape closed the picker without creating a file. A headless check verified that `--map=mexico` skips the picker and saves a Mexico take. The temporary takes were removed after verification.
+
+After extending the duration, an automated macOS windowed check verified the 10–120-second range, five-second steps, and a 1,800-frame District take at the maximum setting with accelerated game time. A replay buffer check verified the 450-frame rolling window for gameplay. `python3 tools/check.py` passed.
+
 ## Normalized back buttons and desktop export presets (November 19)
 
 - **Back-button normalization (`native/scripts/game.gd`):** `_back_button` now defaults to `"BACK TO MAIN MENU"` (`RedButton`, red filled) when returning to the main menu. Submenus that return to an intermediate screen (`BACK TO PAUSE`, `BACK TO SETTINGS`, `BACK TO CONTROLS`, `BACK TO CREDITS`, `BACK TO LOBBY`, `BACK TO ONLINE`, `BACK TO LAN`) render the immediate back button on the left (`RedOutlineButton`) and `"BACK TO MAIN MENU"` (`RedButton`) on the right. `_find_back_button` matches `"RESUME"` or any `"BACK..."` label, and `run_smoke()` was updated to tap `"BACK TO MAIN MENU"`.

@@ -18,7 +18,7 @@ LINUX_BIN := builds/linux/doodleshooter-port-v$(VERSION).x86_64
 MACOS_ZIP := builds/macos/doodleshooter-port-v$(VERSION).zip
 MACOS_DMG := builds/macos/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-release.dmg
 SERVER_PYTHON := .venv/bin/python
-MAP ?= district
+MAP ?=
 TAKE ?=
 REPLAY_SECONDS ?= 30
 
@@ -51,7 +51,7 @@ help:
 	  'make server           Run the online lobby server' \
 	  'make test-server      Run the Python lobby tests' \
 	  'make capture-menus    Save screenshots of the desktop menus' \
-	  'make record-replay    Record a menu background take on desktop' \
+	  'make record-replay    Choose a map and record a menu background take' \
 	  'make maps             Regenerate the port maps' \
 	  'make map-previews     Render the animated map previews' \
 	  'make screenshots      Render the README map screenshots (macOS sips)' \

@@ -240,13 +240,13 @@ make capture-menus
 
 ### Record a main-menu background take
 
-Run `make record-replay` to open District in a desktop recording session. The game shows a three-second countdown, then records 30 seconds with a timer on screen. Each take is saved as a separate JSON file in `native/data/menu_replays/`.
+Run `make record-replay` to open the desktop map picker. Choose a map, set the recording length from 10 to 120 seconds in five-second steps, and press `START` to begin the three-second countdown. The recording length starts at 30 seconds unless you set `REPLAY_SECONDS`. Each take is saved as a separate JSON file in `native/data/menu_replays/`.
 
 ```sh
 make record-replay MAP=jungle TAKE=jungle-bridge REPLAY_SECONDS=20
 ```
 
-`MAP` accepts the same map keys as the map previews. Omit `TAKE` to generate a name from the map and time. Recording duration can be 3–30 seconds. Closing the recorder window before it saves discards the take. To change the take used at launch, set `DEFAULT_TAKE` in `native/scripts/replay.gd` to the new JSON filename. If the default take cannot be loaded, the menu tries the saved personal replay, then a random bundled take, then the District camera glide.
+Set `MAP` to skip the picker and start on that map. It accepts the same map keys as the map previews. Omit `TAKE` to generate a name from the map and time. Direct recordings accept any whole-second duration from 3 to 120 seconds. Closing the recorder window before it saves discards the take. To change the take used at launch, set `DEFAULT_TAKE` in `native/scripts/replay.gd` to the new JSON filename. If the default take cannot be loaded, the menu tries the saved personal replay, then a random bundled take, then the District camera glide.
 
 Screenshots are written to `builds/validation/` (*override with `DOODLE_CAPTURE_DIR`*).
 

@@ -11,6 +11,7 @@ const DEFAULT_MAP := "district"
 const DEFAULT_LOOP_SECONDS := 32.0
 
 var recorded: Array = []
+var recording_frame_limit: int = MAX_FRAMES
 var playback_map: String = DEFAULT_MAP
 var playback_frames: Array = []
 var sample_timer: float = 0.0
@@ -42,8 +43,9 @@ func update_outline(bold: bool) -> void:
 		outline.material_override.set_shader_parameter("ink", ReferenceAssets.outline_ink())
 		outline.material_override.set_shader_parameter("width_scale", 1.75 if bold else 1.0)
 
-func start_recording() -> void:
+func start_recording(frame_limit: int = MAX_FRAMES) -> void:
 	recorded.clear()
+	recording_frame_limit = frame_limit
 	sample_timer = 0.0
 
 func record_step(delta: float, player: Node3D, enemies: Array, bots: Array, remotes: Dictionary) -> void:
@@ -75,7 +77,7 @@ func record_step(delta: float, player: Node3D, enemies: Array, bots: Array, remo
 		"p": [snappedf(eye.x, 0.01), snappedf(eye.y, 0.01), snappedf(eye.z, 0.01), snappedf(yaw, 0.001), snappedf(pitch, 0.001)],
 		"e": actors
 	})
-	if recorded.size() > MAX_FRAMES:
+	if recorded.size() > recording_frame_limit:
 		recorded.pop_front()
 
 func save_recording(map_key: String, path: String = REPLAY_PATH) -> bool:
