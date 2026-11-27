@@ -238,6 +238,16 @@ To capture the four menu screens in a graphical desktop session:
 make capture-menus
 ```
 
+### Record a main-menu background take
+
+Run `make record-replay` to open District in a desktop recording session. The game shows a three-second countdown, then records 30 seconds with a timer on screen. Each take is saved as a separate JSON file in `native/data/menu_replays/`.
+
+```sh
+make record-replay MAP=jungle TAKE=jungle-bridge REPLAY_SECONDS=20
+```
+
+`MAP` accepts the same map keys as the map previews. Omit `TAKE` to generate a name from the map and time. Recording duration can be 3–30 seconds. Closing the recorder window before it saves discards the take. To replace a take, record a new one and remove the old JSON from the folder. Keep the files you want to bundle. The menu chooses a random bundled take at launch when there is no usable personal replay.
+
 Screenshots are written to `builds/validation/` (*override with `DOODLE_CAPTURE_DIR`*).
 
 ## 🛠️ Tech stack

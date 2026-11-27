@@ -5,6 +5,7 @@ const SAMPLE_INTERVAL := 1.0 / 15.0
 const MAX_FRAMES := 450
 const MIN_SAVE_FRAMES := 45
 const REPLAY_PATH := "user://last_replay.json"
+const BUNDLED_DIRECTORY := "res://data/menu_replays"
 const DEFAULT_MAP := "district"
 const DEFAULT_LOOP_SECONDS := 32.0
 
@@ -113,6 +114,18 @@ func load_recording(path: String = REPLAY_PATH) -> bool:
 	play_time = 0.0
 	using_default = false
 	return true
+
+func load_bundled_recording(map_keys: Array[String], directory: String = BUNDLED_DIRECTORY) -> bool:
+	var folder = DirAccess.open(directory)
+	if folder == null:
+		return false
+	var candidates = Array(folder.get_files())
+	candidates.shuffle()
+	for filename in candidates:
+		if filename.get_extension() == "json" and load_recording(directory.path_join(filename)) and playback_map in map_keys:
+			using_default = true
+			return true
+	return false
 
 static func _valid_sample(sample: Variant, numeric_fields: int) -> bool:
 	if not sample is Array or sample.size() != 5:

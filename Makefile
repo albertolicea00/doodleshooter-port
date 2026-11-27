@@ -18,10 +18,13 @@ LINUX_BIN := builds/linux/doodleshooter-port-v$(VERSION).x86_64
 MACOS_ZIP := builds/macos/doodleshooter-port-v$(VERSION).zip
 MACOS_DMG := builds/macos/doodleshooter-port-v$(VERSION)-$(VERSION_CODE)-release.dmg
 SERVER_PYTHON := .venv/bin/python
+MAP ?= district
+TAKE ?=
+REPLAY_SECONDS ?= 30
 
 .PHONY: ipa dmg help import run touch check build android android-release ios windows linux macos \
 	version bump-patch bump-minor bump-major \
-	install-android server-deps server test-server capture-menus maps map-previews screenshots \
+	install-android server-deps server test-server capture-menus record-replay maps map-previews screenshots \
 	assets-reference audio-deps assets-audio controller-motion clean
 
 help:
@@ -48,6 +51,7 @@ help:
 	  'make server           Run the online lobby server' \
 	  'make test-server      Run the Python lobby tests' \
 	  'make capture-menus    Save screenshots of the desktop menus' \
+	  'make record-replay    Record a menu background take on desktop' \
 	  'make maps             Regenerate the port maps' \
 	  'make map-previews     Render the animated map previews' \
 	  'make screenshots      Render the README map screenshots (macOS sips)' \
@@ -62,6 +66,12 @@ import:
 
 run: import
 	"$(GODOT_BIN)" --path "$(PROJECT)"
+
+record-replay: export DOODLE_RECORD_MAP = $(MAP)
+record-replay: export DOODLE_RECORD_TAKE = $(TAKE)
+record-replay: export DOODLE_RECORD_SECONDS = $(REPLAY_SECONDS)
+record-replay: import
+	"$(GODOT_BIN)" --path "$(PROJECT)" --script "$(CURDIR)/tools/record-replay.gd" -- "--map=$$DOODLE_RECORD_MAP" "--take=$$DOODLE_RECORD_TAKE" "--seconds=$$DOODLE_RECORD_SECONDS"
 
 touch: import
 	"$(GODOT_BIN)" --path "$(PROJECT)" -- --touch

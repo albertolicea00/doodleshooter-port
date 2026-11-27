@@ -107,6 +107,7 @@ var auto_scroll_pos = 0.0
 var menu_nav_last_action = ""
 var menu_nav_last_msec = -1000
 var replay := DoodleReplay.new()
+var replay_recorder = false
 var hit_marker = 0.0
 var hurt_flash = 0.0
 var hurt_overlay: ColorRect
@@ -199,7 +200,7 @@ func _ready() -> void:
 		run_smoke.call_deferred()
 	elif capture_mode:
 		run_capture.call_deferred()
-	else:
+	elif not replay_recorder:
 		_load_menu_replay()
 
 func _load_menu_replay() -> void:
@@ -212,7 +213,8 @@ func _load_menu_replay() -> void:
 	add_child(region)
 	level = DoodleLevel.new()
 	region.add_child(level)
-	if not replay.load_recording() or not replay.playback_map in map_keys:
+	var has_personal_replay = replay.load_recording() and replay.playback_map in map_keys
+	if not has_personal_replay and not replay.load_bundled_recording(map_keys):
 		replay.build_default()
 	level.load_map(replay.playback_map, false)
 	replay.step_playback(0.0, true)
@@ -648,7 +650,7 @@ func _apply_main_menu_backdrop() -> void:
 
 func show_main_menu() -> void:
 	stop_rumble()
-	if not "--smoke" in OS.get_cmdline_user_args():
+	if not replay_recorder and not "--smoke" in OS.get_cmdline_user_args():
 		replay.save_recording(map_key)
 		replay.start_recording()
 	_close_network()
@@ -2027,7 +2029,7 @@ func game_over() -> void:
 		death_timer = 2.5
 		return
 	playing = false
-	if not "--smoke" in OS.get_cmdline_user_args():
+	if not replay_recorder and not "--smoke" in OS.get_cmdline_user_args():
 		replay.save_recording(map_key)
 		replay.start_recording()
 	save_progress()
