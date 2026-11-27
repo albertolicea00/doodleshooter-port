@@ -2372,6 +2372,7 @@ func run_smoke() -> void:
 		assert(not fullscreen, "Main menu Fullscreen button must return to windowed mode")
 	await smoke_tap_button("START SOLO")
 	assert(menu_items.get_child(0).get_child(0).text == "Play offline", "A menu tap must open offline play")
+	assert(get_viewport().gui_get_focus_owner() == await smoke_menu_button("START SURVIVAL"), "Play offline must initially focus START SURVIVAL")
 	Input.emulate_touch_from_mouse = false
 	var saved_difficulty = difficulty
 	for tuning in [[0, 0.42, 0.5, 4], [1, 0.72, 0.75, 5], [2, 1.2, 1.0, 7], [3, 1.62, 1.3, 9]]:
@@ -3550,6 +3551,7 @@ func show_offline_menu() -> void:
 	_offline_card(cards, content.slice(survival_start, bots_start))
 	_offline_card(cards, content.slice(bots_start))
 	_back_button(show_main_menu)
+	survival.grab_focus()
 
 func _offline_card(cards: HBoxContainer, content: Array[Node]) -> void:
 	var card = PanelContainer.new()
