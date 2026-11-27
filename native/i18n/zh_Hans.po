@@ -547,9 +547,6 @@ msgstr "语言"
 msgid "Language"
 msgstr "语言"
 
-msgid "Language selection is a port addition."
-msgstr "语言选择是移植版新增的功能。"
-
 msgid "Large"
 msgstr "大"
 

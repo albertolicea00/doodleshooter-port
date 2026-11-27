@@ -176,7 +176,7 @@ msgid "Checking for updates…"
 msgstr "アップデートを確認中…"
 
 msgid "CHECKPOINT · WAVE "
-msgstr "チェックポイント・ウェーブ "
+msgstr "再開・ウェーブ "
 
 msgid "Choose a custom map"
 msgstr "カスタムマップを選ぶ"
@@ -546,9 +546,6 @@ msgstr "言語"
 
 msgid "Language"
 msgstr "言語"
-
-msgid "Language selection is a port addition."
-msgstr "言語選択は移植版で追加された機能です。"
 
 msgid "Large"
 msgstr "大"

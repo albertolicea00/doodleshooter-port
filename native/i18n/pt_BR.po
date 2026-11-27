@@ -547,9 +547,6 @@ msgstr "IDIOMA"
 msgid "Language"
 msgstr "Idioma"
 
-msgid "Language selection is a port addition."
-msgstr "A seleção de idioma é um recurso do port."
-
 msgid "Large"
 msgstr "Grande"
 

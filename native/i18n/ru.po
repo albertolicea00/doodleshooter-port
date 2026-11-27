@@ -176,7 +176,7 @@ msgid "Checking for updates…"
 msgstr "Проверка обновлений…"
 
 msgid "CHECKPOINT · WAVE "
-msgstr "ТОЧКА СОХРАНЕНИЯ · ВОЛНА "
+msgstr "ЧЕКПОИНТ · ВОЛНА "
 
 msgid "Choose a custom map"
 msgstr "Выберите особую карту"
@@ -546,9 +546,6 @@ msgstr "ЯЗЫК"
 
 msgid "Language"
 msgstr "Язык"
-
-msgid "Language selection is a port addition."
-msgstr "Выбор языка добавлен в этой версии."
 
 msgid "Large"
 msgstr "Крупный"

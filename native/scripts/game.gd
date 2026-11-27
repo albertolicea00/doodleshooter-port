@@ -97,6 +97,7 @@ var health_modifier = 1.0
 var menu: PanelContainer
 var menu_scroll: ScrollContainer
 var menu_pad: MarginContainer
+var center_menu_content = false
 var menu_hint: RichTextLabel
 var menu_items: VBoxContainer
 var pulsed_control: Control = null
@@ -451,7 +452,9 @@ func _setup_ui() -> void:
 	ui.add_child(vignette_overlay)
 	apply_visual_settings()
 
-func _clear_menu(title: String, subtitle: String) -> void:
+func _clear_menu(title: String, subtitle: String, centered: bool = false) -> void:
+	center_menu_content = centered
+	menu.grow_horizontal = Control.GROW_DIRECTION_BOTH if centered else Control.GROW_DIRECTION_END
 	menu.remove_theme_stylebox_override("panel")
 	menu.custom_minimum_size.x = 680
 	menu.offset_left = -340
@@ -507,8 +510,9 @@ func _refresh_menu_hint(show_back_note: bool, has_panel: bool = true) -> void:
 	var second_line = tr("\n[color=#%s][i]The Back button is at the very bottom[/i][/color]") % sub_hex if show_back_note else ""
 	menu_hint.text = "[center]%s%s[/center]" % [top_line, second_line]
 	if menu_pad != null:
-		menu_pad.add_theme_constant_override("margin_top", (6 if show_back_note else 0) if has_panel else (40 if show_back_note else 28))
-		menu_pad.add_theme_constant_override("margin_bottom", 2 if has_panel else 12)
+		var top_margin = (6 if show_back_note else 0) if has_panel else (40 if show_back_note else 28)
+		menu_pad.add_theme_constant_override("margin_top", top_margin)
+		menu_pad.add_theme_constant_override("margin_bottom", top_margin if center_menu_content else (2 if has_panel else 12))
 
 # Short screens shrink the sheet to their content; long ones scroll to the screen edges.
 func _fit_menu() -> void:
@@ -591,7 +595,7 @@ func _info_row() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 # Side-by-side outlined choices; the selected one is filled with ink (.mapbtn.on).
-func _choices(labels: Array, selected: int, callback: Callable) -> void:
+func _choices(labels: Array, selected: int, callback: Callable, wrap_labels: bool = false) -> void:
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	var group = ButtonGroup.new()
@@ -603,6 +607,9 @@ func _choices(labels: Array, selected: int, callback: Callable) -> void:
 		button.button_group = group
 		button.button_pressed = i == selected
 		button.custom_minimum_size.y = 48
+		if wrap_labels:
+			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			button.add_theme_font_size_override("font_size", 20)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.mouse_filter = Control.MOUSE_FILTER_PASS
 		button.pressed.connect(callback.bind(i))
@@ -920,9 +927,9 @@ func show_settings() -> void:
 		_back_button(show_main_menu)
 
 func show_language_settings() -> void:
-	_clear_menu(tr("Language"), tr("Choose the language for menus and gameplay."))
-	var start = menu_items.get_child_count()
-	_credit_section("", tr("Language selection is a port addition."))
+	_clear_menu(tr("Language"), tr("Choose the language for menus and gameplay."), true)
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var options_start = menu_items.get_child_count()
 	var grid = GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 10)
@@ -940,7 +947,7 @@ func show_language_settings() -> void:
 		option.reparent(grid)
 		if option.button_pressed:
 			selected = option
-	_card_wrap(start)
+	_card_wrap(options_start)
 	_back_button(show_settings, "BACK TO SETTINGS")
 	if selected != null:
 		selected.grab_focus()
@@ -2433,6 +2440,11 @@ func run_smoke() -> void:
 	var language = await smoke_menu_button("LANGUAGE")
 	assert(accessibility.get_parent() == language.get_parent() and language.get_index() == accessibility.get_index() + 1, "LANGUAGE must sit next to ACCESSIBILITY")
 	await smoke_tap_button("LANGUAGE")
+	var language_grid = (await smoke_menu_button("English")).get_parent()
+	var language_card = language_grid.get_parent().get_parent()
+	var language_back = await smoke_menu_button("BACK TO SETTINGS")
+	assert(language_grid is GridContainer and language_card is PanelContainer and language_card.get_parent() == menu_items, "Language options must share an inner card")
+	assert(language_card.get_index() > 0 and language_back.get_parent().get_parent() == menu_items and language_back.get_parent().get_index() > language_card.get_index(), "Language heading and back actions must sit outside the card")
 	for language_name in LANGUAGES.values():
 		await smoke_menu_button(language_name)
 	await smoke_tap_button("Español")
@@ -3089,6 +3101,8 @@ func _smoke_survival_headings() -> void:
 		show_offline_menu()
 		for i in 3:
 			await get_tree().process_frame
+		var offline_bounds = menu_items.get_global_rect()
+		assert(absf(offline_bounds.get_center().x - ui.get_global_rect().get_center().x) <= 1.0, "Offline content must be centered in " + locale)
 		var heading = menu_items.find_child("SurvivalHeading", true, false) as Label
 		var heading_font = heading.get_theme_font("font")
 		var heading_width = heading_font.get_string_size(heading.text, HORIZONTAL_ALIGNMENT_LEFT, -1, heading.get_theme_font_size("font_size")).x
@@ -3680,11 +3694,12 @@ func reset_arena_player(index: int) -> void:
 	trajectory.clear()
 
 func show_offline_menu() -> void:
-	_clear_menu(tr("Play offline"), tr("No Internet connection or server needed"))
+	_clear_menu(tr("Play offline"), tr("No Internet connection or server needed"), true)
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	menu.custom_minimum_size.x = 1160
-	menu.offset_left = -580
-	menu.offset_right = 580
+	var offline_width = 1184.0
+	menu.custom_minimum_size.x = offline_width
+	menu.offset_left = -offline_width * 0.5
+	menu.offset_right = offline_width * 0.5
 	var map_row = HBoxContainer.new()
 	map_row.add_theme_constant_override("separation", 8)
 	menu_items.add_child(map_row)
@@ -3709,14 +3724,14 @@ func show_offline_menu() -> void:
 		resume.add_theme_font_size_override("font_size", 18)
 		resume.tooltip_text = tr("Continue Survival from wave %d") % checkpoint
 		resume.reparent(heading_row)
-	_choices([tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")], difficulty, func(index): difficulty = index; save_settings())
-	_choices([tr("Normal waves"), tr("Large waves"), tr("Huge waves")], wave_size, func(index): wave_size = index; save_settings())
+	_choices([tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")], difficulty, func(index): difficulty = index; save_settings(), true)
+	_choices([tr("Normal waves"), tr("Large waves"), tr("Huge waves")], wave_size, func(index): wave_size = index; save_settings(), true)
 	var survival = _button("START SURVIVAL", func(): match_mode = "survival"; start_game(1), "StartButton")
 	survival.add_theme_font_size_override("font_size", 40)
 	survival.custom_minimum_size.y = 76
 	var bots_start = menu_items.get_child_count()
 	var bot_rules = _credit_section(tr("Free for all with bots"), "")
-	_choices([tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")], bot_difficulty, func(index): bot_difficulty = index)
+	_choices([tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")], bot_difficulty, func(index): bot_difficulty = index, true)
 	var selectors = HBoxContainer.new()
 	selectors.add_theme_constant_override("separation", 24)
 	menu_items.add_child(selectors)
