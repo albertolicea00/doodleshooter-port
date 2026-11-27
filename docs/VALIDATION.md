@@ -220,6 +220,8 @@ A temporary graphical harness verified exclusive online selection, retained type
 
 Headless Godot tests verified the Play Online custom-map selector (`ONLINE_SELECTOR_PASS`) and Play Offline checkpoint button (`OFFLINE_CHECKPOINT_PASS`). `python3 tools/check.py` passed all stages after the `DoodleReplay` orientation fix (`player.rotation.y` / `player.camera.rotation.x`). Interactive controller feel, visual alignment, and live background replay smoothness were not verified by automated headless checks.
 
+The first-launch District background now uses a 32-second camera glide with the gameplay outline shader. A headless check verified that the camera path clears the map colliders, the first and last poses match, and saved recordings remain loadable. Desktop captures at 1280×720 were inspected for the framing and how the background reads behind the main menu.
+
 ## Normalized back buttons and desktop export presets (November 19)
 
 - **Back-button normalization (`native/scripts/game.gd`):** `_back_button` now defaults to `"BACK TO MAIN MENU"` (`RedButton`, red filled) when returning to the main menu. Submenus that return to an intermediate screen (`BACK TO PAUSE`, `BACK TO SETTINGS`, `BACK TO CONTROLS`, `BACK TO CREDITS`, `BACK TO LOBBY`, `BACK TO ONLINE`, `BACK TO LAN`) render the immediate back button on the left (`RedOutlineButton`) and `"BACK TO MAIN MENU"` (`RedButton`) on the right. `_find_back_button` matches `"RESUME"` or any `"BACK..."` label, and `run_smoke()` was updated to tap `"BACK TO MAIN MENU"`.

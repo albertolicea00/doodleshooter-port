@@ -52,6 +52,20 @@ static func effective_ink(index: int) -> Color:
 static func outline_ink() -> Color:
 	return effective_ink(0)
 
+static func add_camera_outline(camera: Camera3D) -> MeshInstance3D:
+	var post = MeshInstance3D.new()
+	var quad = QuadMesh.new()
+	quad.size = Vector2(2, 2)
+	post.mesh = quad
+	post.extra_cull_margin = 16384
+	post.position.z = -1
+	var material = ShaderMaterial.new()
+	material.shader = preload("res://shaders/outline.gdshader")
+	material.set_shader_parameter("ink", outline_ink())
+	post.material_override = material
+	camera.add_child(post)
+	return post
+
 static func refresh_visuals() -> void:
 	var paper = effective_paper()
 	for mat in materials.values():

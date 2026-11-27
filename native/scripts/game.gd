@@ -193,6 +193,7 @@ func _ready() -> void:
 	server_url = preferences.get_value("online", "url", "ws://10.0.2.2:8911" if OS.has_feature("android") else "ws://127.0.0.1:8911")
 	_setup_ui()
 	replay.attach(self)
+	replay.update_outline(outline_bold == 1)
 	show_main_menu()
 	if "--smoke" in OS.get_cmdline_user_args():
 		run_smoke.call_deferred()
@@ -211,12 +212,11 @@ func _load_menu_replay() -> void:
 	add_child(region)
 	level = DoodleLevel.new()
 	region.add_child(level)
-	replay.load_or_default(null, "district")
-	var bg_map = replay.playback_map if replay.playback_map in map_keys else "district"
-	level.load_map(bg_map, false)
-	if not FileAccess.file_exists(DoodleReplay.REPLAY_PATH):
-		replay.build_default(level, bg_map)
+	if not replay.load_recording() or not replay.playback_map in map_keys:
+		replay.build_default()
+	level.load_map(replay.playback_map, false)
 	replay.step_playback(0.0, true)
+	_apply_main_menu_backdrop()
 
 func _setup_inputs() -> void:
 	var keys = {"forward": KEY_W, "back": KEY_S, "left": KEY_A, "right": KEY_D, "jump": KEY_SPACE, "sprint": KEY_SHIFT, "dash": KEY_C, "grapple": KEY_Q, "reload": KEY_R, "slash": KEY_F, "grenade": KEY_G, "pause": KEY_ESCAPE, "scoreboard": KEY_TAB, "weapon_0": KEY_1, "weapon_1": KEY_2, "weapon_2": KEY_3, "weapon_3": KEY_4, "weapon_4": KEY_5, "weapon_5": KEY_6, "weapon_6": KEY_7, "smoke": KEY_H}
@@ -453,6 +453,7 @@ func _setup_ui() -> void:
 	apply_visual_settings()
 
 func _clear_menu(title: String, subtitle: String, centered: bool = false) -> void:
+	menu_backdrop.color.a = 0.55
 	center_menu_content = centered
 	menu.grow_horizontal = Control.GROW_DIRECTION_BOTH if centered else Control.GROW_DIRECTION_END
 	menu.remove_theme_stylebox_override("panel")
@@ -641,6 +642,10 @@ func _menu_gap(height: float) -> void:
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	menu_items.add_child(gap)
 
+func _apply_main_menu_backdrop() -> void:
+	if replay.using_default:
+		menu_backdrop.color.a = 0.38
+
 func show_main_menu() -> void:
 	stop_rumble()
 	if not "--smoke" in OS.get_cmdline_user_args():
@@ -653,6 +658,7 @@ func show_main_menu() -> void:
 	playing = false
 	paused = false
 	_clear_menu("DOODLE SHOOTER ", tr("native port, portable too"))
+	_apply_main_menu_backdrop()
 	menu_items.add_theme_constant_override("separation", 9)
 	var header = menu_items.get_child(0)
 	var heading = header.get_child(0)
@@ -981,6 +987,7 @@ func apply_visual_settings() -> void:
 	ReferenceAssets.paper_brightness = paper_brightness
 	ReferenceAssets.colorblind = colorblind_mode
 	ReferenceAssets.refresh_visuals()
+	replay.update_outline(outline_bold == 1)
 	var eff_paper = ReferenceAssets.effective_paper()
 	RenderingServer.set_default_clear_color(eff_paper)
 	if is_instance_valid(paper_rect):

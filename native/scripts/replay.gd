@@ -5,14 +5,18 @@ const SAMPLE_INTERVAL := 1.0 / 15.0
 const MAX_FRAMES := 450
 const MIN_SAVE_FRAMES := 45
 const REPLAY_PATH := "user://last_replay.json"
+const DEFAULT_MAP := "district"
+const DEFAULT_LOOP_SECONDS := 32.0
 
 var recorded: Array = []
-var playback_map: String = "district"
+var playback_map: String = DEFAULT_MAP
 var playback_frames: Array = []
 var sample_timer: float = 0.0
 var play_time: float = 0.0
+var using_default = false
 var puppets_root: Node3D
 var camera: Camera3D
+var outline: MeshInstance3D
 var puppet_pool: Dictionary = {}
 
 func attach(parent: Node3D) -> void:
@@ -28,6 +32,13 @@ func attach(parent: Node3D) -> void:
 	camera.near = 0.1
 	camera.far = 600.0
 	parent.add_child(camera)
+	outline = ReferenceAssets.add_camera_outline(camera)
+	outline.hide()
+
+func update_outline(bold: bool) -> void:
+	if is_instance_valid(outline):
+		outline.material_override.set_shader_parameter("ink", ReferenceAssets.outline_ink())
+		outline.material_override.set_shader_parameter("width_scale", 1.75 if bold else 1.0)
 
 func start_recording() -> void:
 	recorded.clear()
@@ -76,50 +87,57 @@ func save_recording(map_key: String, path: String = REPLAY_PATH) -> bool:
 	playback_map = map_key
 	playback_frames = recorded.duplicate(true)
 	play_time = 0.0
+	using_default = false
 	return true
 
-func load_or_default(level: Node3D, default_map: String = "district", path: String = REPLAY_PATH) -> void:
-	if FileAccess.file_exists(path):
-		var raw = FileAccess.get_file_as_string(path)
-		var parsed = JSON.parse_string(raw)
-		if parsed is Dictionary and parsed.get("frames", []) is Array and parsed["frames"].size() >= 10:
-			playback_map = str(parsed.get("map", default_map))
-			playback_frames = parsed["frames"]
-			play_time = 0.0
-			return
-	build_default(level, default_map)
+func load_recording(path: String = REPLAY_PATH) -> bool:
+	if not FileAccess.file_exists(path):
+		return false
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not parsed is Dictionary:
+		return false
+	var frames = parsed.get("frames", [])
+	if not frames is Array or frames.size() < 10:
+		return false
+	for frame in frames:
+		if not frame is Dictionary or not _valid_sample(frame.get("p"), 5):
+			return false
+		var actors = frame.get("e", [])
+		if not actors is Array:
+			return false
+		for actor in actors:
+			if not _valid_sample(actor, 4) or not actor[4] is String:
+				return false
+	playback_map = str(parsed.get("map", DEFAULT_MAP))
+	playback_frames = frames
+	play_time = 0.0
+	using_default = false
+	return true
 
-func build_default(level: Node3D, map_key: String = "district") -> void:
-	playback_map = map_key
+static func _valid_sample(sample: Variant, numeric_fields: int) -> bool:
+	if not sample is Array or sample.size() != 5:
+		return false
+	for i in numeric_fields:
+		var value = sample[i]
+		if not (value is int or value is float) or not is_finite(value):
+			return false
+	return true
+
+func build_default() -> void:
+	playback_map = DEFAULT_MAP
 	playback_frames.clear()
-	var center = Vector3(0, 4.5, 0)
-	if is_instance_valid(level):
-		center = level.start + Vector3(0, 3.0, 0)
-	var spawn_points: Array = []
-	if is_instance_valid(level) and level.spawns.size() > 0:
-		for i in mini(4, level.spawns.size()):
-			spawn_points.append(level.spawns[i])
-	else:
-		spawn_points = [center + Vector3(6, -1.5, -8), center + Vector3(-7, -1.5, -6), center + Vector3(4, -1.5, 7)]
-	var count = 180
-	for i in count:
-		var t = TAU * float(i) / float(count)
-		var eye = center + Vector3(sin(t) * 16.0, 9.5 + sin(t * 2.0) * 1.5, cos(t) * 16.0)
-		var look = center + Vector3(sin(t + 0.4) * 3.0, 0.5, cos(t + 0.4) * 3.0)
+	using_default = true
+	var intervals = roundi(DEFAULT_LOOP_SECONDS / SAMPLE_INTERVAL)
+	# Frame District's central tower beside the menu sheet as the camera glides past.
+	# Include the closing sample so interpolation reaches the first pose at the seam.
+	for i in intervals + 1:
+		var t = TAU * float(i) / intervals
+		var eye = Vector3(22.0 + sin(t) * 5.0, 17.0 + sin(t) * 1.2, 30.0 + cos(t) * 2.5)
+		var look = Vector3(-24.0 + sin(t) * 2.0, 6.0, 17.0)
 		var dir = (look - eye).normalized()
 		var yaw = atan2(-dir.x, -dir.z)
 		var pitch = asin(clampf(dir.y, -0.95, 0.95))
-		var actors: Array = []
-		for j in spawn_points.size():
-			var sp: Vector3 = spawn_points[j]
-			var phase = t * 2.0 + float(j) * 1.6
-			var pos = sp + Vector3(sin(phase) * 2.2, 0.0, cos(phase) * 2.2)
-			var kind = ["grunt", "rusher", "sniper", "grunt"][j % 4]
-			actors.append([pos.x, pos.y, pos.z, phase + PI * 0.5, kind])
-		playback_frames.append({
-			"p": [eye.x, eye.y, eye.z, yaw, pitch],
-			"e": actors
-		})
+		playback_frames.append({"p": [eye.x, eye.y, eye.z, yaw, pitch]})
 	play_time = 0.0
 
 func clear_puppets() -> void:
@@ -134,10 +152,12 @@ func step_playback(delta: float, active: bool) -> void:
 		return
 	if not active or playback_frames.size() < 2:
 		puppets_root.visible = false
+		outline.hide()
 		if camera.current:
 			camera.current = false
 		return
 	puppets_root.visible = true
+	outline.visible = using_default
 	camera.current = true
 	var total = float(playback_frames.size() - 1) * SAMPLE_INTERVAL
 	play_time = fposmod(play_time + delta, total)

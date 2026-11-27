@@ -84,19 +84,9 @@ func _ready() -> void:
 	camera.fov = 82
 	camera.near = 0.04
 	add_child(camera)
-	var post = MeshInstance3D.new()
-	var quad = QuadMesh.new()
-	quad.size = Vector2(2, 2)
-	post.mesh = quad
-	post.extra_cull_margin = 16384
-	post.position.z = -1
-	outline_material = ShaderMaterial.new()
-	outline_material.shader = preload("res://shaders/outline.gdshader")
-	outline_material.set_shader_parameter("ink", ReferenceAssets.outline_ink())
+	outline_material = ReferenceAssets.add_camera_outline(camera).material_override
 	if game != null:
 		outline_material.set_shader_parameter("width_scale", 1.75 if game.outline_bold == 1 else 1.0)
-	post.material_override = outline_material
-	camera.add_child(post)
 	rig = Node3D.new()
 	camera.add_child(rig)
 	weapons = ReferenceAssets.read_json("weapons")
