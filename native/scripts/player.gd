@@ -63,6 +63,7 @@ var block_cd = 0.0
 var previous_block = false
 var previous_ground = false
 var step_distance = 0.0
+var step_grace = 0.0
 var last_attack = "rifle"
 var blood_level = 0.0
 var resume_frames = 0
@@ -165,6 +166,7 @@ func ray(distance: float, direction: Vector3 = Vector3.ZERO, skip: Array[RID] = 
 func _physics_process(delta: float) -> void:
 	if not game.playing or not alive:
 		return
+	step_grace -= delta
 	var control = Input.get_vector("left", "right", "forward", "back")
 	if game.touch != null:
 		control += game.touch.move_vector
@@ -203,7 +205,7 @@ func _physics_process(delta: float) -> void:
 	last_hurt += delta
 	if last_hurt > 4.5 and hp < 120.0 and speed < 10.0:
 		hp = minf(120.0, hp + 11.0 * delta)
-	if is_on_floor():
+	if _grounded():
 		jumps = 1
 		coyote = 0.13
 		if not grapple_active and stamina_pause <= 0:
@@ -215,12 +217,12 @@ func _physics_process(delta: float) -> void:
 			stamina = minf(1.0, stamina + STAMINA_AIR * delta)
 	var horizontal = Vector3(velocity.x, 0, velocity.z)
 	if slide_time <= 0:
-		if is_on_floor():
+		if _grounded():
 			horizontal *= maxf(0, 1 - 8.0 * delta)
 		if wish.length() > 0:
 			var direction = wish.normalized()
-			var cap = speed if is_on_floor() else 7.5
-			var add = minf(cap * control.length() - horizontal.dot(direction), (140.0 if is_on_floor() else 36.0) * delta)
+			var cap = speed if _grounded() else 7.5
+			var add = minf(cap * control.length() - horizontal.dot(direction), (140.0 if _grounded() else 36.0) * delta)
 			if add > 0:
 				horizontal += direction * add
 	else:
@@ -236,7 +238,7 @@ func _physics_process(delta: float) -> void:
 		if grapple_active:
 			detach_grapple(true)
 			jump_buffer = 0
-		elif is_on_floor() or coyote > 0:
+		elif _grounded() or coyote > 0:
 			velocity.y = 9.6
 			coyote = 0
 			jump_buffer = 0
@@ -255,7 +257,7 @@ func _physics_process(delta: float) -> void:
 			game.sound.play_effect("jump")
 	if allow_menu_buttons and Input.is_action_just_pressed("dash") and dash_cd <= 0:
 		var direction = wish.normalized() if wish.length() > 0.1 else -global_basis.z
-		if is_on_floor():
+		if _grounded():
 			if horizontal.length() > 4.0:
 				velocity += direction * clampf(12.8 - horizontal.length(), 0, 4.5)
 				slide_time = 0.9
@@ -268,7 +270,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = maxf(velocity.y, 2.0)
 			game.sound.play_effect("dash")
 			game.rumble(0.3, 0.6, 70)
-	var crouched = slide_time > 0 and is_on_floor()
+	var crouched = slide_time > 0 and _grounded()
 	if not crouched and capsule.shape.height < 1.75:
 		var check = PhysicsShapeQueryParameters3D.new()
 		var full = CapsuleShape3D.new()
@@ -282,21 +284,24 @@ func _physics_process(delta: float) -> void:
 	capsule.position.y = capsule.shape.height * 0.5
 	camera.position.y = move_toward(camera.position.y, 0.88 if crouched else 1.6, delta * 7)
 	update_grapple(delta, control)
-	if not is_on_floor() and control.y < -0.3 and mantle_cd <= 0 and not grapple_active:
+	if not _grounded() and control.y < -0.3 and mantle_cd <= 0 and not grapple_active:
 		try_mantle()
 	velocity = velocity.limit_length(48.0)
-	if is_on_floor():
+	var was_grounded = _grounded()
+	if was_grounded:
 		step_up(delta)
 	var landing_speed = velocity.y
 	move_and_slide()
-	if is_on_floor() and not previous_ground:
+	if was_grounded and not is_on_floor() and velocity.y <= 0.0:
+		step_down()
+	if _grounded() and not previous_ground:
 		game.sound.play_effect("land")
 		game.shake = minf(1.0, absf(landing_speed) / 30.0)
 		if absf(landing_speed) > 12.0:
 			game.rumble(clampf(absf(landing_speed) / 30.0 * 0.4, 0.1, 0.45), 0.2, 80)
-	previous_ground = is_on_floor()
+	previous_ground = _grounded()
 	step_distance += Vector2(velocity.x, velocity.z).length() * delta
-	if is_on_floor() and step_distance > 2.0:
+	if _grounded() and step_distance > 2.0:
 		step_distance = 0
 		game.sound.play_effect("footstep")
 	if position.y < -12.0:
@@ -570,8 +575,34 @@ func step_up(delta: float) -> void:
 	if test_move(global_transform, Vector3.UP * 0.55):
 		return
 	var raised = global_transform.translated(Vector3.UP * 0.55)
-	if not test_move(raised, horizontal):
-		global_position.y += 0.55
+	# Probe far enough ahead that the capsule's rounded base sits over the tread, not its edge.
+	# Shallow treads shorten the probe to the room left before the next riser.
+	var probe = horizontal.normalized() * maxf(horizontal.length(), 0.4)
+	var blocked = KinematicCollision3D.new()
+	if test_move(raised, probe, blocked):
+		probe = blocked.get_travel()
+		if probe.length() < horizontal.length():
+			return
+	# Like the original, settle back down onto the tread instead of keeping the full lift.
+	var hit = KinematicCollision3D.new()
+	if not test_move(raised.translated(probe), Vector3.DOWN * 0.55, hit) or hit.get_normal().y < 0.1:
+		return
+	var rise = 0.55 + hit.get_travel().y
+	if rise > 0.01:
+		global_position.y += rise
+		step_grace = 0.12
+
+# Like the original, stay on stairs and short drops instead of launching off each tread edge.
+func step_down() -> void:
+	var hit = KinematicCollision3D.new()
+	if test_move(global_transform, Vector3.DOWN * 0.55, hit) and hit.get_normal().y > 0.1:
+		global_position.y += hit.get_travel().y
+		velocity.y = 0.0
+		step_grace = 0.12
+
+# The rounded capsule base can leave the floor for a frame or two after a step.
+func _grounded() -> bool:
+	return is_on_floor() or (step_grace > 0.0 and velocity.y <= 0.0)
 
 func try_mantle() -> void:
 	var forward = -global_basis.z

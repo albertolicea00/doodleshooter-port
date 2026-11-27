@@ -234,6 +234,14 @@ The `Game speed` selector was inspected at 1280×720 on macOS. A windowed run ca
 
 The experimental offline `Game speed` control in the Survival and bot-match pause menus offers 1×, 1.5×, 2×, 2.5×, 3×, 4×, and 5×, shared with the recorder's selector. The headless smoke run verifies that resuming a bot match at 2.5× scales `Engine.time_scale` and the physics tick rate, and that pausing restores normal timing. A windowed 1280×720 macOS capture of the Survival pause menu verified that the `Game speed` label sits above the seven choices and that the row, `CONTROLS` / `SETTINGS`, and the compact red-outlined `MAIN MENU` button fit inside the menu card. The recorder map picker with the same row and phone-width layouts have not been visually inspected. `python3 tools/check.py` passed.
 
+## Stair step-up and step-down (November 27)
+
+Step-up previously lifted the player a fixed 0.55 m whenever a riser blocked them, regardless of its height. On 0.25 m stairs the player then floated off the ground for four to nine physics frames per step, fell back, and briefly took the 7.5 m/s air speed cap instead of the 6.6 m/s walking speed. Walking down stairs, the player lost the floor after two treads and flew about 2 m through the air.
+
+`native/scripts/player.gd` now follows the original's `_moveHoriz` / `_moveBodyStep` behavior: it lifts by at most 0.55 m, probes ahead (shortened when the next riser is close), and settles onto the tread, so each step rises by the actual riser height. After moving, a player who was grounded and is now airborne with no upward velocity snaps down by up to 0.55 m. A 0.12-second grace period counts as grounded while the capsule's rounded base rests on a tread edge.
+
+`tests/stairs.gd`, now part of `python3 tools/check.py`, walks up and down 10-step box stairs with risers and treads of 0.25×0.4, 0.4×0.3, and 0.15×0.3 m. It checks that the player stays grounded, stays under 6.7 m/s, and ends on the top and bottom treads. The previous code fails this test. The capsule can still climb risers of about 0.6 m, slightly above the original's 0.55 m box step; this was already true before the change. Short drops of up to 0.55 m now snap down rather than falling, as in the original. Map stairs and the feel of the camera on stairs were not checked on screen.
+
 ## Normalized back buttons and desktop export presets (November 19)
 
 - **Back-button normalization (`native/scripts/game.gd`):** `_back_button` now defaults to `"BACK TO MAIN MENU"` (`RedButton`, red filled) when returning to the main menu. Submenus that return to an intermediate screen (`BACK TO PAUSE`, `BACK TO SETTINGS`, `BACK TO CONTROLS`, `BACK TO CREDITS`, `BACK TO LOBBY`, `BACK TO ONLINE`, `BACK TO LAN`) render the immediate back button on the left (`RedOutlineButton`) and `"BACK TO MAIN MENU"` (`RedButton`) on the right. `_find_back_button` matches `"RESUME"` or any `"BACK..."` label, and `run_smoke()` was updated to tap `"BACK TO MAIN MENU"`.

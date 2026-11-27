@@ -42,9 +42,11 @@ def run(extra, tag):
         raise SystemExit('FAIL: smoke did not reach both completion markers')
     if tag == 'jungle' and 'JUNGLE PASS:' not in output:
         raise SystemExit('FAIL: Jungle check did not reach its completion marker')
+    if tag == 'stairs' and 'STAIRS PASS:' not in output:
+        raise SystemExit('FAIL: stairs check did not reach its completion marker')
     if tag == 'lan' and 'LAN PASS:' not in output:
         raise SystemExit('FAIL: native LAN test did not reach its completion marker')
-    print('\n'.join(line for line in output.splitlines() if line.startswith(('SMOKE PASS:', 'LAN PASS:', 'JUNGLE PASS:'))) or f'PASS: {tag}')
+    print('\n'.join(line for line in output.splitlines() if line.startswith(('SMOKE PASS:', 'LAN PASS:', 'JUNGLE PASS:', 'STAIRS PASS:'))) or f'PASS: {tag}')
     print(f'Log: {logfile}')
 
 run(['--editor', '--import'], 'import')
@@ -53,6 +55,7 @@ try:
 finally:
     (ROOT / 'native/.smoke-progress.cfg').unlink(missing_ok=True)
 run(['--script', str(ROOT / 'tests/jungle.gd')], 'jungle')
+run(['--script', str(ROOT / 'tests/stairs.gd')], 'stairs')
 run(['--script', str(ROOT / 'tests/native_lan.gd')], 'lan')
 
 def run_lan_game():
