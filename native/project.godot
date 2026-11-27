@@ -32,3 +32,6 @@ pointing/emulate_touch_from_mouse=false
 pointing/emulate_mouse_from_touch=true
 sensors/enable_gyroscope=true
 sensors/enable_accelerometer=true
+
+[internationalization]
+locale/translations=PackedStringArray("res://i18n/es.po")

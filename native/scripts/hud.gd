@@ -69,7 +69,7 @@ func _draw() -> void:
 	# Health: label, hatched bar and number; everything turns red when low.
 	var low = player.hp < 36
 	var tone = red_tone if low else ink_tone
-	var x = left + write(Vector2(left, y + 27), "Health", 26, tone) + 10
+	var x = left + write(Vector2(left, y + 27), tr("Health"), 26, tone) + 10
 	bar(Rect2(x, y + 9, 170 if touch_mode else 210, 16), player.hp / 120.0, tone)
 	write(Vector2(x + (180 if touch_mode else 220), y + 27), str(ceili(player.hp)), 26, tone)
 	# Ammunition: big magazine count, reserve, grenades, then one tally mark per round.
@@ -77,12 +77,12 @@ func _draw() -> void:
 	y += 36 + big * 0.86
 	x = left
 	if katana:
-		x += write(Vector2(x, y), "Katana", 34 if touch_mode else 42, ink_tone) + 8
+		x += write(Vector2(x, y), tr("Katana"), 34 if touch_mode else 42, ink_tone) + 8
 	else:
 		x += write(Vector2(x, y), str(magazine), big, ink_tone) + 4
 		x += write(Vector2(x, y), "/" + str(player.reserves[player.weapon_index]), 28, Color(ink_tone, 0.8)) + 4
 	if player.reload_time > 0:
-		x += write(Vector2(x, y), " reloading…", 22, red_tone)
+		x += write(Vector2(x, y), tr(" reloading…"), 22, red_tone)
 	x += 12
 	for i in player.grenades:
 		draw_arc(Vector2(x + 7, y - 9), 7, 0, TAU, 16, ink_tone, 2.5, true)
@@ -104,7 +104,7 @@ func _draw() -> void:
 		draw_line(Vector2(x + 2 + slant, y), Vector2(x + 2 - slant, y + 20), Color(ink_tone, 0.9), 4, true)
 		x += 17 if i % 5 == 4 else 7
 	# Score and combo: top-left on desktop; on touch, centred at the top above the grenade buttons.
-	var fps = "%d fps" % Engine.get_frames_per_second() if game.show_fps else ""
+	var fps = tr("%d fps") % Engine.get_frames_per_second() if game.show_fps else ""
 	if touch_mode:
 		var line = score_text + ("   " + combo_text if combo_text != "" else "")
 		var line_width = font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
@@ -148,7 +148,7 @@ func _draw() -> void:
 func _draw_slots(player: DoodlePlayer, right: float, bottom: float) -> void:
 	var ink_tone = _ink_color()
 	var red_tone = _alert_color()
-	write(Vector2(right, bottom), DoodleTouchControls.NAMES[player.weapon_index], 36, ink_tone, true)
+	write(Vector2(right, bottom), tr(DoodleTouchControls.NAMES[player.weapon_index]), 36, ink_tone, true)
 	var y = bottom - 44 - 28 * (player.weapon_names.size() - 1)
 	for i in player.weapon_names.size():
 		var active = i == player.weapon_index
@@ -157,7 +157,7 @@ func _draw_slots(player: DoodlePlayer, right: float, bottom: float) -> void:
 		var ammo = "" if i == 3 else "%d/%d" % [player.magazines[i], player.reserves[i]]
 		write(Vector2(right, y), ammo, 16, Color(tone, tone.a * 0.8), true)
 		var name_size = 24 if active else 20
-		var name_width = write(Vector2(right - 62, y), DoodleTouchControls.NAMES[i], name_size, tone, true)
+		var name_width = write(Vector2(right - 62, y), tr(DoodleTouchControls.NAMES[i]), name_size, tone, true)
 		var number = Vector2(right - 62 - name_width - 26, y)
 		write(number + Vector2(5, -1), str(i + 1), 15, Color(tone, tone.a * 0.8))
 		DoodlePen.sketch_box(self, Rect2(number + Vector2(0, -16), Vector2(18, 19)), DoodlePen.CLEAR, Color(tone, tone.a * 0.8), 1.5)
@@ -172,12 +172,12 @@ func _draw_focus(player: DoodlePlayer, x: float) -> void:
 	var ready = player.katana_charge >= 1.0
 	var tone = red_tone if ready else ink_tone
 	var tube = Rect2(x, size.y * 0.5 - 84, 26, 168)
-	write(Vector2(x - 12, tube.position.y - 8), "Katana", 17, Color(ink_tone, 0.8))
+	write(Vector2(x - 12, tube.position.y - 8), tr("Katana"), 17, Color(ink_tone, 0.8))
 	var filled = tube.size.y * clampf(player.katana_charge, 0, 1)
 	DoodlePen.hatch(self, Rect2(tube.position.x, tube.end.y - filled, tube.size.x, filled), tone, 7.0, 3.0)
 	DoodlePen.sketch_box(self, tube, DoodlePen.CLEAR, tone, 3.0, -1.5)
 	if ready:
-		write(Vector2(x - 8, tube.end.y + 20), "Ready", 15, red_tone)
+		write(Vector2(x - 8, tube.end.y + 20), tr("Ready"), 15, red_tone)
 
 func _draw_crosshair(player: DoodlePlayer, center: Vector2) -> void:
 	var ink_tone = _ink_color()

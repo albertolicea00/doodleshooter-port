@@ -50,6 +50,8 @@ const PREVIEW_SIZE = 160
 const REPO_URL = "https://github.com/albertolicea00/doodleshooter-port"
 const RELEASES_PAGE_URL = "https://github.com/albertolicea00/doodleshooter-port/releases"
 const RELEASES_API_URL = "https://api.github.com/repos/albertolicea00/doodleshooter-port/releases?per_page=8"
+const LANGUAGES = ["en", "es"]
+const LANGUAGE_NAMES = ["English", "Español"]
 var update_request: HTTPRequest
 var update_dots_timer: Timer
 var show_fps = true
@@ -158,6 +160,8 @@ func _ready() -> void:
 	capture_mode = "--capture" in OS.get_cmdline_user_args()
 	_setup_inputs()
 	preferences.load(save_path)
+	var saved_language: String = preferences.get_value("ui", "language", "en")
+	TranslationServer.set_locale(saved_language if saved_language in LANGUAGES else "en")
 	best = int(preferences.get_value("progress", "best", 0))
 	checkpoint = int(preferences.get_value("progress", "checkpoint", 0))
 	enemy_stats = ReferenceAssets.read_json("enemy_stats")
@@ -486,8 +490,8 @@ func _refresh_menu_hint(show_back_note: bool, has_panel: bool = true) -> void:
 		return
 	var red_hex = DoodlePen.RED.to_html(false)
 	var sub_hex = Color(DoodlePen.INK, 0.62).to_html(true)
-	var top_line = "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back" % [red_hex, red_hex]
-	var second_line = "\n[color=#%s][i]The Back button is at the very bottom[/i][/color]" % sub_hex if show_back_note else ""
+	var top_line = tr("[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back") % [red_hex, red_hex]
+	var second_line = tr("\n[color=#%s][i]The Back button is at the very bottom[/i][/color]") % sub_hex if show_back_note else ""
 	menu_hint.text = "[center]%s%s[/center]" % [top_line, second_line]
 	if menu_pad != null:
 		menu_pad.add_theme_constant_override("margin_top", (6 if show_back_note else 0) if has_panel else (40 if show_back_note else 28))
@@ -498,7 +502,7 @@ func _fit_menu() -> void:
 	_prepare_menu_controls(menu_items)
 	var back_btn = _find_back_button(menu_items)
 	var has_panel = menu.get_theme_stylebox("panel").get_minimum_size().y > 0.0
-	_refresh_menu_hint(back_btn != null and back_btn.text.begins_with("BACK"), has_panel)
+	_refresh_menu_hint(back_btn != null and str(back_btn.get_meta("menu_label", "")).begins_with("BACK"), has_panel)
 	menu_scroll.follow_focus = false
 	var current_focus = get_viewport().gui_get_focus_owner()
 	if current_focus == null or not menu_items.is_ancestor_of(current_focus):
@@ -552,7 +556,8 @@ func _first_focusable(node: Node) -> Control:
 
 func _button(text: String, callback: Callable, variation: String = "") -> Button:
 	var button = Button.new()
-	button.text = text
+	button.text = tr(text)
+	button.set_meta("menu_label", text)
 	button.theme_type_variation = variation
 	button.custom_minimum_size.y = 52
 	# Let the scroll container cancel the press when a tap becomes a swipe.
@@ -573,7 +578,7 @@ func _info_row() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 # Side-by-side outlined choices; the selected one is filled with ink (.mapbtn.on).
-func _choices(labels: Array, selected: int, callback: Callable) -> void:
+func _choices(labels: Array, selected: int, callback: Callable) -> HBoxContainer:
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	var group = ButtonGroup.new()
@@ -590,13 +595,14 @@ func _choices(labels: Array, selected: int, callback: Callable) -> void:
 		button.pressed.connect(callback.bind(i))
 		row.add_child(button)
 	menu_items.add_child(row)
+	return row
 
 func _toggle(text: String, value: bool, callback: Callable) -> void:
 	var button = _button("", func(): pass, "AltButton")
 	button.toggle_mode = true
 	button.button_pressed = value
-	button.text = text + (": on" if value else ": off")
-	button.toggled.connect(func(on): button.text = text + (": on" if on else ": off"); callback.call(on))
+	button.text = text + (tr(": on") if value else tr(": off"))
+	button.toggled.connect(func(on): button.text = text + (tr(": on") if on else tr(": off")); callback.call(on))
 
 func _close_network() -> void:
 	if network != null:
@@ -624,7 +630,7 @@ func show_main_menu() -> void:
 	_clear_remote_players()
 	playing = false
 	paused = false
-	_clear_menu("DOODLE SHOOTER ", "native port, portable too")
+	_clear_menu("DOODLE SHOOTER ", tr("native port, portable too"))
 	menu_items.add_theme_constant_override("separation", 9)
 	var header = menu_items.get_child(0)
 	var heading = header.get_child(0)
@@ -656,7 +662,7 @@ func show_main_menu() -> void:
 	foot.custom_minimum_size.x = 480
 	foot.add_theme_font_size_override("normal_font_size", 18)
 	foot.modulate.a = 0.85
-	foot.text = "[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]" % ProjectSettings.get_setting("application/config/version")
+	foot.text = tr("[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]") % ProjectSettings.get_setting("application/config/version")
 	foot.meta_clicked.connect(func(meta): OS.shell_open(str(meta)))
 	header.add_child(foot)
 	var updates_pad = MarginContainer.new()
@@ -707,12 +713,12 @@ func show_main_menu() -> void:
 		bottom_row.custom_minimum_size.x = 460
 		bottom_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		menu_items.add_child(bottom_row)
-		var fs_btn = _button("FULLSCREEN: ON" if fullscreen else "FULLSCREEN: OFF", func(): pass, "AltButton")
+		var fs_btn = _button(tr("FULLSCREEN: ON") if fullscreen else tr("FULLSCREEN: OFF"), func(): pass, "AltButton")
 		fs_btn.custom_minimum_size.y = 42
 		fs_btn.toggle_mode = true
 		fs_btn.button_pressed = fullscreen
 		fs_btn.toggled.connect(func(on: bool):
-			fs_btn.text = "FULLSCREEN: ON" if on else "FULLSCREEN: OFF"
+			fs_btn.text = tr("FULLSCREEN: ON") if on else tr("FULLSCREEN: OFF")
 			apply_fullscreen(on)
 			save_settings())
 		fs_btn.reparent(bottom_row)
@@ -785,7 +791,7 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable, ex
 		picture.resized.connect(func(): preview_material.set_shader_parameter("preview_size", picture.size))
 		column.add_child(picture)
 		var label = Label.new()
-		label.text = info.name
+		label.text = tr(info.name)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.add_theme_font_size_override("font_size", 16 if mini else 20)
 		label.add_theme_color_override("font_color", DoodlePen.PAPER if chosen else DoodlePen.INK)
@@ -798,7 +804,7 @@ func _populate_map_cards(container: Container, mini: bool, on_pick: Callable, ex
 
 # Square cards with a rendered preview of each map.
 func show_map_menu(back: Callable, pick: Callable = Callable(), excluded_key: String = "", selected_key: String = "__map_key__") -> void:
-	_clear_menu("Choose a custom map" if excluded_key != "" else "Choose a map", "District, Jungle and Mexico are original · the rest are new in this port")
+	_clear_menu(tr("Choose a custom map") if excluded_key != "" else tr("Choose a map"), tr("District, Jungle and Mexico are original · the rest are new in this port"))
 	if excluded_key != "":
 		menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var grid = GridContainer.new()
@@ -861,7 +867,7 @@ func _back_button(callback: Callable, label: String = "BACK TO MAIN MENU") -> vo
 	main_btn.reparent(row)
 
 func show_settings() -> void:
-	_clear_menu("Settings", "Choose how you want to play")
+	_clear_menu(tr("Settings"), tr("Choose how you want to play"))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
@@ -871,32 +877,50 @@ func show_settings() -> void:
 	top_row.add_theme_constant_override("separation", 16)
 	menu_items.add_child(top_row)
 	var access_button = _button("ACCESSIBILITY", show_accessibility_settings)
-	access_button.custom_minimum_size.x = 240
+	access_button.custom_minimum_size.x = 210
 	access_button.reparent(top_row)
+	var language_button = _button("LANGUAGE", show_language_settings)
+	language_button.custom_minimum_size.x = 180
+	language_button.reparent(top_row)
 	var touch_button = _button("TOUCH & AIMING", show_touch_settings)
-	touch_button.custom_minimum_size.x = 250
+	touch_button.custom_minimum_size.x = 230
 	touch_button.reparent(top_row)
 	var controller_button = _button("CONTROLLER & MOTION", show_controller_settings)
-	controller_button.custom_minimum_size.x = 270
+	controller_button.custom_minimum_size.x = 250
 	controller_button.reparent(top_row)
 	var start = menu_items.get_child_count()
-	_credit_section("Sound", "")
-	_slider("Music volume", sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
-	_slider("Effects volume", sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
-	_toggle("Sound effects", sound.enabled, func(value): sound.enabled = value; save_settings())
-	_toggle("Original soundtrack", sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
+	_credit_section(tr("Sound"), "")
+	_slider(tr("Music volume"), sound.music_volume, 0, 1, func(value): sound.music_volume = value; save_settings())
+	_slider(tr("Effects volume"), sound.effects_volume, 0, 1, func(value): sound.effects_volume = value; save_settings())
+	_toggle(tr("Sound effects"), sound.enabled, func(value): sound.enabled = value; save_settings())
+	_toggle(tr("Original soundtrack"), sound.music_enabled, func(value): sound.music_enabled = value; save_settings())
 	var split = menu_items.get_child_count()
-	_credit_section("Graphics detail", "")
-	_choices(["Low", "Medium", "High"], quality, func(index): apply_quality(index); save_settings())
-	_credit_section("Shading", "")
-	_choices(["Original hatching", "Coloured pencil"], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
-	_toggle("Frame rate counter", show_fps, func(value): show_fps = value; save_settings())
-	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
+	_credit_section(tr("Graphics detail"), "")
+	_choices([tr("Low"), tr("Medium"), tr("High")], quality, func(index): apply_quality(index); save_settings())
+	_credit_section(tr("Shading"), "")
+	_choices([tr("Original hatching"), tr("Coloured pencil")], shading, func(index): shading = index; ReferenceAssets.set_style(float(index)); save_settings())
+	_toggle(tr("Frame rate counter"), show_fps, func(value): show_fps = value; save_settings())
+	_toggle(tr("Dizzy screen sway"), screen_effects, func(value): screen_effects = value; save_settings())
 	_card_wrap(start, split)
 	if paused:
 		_back_button(pause_menu, "BACK TO PAUSE")
 	else:
 		_back_button(show_main_menu)
+
+func show_language_settings() -> void:
+	_clear_menu(tr("Language"), tr("Choose the language for menus and gameplay."))
+	var start = menu_items.get_child_count()
+	_credit_section("", tr("Language selection is a port addition."))
+	var selected = LANGUAGES.find(TranslationServer.get_locale())
+	var choices = _choices(LANGUAGE_NAMES, selected, func(index: int):
+		var locale: String = LANGUAGES[index]
+		TranslationServer.set_locale(locale)
+		preferences.set_value("ui", "language", locale)
+		preferences.save(save_path)
+		show_language_settings.call_deferred())
+	_card_wrap(start)
+	_back_button(show_settings, "BACK TO SETTINGS")
+	choices.get_child(selected).grab_focus()
 
 # Low renders the scene at 70% size with straight pen strokes and no edge
 # smoothing; Medium adds the hand-drawn stroke waver and 2x smoothing; High
@@ -935,26 +959,26 @@ func apply_visual_settings() -> void:
 		hud.queue_redraw()
 
 func show_accessibility_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu("Accessibility", "Visual comfort, dark paper, motion reduction and readability")
+	_clear_menu(tr("Accessibility"), tr("Visual comfort, dark paper, motion reduction and readability"))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
 	var start = menu_items.get_child_count()
-	_credit_section("Paper & brightness", "Lower brightness or choose Dark board to rest your eyes; inks adapt automatically.")
-	_choices(["Original", "Warm sepia", "Soft slate", "Dark board"], paper_theme, func(index): paper_theme = index; apply_visual_settings(); save_settings())
-	_slider("Paper brightness", paper_brightness, 0.15, 1.0, func(value): paper_brightness = value; apply_visual_settings(); save_settings())
-	_slider("Edge shadow", edge_shadow, 0.0, 1.0, func(value): edge_shadow = value; apply_visual_settings(); save_settings())
-	_toggle("Ruled notebook lines", paper_lines, func(value): paper_lines = value; apply_visual_settings(); save_settings())
-	_toggle("Colorblind-safe enemy & pickup inks", colorblind_mode, func(value): colorblind_mode = value; apply_visual_settings(); save_settings())
+	_credit_section(tr("Paper & brightness"), tr("Lower brightness or choose Dark board to rest your eyes; inks adapt automatically."))
+	_choices([tr("Original"), tr("Warm sepia"), tr("Soft slate"), tr("Dark board")], paper_theme, func(index): paper_theme = index; apply_visual_settings(); save_settings())
+	_slider(tr("Paper brightness"), paper_brightness, 0.15, 1.0, func(value): paper_brightness = value; apply_visual_settings(); save_settings())
+	_slider(tr("Edge shadow"), edge_shadow, 0.0, 1.0, func(value): edge_shadow = value; apply_visual_settings(); save_settings())
+	_toggle(tr("Ruled notebook lines"), paper_lines, func(value): paper_lines = value; apply_visual_settings(); save_settings())
+	_toggle(tr("Colorblind-safe enemy & pickup inks"), colorblind_mode, func(value): colorblind_mode = value; apply_visual_settings(); save_settings())
 	var split = menu_items.get_child_count()
-	_credit_section("Motion & flashes", "")
-	_slider("Screen shake", shake_scale, 0.0, 1.0, func(value): shake_scale = value; save_settings())
-	_slider("Damage flash", flash_scale, 0.0, 1.0, func(value): flash_scale = value; save_settings())
-	_toggle("Dizzy screen sway", screen_effects, func(value): screen_effects = value; save_settings())
-	_credit_section("Readability", "")
-	_choices(["Normal crosshair", "Large", "High contrast"], crosshair_style, func(index): crosshair_style = index; apply_visual_settings(); save_settings())
-	_choices(["Normal 3D outlines", "Bold 3D outlines"], outline_bold, func(index): outline_bold = index; apply_visual_settings(); save_settings())
+	_credit_section(tr("Motion & flashes"), "")
+	_slider(tr("Screen shake"), shake_scale, 0.0, 1.0, func(value): shake_scale = value; save_settings())
+	_slider(tr("Damage flash"), flash_scale, 0.0, 1.0, func(value): flash_scale = value; save_settings())
+	_toggle(tr("Dizzy screen sway"), screen_effects, func(value): screen_effects = value; save_settings())
+	_credit_section(tr("Readability"), "")
+	_choices([tr("Normal crosshair"), tr("Large"), tr("High contrast")], crosshair_style, func(index): crosshair_style = index; apply_visual_settings(); save_settings())
+	_choices([tr("Normal 3D outlines"), tr("Bold 3D outlines")], outline_bold, func(index): outline_bold = index; apply_visual_settings(); save_settings())
 	_card_wrap(start, split)
 	if return_to.is_valid():
 		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
@@ -967,12 +991,12 @@ func apply_fullscreen(enabled: bool) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 
 func show_controls(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu("Controls", "")
+	_clear_menu(tr("Controls"), "")
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
-	var touch_card = _controls_column(menu_items, "TOUCH", [
+	var touch_card = _controls_column(menu_items, tr("TOUCH"), [
 		"{Left thumb} move and sprint · drag up to the runner marker to keep running   {Drag elsewhere} look, even while firing",
 		"{SLIDE} becomes {DASH} in the air   {Weapon bar} tap a weapon to switch · tap it again or use reload to reload"
 	])
@@ -996,7 +1020,7 @@ func show_controls(return_to: Callable = Callable(), return_label: String = "") 
 	var cards = HBoxContainer.new()
 	cards.add_theme_constant_override("separation", 24)
 	menu_items.add_child(cards)
-	_controls_column(cards, "MOUSE + KEYBOARD", [
+	_controls_column(cards, tr("MOUSE + KEYBOARD"), [
 		"{WASD} move   {Mouse} look   {Shift} sprint",
 		"{LMB} fire / slash   {RMB} aim / block",
 		"{Space} jump · press against a wall to wall jump",
@@ -1058,24 +1082,36 @@ func _controls_column(parent: Container, title: String, lines: Array[String]) ->
 	column.add_child(legend)
 	return column
 
-func _controls_text(lines: Array[String]) -> String:
+func _controls_text(lines: Array[String], bindings: Dictionary = {}) -> String:
 	# Braces mark inputs, keeping the actions in the default blue ink.
-	var text = "\n".join(lines).replace("{", "[color=#%s]" % DoodlePen.RED.to_html(false)).replace("}", "[/color]")
+	var localized: PackedStringArray = []
+	for source in lines:
+		if not bindings.is_empty() and source.begins_with("{Touchpad swipe}"):
+			continue
+		var line = tr(source)
+		for binding in bindings:
+			line = line.replace(binding, bindings[binding])
+		# Translate button and stick names after swapping the controller bindings.
+		var marker_start = line.find("{")
+		while marker_start >= 0:
+			var marker_end = line.find("}", marker_start + 1)
+			if marker_end < 0:
+				break
+			var marker = line.substr(marker_start, marker_end - marker_start + 1)
+			var localized_marker = tr(marker)
+			line = line.erase(marker_start, marker.length()).insert(marker_start, localized_marker)
+			marker_start = line.find("{", marker_start + localized_marker.length())
+		localized.append(line)
+	var text = "\n".join(localized).replace("{", "[color=#%s]" % DoodlePen.RED.to_html(false)).replace("}", "[/color]")
 	var symbols = {"□": "square", "△": "triangle", "○": "circle", "×": "cross"}
 	for symbol in symbols:
 		text = text.replace(symbol, "[img=22x22]res://assets/ui/controller-%s.svg[/img]" % symbols[symbol])
 	return text
 
 func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void:
-	var xbox_lines: Array[String] = []
 	var bindings = {"{L stick}": "{LS}", "{R stick / Gyro}": "{RS / Gyro}", "{L3}": "{LS click}", "{R2}": "{RT}", "{L2}": "{LT}", "{×}": "{A}", "{○}": "{B}", "{L1}": "{LB}", "{L2 + R2}": "{LT + RT}", "{R1}": "{RB}", "{□}": "{X}", "{△}": "{Y}", "{R3 / D-pad Left}": "{RS click / D-pad Left}", "{Touchpad click / Create}": "{View}", "{Options}": "{Menu}"}
-	for line in ps5_lines:
-		if line.begins_with("{Touchpad swipe}"):
-			continue
-		var translated = line
-		for binding in bindings:
-			translated = translated.replace(binding, bindings[binding])
-		xbox_lines.append(translated)
+	var ps_text = _controls_text(ps5_lines)
+	var xbox_text = _controls_text(ps5_lines, bindings)
 	var legend = column.get_child(1) as RichTextLabel
 	column.get_child(0).free()
 	var picker = HBoxContainer.new()
@@ -1090,7 +1126,7 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 	var buttons: Array[Button] = []
 	for index in 2:
 		var button = Button.new()
-		button.text = ["PS CONTROLLER", "XBOX CONTROLLER"][index]
+		button.text = [tr("PS CONTROLLER"), tr("XBOX CONTROLLER")][index]
 		button.flat = true
 		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 			button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
@@ -1106,7 +1142,7 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 		button.button_pressed = controls_xbox == (index == 1)
 		button.pressed.connect(func():
 			controls_xbox = index == 1
-			legend.text = _controls_text(xbox_lines if controls_xbox else ps5_lines)
+			legend.text = xbox_text if controls_xbox else ps_text
 			rule.queue_redraw()
 			_fit_menu.call_deferred())
 		button.focus_entered.connect(rule.queue_redraw)
@@ -1118,34 +1154,34 @@ func _controller_picker(column: VBoxContainer, ps5_lines: Array[String]) -> void
 		for button in buttons:
 			if button.button_pressed or button.has_focus():
 				rule.draw_line(Vector2(button.position.x + 10, 1.0), Vector2(button.position.x + button.size.x - 10, 1.0), DoodlePen.INK, 2.0, true))
-	legend.text = _controls_text(xbox_lines if controls_xbox else ps5_lines)
+	legend.text = xbox_text if controls_xbox else ps_text
 
 # Every merged or assisted behaviour is optional, as in large mobile shooters.
 func show_touch_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu("Touch & aiming", "Changes apply immediately and are saved on this device")
+	_clear_menu(tr("Touch & aiming"), tr("Changes apply immediately and are saved on this device"))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
 	var start = menu_items.get_child_count()
 	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
-	_credit_section("Looking", "Applies to touch controls and the controller right stick.")
-	_slider("Look sensitivity", touch.options.look, 0.3, 2.5, option.call("look"))
-	_slider("Sensitivity while aiming", touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
-	_toggle("Invert vertical look", touch.options.invert_y, option.call("invert_y"))
-	_credit_section("Gyroscope", "Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden.")
-	_choices(["Off", "While aiming", "Always"], touch.options.gyro, option.call("gyro"))
-	_slider("Gyroscope sensitivity", touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
+	_credit_section(tr("Looking"), tr("Applies to touch controls and the controller right stick."))
+	_slider(tr("Look sensitivity"), touch.options.look, 0.3, 2.5, option.call("look"))
+	_slider(tr("Sensitivity while aiming"), touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
+	_toggle(tr("Invert vertical look"), touch.options.invert_y, option.call("invert_y"))
+	_credit_section(tr("Gyroscope"), tr("Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden."))
+	_choices([tr("Off"), tr("While aiming"), tr("Always")], touch.options.gyro, option.call("gyro"))
+	_slider(tr("Gyroscope sensitivity"), touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
 	var split = menu_items.get_child_count()
-	_credit_section("Moving", "")
-	_toggle("Fixed joystick", touch.options.fixed_stick, option.call("fixed_stick"))
-	_toggle("Sprint with a full forward push", touch.options.stick_sprint, option.call("stick_sprint"))
-	_toggle("Run lock marker", touch.options.run_lock, option.call("run_lock"))
-	_credit_section("Shooting", "")
-	_toggle("Auto fire on target", touch.options.auto_fire, option.call("auto_fire"))
-	_toggle("Hold to aim", touch.options.aim_hold, option.call("aim_hold"))
-	_toggle("Second fire button on the left", touch.options.left_fire, option.call("left_fire"))
-	_toggle("Reload button", touch.options.reload_button, option.call("reload_button"))
+	_credit_section(tr("Moving"), "")
+	_toggle(tr("Fixed joystick"), touch.options.fixed_stick, option.call("fixed_stick"))
+	_toggle(tr("Sprint with a full forward push"), touch.options.stick_sprint, option.call("stick_sprint"))
+	_toggle(tr("Run lock marker"), touch.options.run_lock, option.call("run_lock"))
+	_credit_section(tr("Shooting"), "")
+	_toggle(tr("Auto fire on target"), touch.options.auto_fire, option.call("auto_fire"))
+	_toggle(tr("Hold to aim"), touch.options.aim_hold, option.call("aim_hold"))
+	_toggle(tr("Second fire button on the left"), touch.options.left_fire, option.call("left_fire"))
+	_toggle(tr("Reload button"), touch.options.reload_button, option.call("reload_button"))
 	_card_wrap(start, split)
 	if return_to.is_valid():
 		_back_button(return_to, return_label if return_label != "" else "BACK TO SETTINGS")
@@ -1153,25 +1189,25 @@ func show_touch_settings(return_to: Callable = Callable(), return_label: String 
 		_back_button(show_settings, "BACK TO SETTINGS")
 
 func show_controller_settings(return_to: Callable = Callable(), return_label: String = "") -> void:
-	_clear_menu("Controller & motion", "Controller aiming, motion sensor and feedback · saved on this device")
+	_clear_menu(tr("Controller & motion"), tr("Controller aiming, motion sensor and feedback · saved on this device"))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
 	var start = menu_items.get_child_count()
 	var option = func(key: String): return func(value): touch.options[key] = value; save_settings()
-	_credit_section("Right stick", "")
-	_slider("Look sensitivity", touch.options.look, 0.3, 2.5, option.call("look"))
-	_slider("Sensitivity while aiming", touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
-	_toggle("Invert vertical look", touch.options.invert_y, option.call("invert_y"))
-	_credit_section("Light bar", "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready.")
-	_toggle("Controller light bar", controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
+	_credit_section(tr("Right stick"), "")
+	_slider(tr("Look sensitivity"), touch.options.look, 0.3, 2.5, option.call("look"))
+	_slider(tr("Sensitivity while aiming"), touch.options.aim_look, 0.2, 1.5, option.call("aim_look"))
+	_toggle(tr("Invert vertical look"), touch.options.invert_y, option.call("invert_y"))
+	_credit_section(tr("Light bar"), tr("DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready."))
+	_toggle(tr("Controller light bar"), controller_light, func(value): controller_light = value; _update_controller_light(0.0, true); save_settings())
 	var split = menu_items.get_child_count()
-	_credit_section("Gyroscope", "Tilt your motion controller (DualShock / DualSense) or phone to aim.")
-	_choices(["Off", "While aiming", "Always"], touch.options.gyro, option.call("gyro"))
-	_slider("Gyroscope sensitivity", touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
-	_credit_section("Vibration", "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts.")
-	_toggle("Controller vibration", controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
+	_credit_section(tr("Gyroscope"), tr("Tilt your motion controller (DualShock / DualSense) or phone to aim."))
+	_choices([tr("Off"), tr("While aiming"), tr("Always")], touch.options.gyro, option.call("gyro"))
+	_slider(tr("Gyroscope sensitivity"), touch.options.gyro_speed, 0.3, 3.0, option.call("gyro_speed"))
+	_credit_section(tr("Vibration"), tr("Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts."))
+	_toggle(tr("Controller vibration"), controller_vibration, func(value): controller_vibration = value; if not value: stop_rumble(); save_settings())
 	_button("TEST VIBRATION", func(): rumble(0.65, 0.55, 160), "AltButton")
 	_card_wrap(start, split)
 	if return_to.is_valid():
@@ -1216,21 +1252,21 @@ func close_layout_editor() -> void:
 		show_controls()
 
 func show_credits() -> void:
-	_clear_menu("Credits", "doodleshooter-port · unofficial native adaptation")
+	_clear_menu(tr("Credits"), tr("doodleshooter-port · unofficial native adaptation"))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var start = menu_items.get_child_count()
-	_credit_section("Original game · Doodle District", "The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation.")
+	_credit_section(tr("Original game · Doodle District"), tr("The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation."))
 	_button("OPEN ORIGINAL GAME", func(): OS.shell_open("https://doodleshooter.vercel.app/"))
-	var ref = _credit_section("Reference source", "")
+	var ref = _credit_section(tr("Reference source"), "")
 	ref.bbcode_enabled = true
-	ref.text = "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
+	ref.text = tr("[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author.")
 	ref.meta_clicked.connect(func(meta): OS.shell_open(str(meta)))
-	_credit_section("Native adaptation", "Ported by @albertolicea00. Shared Android, iOS, and desktop project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator.")
+	_credit_section(tr("Native adaptation"), tr("Ported by @albertolicea00. Shared Android, iOS, and desktop project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator."))
 	_button("PORT REPOSITORY", func(): OS.shell_open("https://github.com/albertolicea00/doodleshooter-port"))
-	_credit_section("Engine and font", "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1")
-	_credit_section("Reference dependencies", "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause.")
+	_credit_section(tr("Engine and font"), tr("Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1"))
+	_credit_section(tr("Reference dependencies"), tr("Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause."))
 	_button("FULL CREDITS & NOTICES", show_credit_notices, "AltButton")
-	_button("GODOT LICENSE", func(): show_license("Godot Engine license", Engine.get_license_text()), "AltButton")
+	_button("GODOT LICENSE", func(): show_license(tr("Godot Engine license"), Engine.get_license_text()), "AltButton")
 	_card_wrap(start)
 	if paused:
 		_back_button(pause_menu, "BACK TO PAUSE")
@@ -1263,7 +1299,11 @@ func _credit_section(title: String, body: String) -> RichTextLabel:
 	return text
 
 func show_credit_notices() -> void:
-	show_license("Full credits & notices", FileAccess.get_file_as_string("res://CREDITS.txt") + "\n\n" + FileAccess.get_file_as_string("res://assets/fonts/PatrickHand-OFL.txt"))
+	var credits = FileAccess.get_file_as_string("res://CREDITS.txt").strip_edges().split("\n\n")
+	var paragraphs: PackedStringArray = []
+	for paragraph in credits:
+		paragraphs.append(tr(paragraph))
+	show_license(tr("Full credits & notices"), "\n\n".join(paragraphs) + "\n\n" + FileAccess.get_file_as_string("res://assets/fonts/PatrickHand-OFL.txt"))
 
 func _cancel_update_request() -> void:
 	if is_instance_valid(update_dots_timer):
@@ -1297,7 +1337,7 @@ static func _compare_versions(candidate: String, current: String) -> int:
 static func _format_release_notes(markdown: String) -> String:
 	var trimmed = markdown.strip_edges()
 	if trimmed.is_empty():
-		return "No release notes were provided for this release."
+		return TranslationServer.translate("No release notes were provided for this release.")
 	var red_hex = DoodlePen.RED.to_html(false)
 	var out: PackedStringArray = []
 	for raw_line in trimmed.split("\n"):
@@ -1338,7 +1378,7 @@ static func _classify_release_asset(asset_name: String) -> Dictionary:
 	if lower.ends_with(".exe") or "windows" in lower:
 		return {"label": "WINDOWS (.EXE)", "preferred": current_os == "Windows"}
 	if lower.ends_with(".apk"):
-		var label = "ANDROID DEBUG (.APK)" if "debug" in lower else "ANDROID (.APK)"
+		var label = TranslationServer.translate("ANDROID DEBUG (.APK)") if "debug" in lower else "ANDROID (.APK)"
 		return {"label": label, "preferred": current_os == "Android"}
 	if lower.ends_with(".ipa") or "ios" in lower:
 		return {"label": "IOS (.IPA)", "preferred": current_os == "iOS"}
@@ -1348,9 +1388,9 @@ static func _classify_release_asset(asset_name: String) -> Dictionary:
 
 func show_updates_menu() -> void:
 	var installed = str(ProjectSettings.get_setting("application/config/version"))
-	_clear_menu("Checking for updates…", "Installed v%s · contacting GitHub Releases" % installed)
+	_clear_menu(tr("Checking for updates…"), tr("Installed v%s · contacting GitHub Releases") % installed)
 	var start = menu_items.get_child_count()
-	var status_label = _credit_section("GitHub Releases", "Connecting to github.com/albertolicea00/doodleshooter-port ·")
+	var status_label = _credit_section("GitHub Releases", tr("Connecting to github.com/albertolicea00/doodleshooter-port ·"))
 	_button("VIEW SOURCE CODE", func(): OS.shell_open(REPO_URL), "AltButton")
 	_card_wrap(start)
 	_back_button(show_main_menu)
@@ -1363,7 +1403,7 @@ func show_updates_menu() -> void:
 	update_dots_timer.timeout.connect(func():
 		if is_instance_valid(status_label):
 			step_state[0] = (step_state[0] % 3) + 1
-			status_label.text = "Connecting to github.com/albertolicea00/doodleshooter-port " + "·".repeat(step_state[0]))
+			status_label.text = tr("Connecting to github.com/albertolicea00/doodleshooter-port ") + "·".repeat(step_state[0]))
 	add_child(update_dots_timer)
 	update_request = HTTPRequest.new()
 	update_request.timeout = 12.0
@@ -1372,16 +1412,16 @@ func show_updates_menu() -> void:
 	var headers = PackedStringArray(["Accept: application/vnd.github+json", "User-Agent: doodleshooter-port/" + installed])
 	var err = update_request.request(RELEASES_API_URL, headers)
 	if err != OK:
-		_render_update_error("Could not start the network request (error %d)." % err)
+		_render_update_error(tr("Could not start the network request (error %d).") % err)
 
 func _on_updates_response(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	_cancel_update_request()
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-		_render_update_error("Could not reach GitHub Releases (HTTP %d). Check your Internet connection and try again." % response_code if response_code > 0 else "Could not reach GitHub Releases. Check your Internet connection and try again.")
+		_render_update_error(tr("Could not reach GitHub Releases (HTTP %d). Check your Internet connection and try again.") % response_code if response_code > 0 else tr("Could not reach GitHub Releases. Check your Internet connection and try again."))
 		return
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if not (parsed is Array) or parsed.is_empty():
-		_render_update_error("No published releases were found on GitHub yet.")
+		_render_update_error(tr("No published releases were found on GitHub yet."))
 		return
 	var chosen: Dictionary = {}
 	for entry in parsed:
@@ -1392,13 +1432,13 @@ func _on_updates_response(result: int, response_code: int, _headers: PackedStrin
 				chosen = entry
 				break
 	if chosen.is_empty():
-		_render_update_error("No public releases are available yet.")
+		_render_update_error(tr("No public releases are available yet."))
 		return
 	_render_update_release(chosen)
 
 func _render_update_error(message: String) -> void:
 	var installed = str(ProjectSettings.get_setting("application/config/version"))
-	_clear_menu("Updates", "Installed version v%s" % installed)
+	_clear_menu(tr("Updates"), tr("Installed version v%s") % installed)
 	var top_row = HBoxContainer.new()
 	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	top_row.add_theme_constant_override("separation", 16)
@@ -1410,7 +1450,7 @@ func _render_update_error(message: String) -> void:
 	src_btn.custom_minimum_size.x = 240
 	src_btn.reparent(top_row)
 	var start = menu_items.get_child_count()
-	_credit_section("Could not check automatically", message)
+	_credit_section(tr("Could not check automatically"), message)
 	_button("OPEN GITHUB RELEASES", func(): OS.shell_open(RELEASES_PAGE_URL), "AltButton")
 	_card_wrap(start)
 	_back_button(show_main_menu)
@@ -1420,12 +1460,12 @@ func _render_update_release(release: Dictionary) -> void:
 	var tag = str(release.get("tag_name", "v" + installed))
 	var clean_tag = tag.trim_prefix("v").trim_prefix("V")
 	var published = str(release.get("published_at", "")).left(10)
-	var date_note = " · published " + published if published != "" else ""
+	var date_note = tr(" · published ") + published if published != "" else ""
 	var cmp = _compare_versions(tag, installed)
-	var heading = "Update available · v" + clean_tag if cmp > 0 else "Up to date · v" + installed
-	var subtitle = ("Installed v%s · new version v%s%s" % [installed, clean_tag, date_note]) if cmp > 0 else (
-		("You have the latest GitHub release (v%s%s)" % [clean_tag, date_note]) if cmp == 0 else (
-		"Installed v%s is ahead of the latest published release (v%s%s)" % [installed, clean_tag, date_note]))
+	var heading = tr("Update available · v") + clean_tag if cmp > 0 else tr("Up to date · v") + installed
+	var subtitle = (tr("Installed v%s · new version v%s%s") % [installed, clean_tag, date_note]) if cmp > 0 else (
+		(tr("You have the latest GitHub release (v%s%s)") % [clean_tag, date_note]) if cmp == 0 else (
+		tr("Installed v%s is ahead of the latest published release (v%s%s)") % [installed, clean_tag, date_note]))
 	_clear_menu(heading, subtitle)
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1040
@@ -1443,7 +1483,7 @@ func _render_update_release(release: Dictionary) -> void:
 	src_btn.reparent(top_row)
 	# Top card: Direct downloads.
 	var dl_start = menu_items.get_child_count()
-	_credit_section("Direct downloads · v" + clean_tag, "Packages attached to this GitHub release. Recommended builds for your device appear first.")
+	_credit_section(tr("Direct downloads · v") + clean_tag, tr("Packages attached to this GitHub release. Recommended builds for your device appear first."))
 	var raw_assets: Array = release.get("assets", [])
 	var decorated: Array[Dictionary] = []
 	for item in raw_assets:
@@ -1485,7 +1525,7 @@ func _render_update_release(release: Dictionary) -> void:
 	if notes_title.is_empty():
 		notes_title = "v" + clean_tag
 	var release_url = str(release.get("html_url", RELEASES_PAGE_URL))
-	var notes = _credit_section("Release notes · " + notes_title, "")
+	var notes = _credit_section(tr("Release notes · ") + notes_title, "")
 	var notes_heading = menu_items.get_child(notes_start) as Label
 	var notes_header = HBoxContainer.new()
 	notes_header.add_theme_constant_override("separation", 16)
@@ -1504,7 +1544,7 @@ func _render_update_release(release: Dictionary) -> void:
 	_back_button(show_main_menu)
 
 func show_license(title: String, text: String) -> void:
-	_clear_menu(title, "Attribution and license notices")
+	_clear_menu(title, tr("Attribution and license notices"))
 	auto_scroll = true
 	auto_scroll_wait = 1.2
 	auto_scroll_pos = 0.0
@@ -1518,7 +1558,7 @@ func start_game(first_wave: int) -> void:
 	if starting:
 		return
 	starting = true
-	_clear_menu("Drawing the world…", "Loading original geometry and native navigation")
+	_clear_menu(tr("Drawing the world…"), tr("Loading original geometry and native navigation"))
 	await get_tree().process_frame
 	_clear_world()
 	score = 0
@@ -1640,12 +1680,12 @@ func pause_menu() -> void:
 	stop_rumble()
 	paused = true
 	playing = false
-	var summary = "Wave %d · %d points" % [wave, score]
+	var summary = tr("Wave %d · %d points") % [wave, score]
 	if match_mode == "bots":
-		summary = "Offline free for all · %d / %d kills" % [bot_match.scores.player.kills, bot_match.kill_limit]
+		summary = tr("Offline free for all · %d / %d kills") % [bot_match.scores.player.kills, bot_match.kill_limit]
 	elif network.in_match:
-		summary = "Free for all · the match continues while this menu is open"
-	_clear_menu("Paused", summary)
+		summary = tr("Free for all · the match continues while this menu is open")
+	_clear_menu(tr("Paused"), summary)
 	_button("RESUME", resume_game, "StartButton")
 	_info_row()
 	_button("MAIN MENU", show_main_menu, "AltButton")
@@ -1656,7 +1696,8 @@ func _notification(what: int) -> void:
 
 func _find_back_button(node: Node) -> Button:
 	if node is Button and node.is_visible_in_tree() and not node.disabled:
-		if node.text in ["RESUME", "CANCEL", "LEAVE LOBBY"] or node.text.begins_with("BACK"):
+		var label = str(node.get_meta("menu_label", ""))
+		if label in ["RESUME", "CANCEL", "LEAVE LOBBY"] or label.begins_with("BACK"):
 			return node
 	for child in node.get_children():
 		var found = _find_back_button(child)
@@ -1848,17 +1889,17 @@ func _process(delta: float) -> void:
 	hit_marker = maxf(0, hit_marker - delta)
 	hurt_flash = maxf(0, hurt_flash - delta)
 	hurt_overlay.color.a = hurt_flash * flash_scale
-	hud.score_text = "Score %d" % score
-	hud.combo_text = "Combo x%d" % combo if combo > 1 else ""
-	hud.info = [["Wave %d" % wave, false]]
+	hud.score_text = tr("Score %d") % score
+	hud.combo_text = tr("Combo x%d") % combo if combo > 1 else ""
+	hud.info = [[tr("Wave %d") % wave, false]]
 	if modifier != "":
-		hud.info.append([modifier, true])
-	hud.info.append(["%d enemies left" % (enemies.size() + spawn_queue.size()), false])
-	center_text.text = "Next wave in %d" % ceili(intermission) if intermission > 0 else ""
+		hud.info.append([tr(modifier), true])
+	hud.info.append([tr("%d enemies left") % (enemies.size() + spawn_queue.size()), false])
+	center_text.text = tr("Next wave in %d") % ceili(intermission) if intermission > 0 else ""
 	hud.boss_name = ""
 	for enemy in enemies:
 		if enemy.stats.get("boss", false):
-			hud.boss_name = enemy.stats.name
+			hud.boss_name = tr(enemy.stats.name)
 			hud.boss_fraction = enemy.hp / enemy.max_hp
 	if intermission > 0:
 		intermission -= delta
@@ -1945,7 +1986,7 @@ func game_over() -> void:
 		replay.save_recording(map_key)
 		replay.start_recording()
 	save_progress()
-	_clear_menu("You got erased", "%d waves · %d kills · %d points\nBest score: %d" % [wave, kills, score, best])
+	_clear_menu(tr("You got erased"), tr("%d waves · %d kills · %d points\nBest score: %d") % [wave, kills, score, best])
 	_menu_gap(4)
 	var again = _button("DRAW AGAIN", func(): start_game(1), "StartButton")
 	again.custom_minimum_size = Vector2(420, 68)
@@ -2354,6 +2395,33 @@ func run_smoke() -> void:
 	var main_quit_btn = await smoke_menu_button("QUIT GAME")
 	assert(main_updates_btn.global_position.y < main_start_btn.global_position.y and main_updates_btn.size.x < main_start_btn.size.x, "CHECK FOR UPDATES must sit above START SOLO and be narrower")
 	assert(menu_pad.get_combined_minimum_size().y <= menu_scroll.size.y + 1.0 and main_quit_btn.get_global_rect().end.y <= menu.get_global_rect().end.y, "Entire main menu including FULLSCREEN and QUIT GAME must fit visibly inside the panel without scrolling")
+	await smoke_tap_button("SETTINGS")
+	var accessibility = await smoke_menu_button("ACCESSIBILITY")
+	var language = await smoke_menu_button("LANGUAGE")
+	assert(accessibility.get_parent() == language.get_parent() and language.get_index() == accessibility.get_index() + 1, "LANGUAGE must sit next to ACCESSIBILITY")
+	await smoke_tap_button("LANGUAGE")
+	await smoke_tap_button("Español")
+	await smoke_menu_button("VOLVER A AJUSTES")
+	assert(menu_items.get_child(0).get_child(0).text == "Idioma", "Changing language must refresh the current screen")
+	var stored_language = ConfigFile.new()
+	assert(stored_language.load(save_path) == OK and stored_language.get_value("ui", "language") == "es", "The selected language must be saved")
+	await smoke_joy_press(JOY_BUTTON_B)
+	await smoke_menu_button("IDIOMA")
+	assert(menu_items.get_child(0).get_child(0).text == "Ajustes", "Controller back must work in Spanish")
+	await smoke_tap_button("VOLVER AL MENÚ PRINCIPAL")
+	await smoke_tap_button("JUGAR EN SOLITARIO")
+	assert(get_viewport().gui_get_focus_owner() == await smoke_menu_button("INICIAR SUPERVIVENCIA"), "Spanish offline play must focus START SURVIVAL")
+	await smoke_tap_button("VOLVER AL MENÚ PRINCIPAL")
+	await smoke_tap_button("CONTROLES")
+	assert(menu_items.get_child(0).get_child(0).text == "Controles", "Controls must open in the selected language")
+	var xbox_legend = _controls_text(["{R2} fire / slash   {L2} aim / block"], {"{R2}": "{RT}", "{L2}": "{LT}"})
+	assert("RT" in xbox_legend and "disparar o cortar" in xbox_legend, "Translated controls must preserve the correct controller bindings")
+	await smoke_tap_button("VOLVER AL MENÚ PRINCIPAL")
+	await smoke_tap_button("AJUSTES")
+	await smoke_tap_button("IDIOMA")
+	await smoke_tap_button("English")
+	await smoke_tap_button("BACK TO SETTINGS")
+	await smoke_tap_button("BACK TO MAIN MENU")
 	await smoke_tap_button("CHECK FOR UPDATES")
 	assert(menu_items.get_child(0).get_child(0).text == "Checking for updates…", "CHECK FOR UPDATES must open the loading updater screen")
 	_render_update_release({
@@ -2397,6 +2465,11 @@ func run_smoke() -> void:
 		assert(spawn_queue.size() == tuning[3], "Survival tiers must scale the first wave")
 	difficulty = saved_difficulty
 	await start_game(1)
+	TranslationServer.set_locale("es")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert(hud.score_text.begins_with("Puntos ") and hud.info[0][0] == "Oleada 1", "The in-game HUD must use the selected language")
+	TranslationServer.set_locale("en")
 	assert(not Input.emulate_mouse_from_touch, "Gameplay touch must not also press mouse-bound fire")
 	assert(level.data.boxes.size() == 517)
 	assert(player.magazines[0] == 35)
@@ -3198,13 +3271,13 @@ func _online_map_selector(container: Container) -> void:
 	row.add_theme_constant_override("separation", 8)
 	container.add_child(row)
 	var caption = Label.new()
-	caption.text = "map"
+	caption.text = tr("map")
 	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	caption.add_theme_font_size_override("font_size", 20)
 	row.add_child(caption)
 	var selection = ButtonGroup.new()
-	var custom_title: String = map_info(online_custom_map_key).name.to_upper() if online_custom_map_key != "" else "SELECT CUSTOM MAP"
-	for info in [{"key": "district", "name": "DOODLE DISTRICT", "blurb": "default global map"}, {"key": "custom", "name": custom_title, "blurb": "custom map · tap to change" if online_custom_map_key != "" else "choose from 9 maps"}]:
+	var custom_title: String = tr(map_info(online_custom_map_key).name).to_upper() if online_custom_map_key != "" else tr("SELECT CUSTOM MAP")
+	for info in [{"key": "district", "name": tr("DOODLE DISTRICT"), "blurb": tr("default global map")}, {"key": "custom", "name": custom_title, "blurb": tr("custom map · tap to change") if online_custom_map_key != "" else tr("choose from 9 maps")}]:
 		var card = Button.new()
 		card.theme_type_variation = "AltButton"
 		card.set_meta("map_key", info.key)
@@ -3252,7 +3325,7 @@ func _show_online_custom_maps() -> void:
 func show_online_menu() -> void:
 	_close_network()
 	playing = false
-	_clear_menu("Play online", "Free for all · 10 players · first to 20 kills · Connect to a native lobby server")
+	_clear_menu(tr("Play online"), tr("Free for all · 10 players · first to 20 kills · Connect to a native lobby server"))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
@@ -3265,27 +3338,27 @@ func show_online_menu() -> void:
 	top_inputs.add_theme_constant_override("separation", 16)
 	menu_items.add_child(top_inputs)
 	name_input = LineEdit.new()
-	name_input.placeholder_text = "Your name"
+	name_input.placeholder_text = tr("Your name")
 	name_input.text = player_name
 	name_input.custom_minimum_size = Vector2(240, 48)
 	top_inputs.add_child(name_input)
 	server_input = LineEdit.new()
-	server_input.placeholder_text = "wss://your-lobby-server"
+	server_input.placeholder_text = tr("wss://your-lobby-server")
 	server_input.text = server_url
 	server_input.custom_minimum_size = Vector2(360, 48)
 	top_inputs.add_child(server_input)
 	_online_map_selector(top_inputs)
 	var start = menu_items.get_child_count()
-	_credit_section("Create a lobby", "Open a new room on the lobby server and share its code with friends, or list it publicly.")
+	_credit_section(tr("Create a lobby"), tr("Open a new room on the lobby server and share its code with friends, or list it publicly."))
 	_button("CREATE PRIVATE LOBBY", func(): connect_online({"type": "host", "public": false, "map": online_map_key}), "AltButton")
 	_button("CREATE PUBLIC LOBBY", func(): connect_online({"type": "host", "public": true, "map": online_map_key}))
 	var split = menu_items.get_child_count()
-	_credit_section("Join a lobby", "Enter a five-character room code from a friend, or browse open public rooms to jump into a match.")
+	_credit_section(tr("Join a lobby"), tr("Enter a five-character room code from a friend, or browse open public rooms to jump into a match."))
 	var code_row = HBoxContainer.new()
 	code_row.add_theme_constant_override("separation", 12)
 	menu_items.add_child(code_row)
 	code_input = LineEdit.new()
-	code_input.placeholder_text = "Five-character lobby code"
+	code_input.placeholder_text = tr("Five-character lobby code")
 	code_input.max_length = 5
 	code_input.custom_minimum_size.y = 48
 	code_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -3305,23 +3378,23 @@ func connect_online(request: Dictionary) -> void:
 	preferences.set_value("online", "url", server_url)
 	preferences.save(save_path)
 	network.connect_lobby(server_url, request)
-	_clear_menu("Connecting…", "Contacting the lobby server")
+	_clear_menu(tr("Connecting…"), tr("Contacting the lobby server"))
 	_button("CANCEL", show_main_menu, "AltButton")
 
 func show_lobby() -> void:
 	if network.in_match or starting:
 		return
 	last_room_code = network.code
-	var bot_note = " · %d bots" % network.lobby_bots if network.lobby_bots > 0 else ""
-	var rules_text = "Free for all · first to %d · %d minute limit%s" % [network.kill_limit, network.match_minutes, bot_note]
-	var lobby_hint = "Choose a map, adjust the match settings, and start when everyone is ready."
+	var bot_note = tr(" · %d bots") % network.lobby_bots if network.lobby_bots > 0 else ""
+	var rules_text = tr("Free for all · first to %d · %d minute limit%s") % [network.kill_limit, network.match_minutes, bot_note]
+	var lobby_hint = tr("Choose a map, adjust the match settings, and start when everyone is ready.")
 	if network.peer_id != network.host_id:
-		lobby_hint = "Review the match settings and players while the host prepares the match."
+		lobby_hint = tr("Review the match settings and players while the host prepares the match.")
 	var local_host = network.peer_id == network.host_id and is_instance_valid(lan_server)
 	# Keep the atlas textures and animation timer alive across server lobby updates.
 	if local_host and is_instance_valid(lobby_map_row):
 		lobby_map_row.reparent(self)
-	_clear_menu("Lobby " + network.code, lobby_hint)
+	_clear_menu(tr("Lobby ") + network.code, lobby_hint)
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
@@ -3341,10 +3414,10 @@ func show_lobby() -> void:
 				network.send_packet({"type": "map", "map": key}))
 	var start = menu_items.get_child_count()
 	if network.peer_id == network.host_id:
-		var match_rules = _credit_section("Match setup", rules_text)
+		var match_rules = _credit_section(tr("Match setup"), rules_text)
 		if is_instance_valid(lan_server):
 			var send_config = func(): network.send_packet({"type": "config", "minutes": lan_minutes, "bots": lan_bot_count, "difficulty": lan_bot_difficulty})
-			_choices(["Easy", "Normal", "Hard", "Insane"], lan_bot_difficulty, func(index): lan_bot_difficulty = index; send_config.call())
+			_choices([tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")], lan_bot_difficulty, func(index): lan_bot_difficulty = index; send_config.call())
 			var diff_row = menu_items.get_child(-1)
 			for btn in diff_row.get_children():
 				btn.disabled = lan_bot_count == 0
@@ -3354,16 +3427,16 @@ func show_lobby() -> void:
 			_duration_selector(match_rules, lan_minutes, func(m): lan_minutes = m; send_config.call(), func(_m): return rules_text).reparent(selectors)
 			_count_selector(lan_bot_count, 0, func(c): lan_bot_count = c; send_config.call()).reparent(selectors)
 		else:
-			_button("MAP · " + map_info(map_key).name, func(): show_map_menu(show_lobby, func(key): network.send_packet({"type": "map", "map": key})), "AltButton")
+			_button(tr("MAP · ") + tr(map_info(map_key).name), func(): show_map_menu(show_lobby, func(key): network.send_packet({"type": "map", "map": key})), "AltButton")
 	else:
-		_credit_section("Match setup", "%s\nMap: %s\nWaiting for the host to start the match." % [rules_text, map_info(map_key).name])
+		_credit_section(tr("Match setup"), tr("%s\nMap: %s\nWaiting for the host to start the match.") % [rules_text, tr(map_info(map_key).name)])
 	var split = menu_items.get_child_count()
 	var entries: Array[String] = []
 	for entry in network.roster:
-		entries.append("• %s%s" % [entry.name, " (host)" if entry.id == network.host_id else ""])
+		entries.append("• %s%s" % [_network_display_name(entry), tr(" (host)") if entry.id == network.host_id else ""])
 	if network.lobby_bots > 0:
-		entries.append("• 1 bot" if network.lobby_bots == 1 else "• %d bots" % network.lobby_bots)
-	_credit_section("Players (%d/12)" % entries.size(), lan_host_note.strip_edges())
+		entries.append(tr("• 1 bot") if network.lobby_bots == 1 else tr("• %d bots") % network.lobby_bots)
+	_credit_section(tr("Players (%d/12)") % entries.size(), lan_host_note.strip_edges())
 	if lan_host_note == "":
 		menu_items.get_child(-1).hide()
 	var players_grid = HBoxContainer.new()
@@ -3401,7 +3474,7 @@ func _network_packet(packet: Dictionary) -> void:
 			map_key = packet.map
 			show_lobby()
 		"rooms":
-			_clear_menu("Public lobbies", "Choose an open room")
+			_clear_menu(tr("Public lobbies"), tr("Choose an open room"))
 			for room in packet.rooms:
 				var code: String = room.code
 				_button("%s · %s · %d/10" % [code, room.host, int(room.players)], func(): network.send_packet({"type": "join", "code": code}))
@@ -3465,12 +3538,12 @@ func _network_packet(packet: Dictionary) -> void:
 			online_results = packet.players
 			var scores = ""
 			for entry in online_results:
-				scores += "%s · %d kills · %d deaths\n" % [entry.name, int(entry.kills), int(entry.deaths)]
-			_clear_menu("Match finished", scores)
+				scores += tr("%s · %d kills · %d deaths\n") % [_network_display_name(entry), int(entry.kills), int(entry.deaths)]
+			_clear_menu(tr("Match finished"), scores)
 			_button("MAIN MENU", show_main_menu)
 		"idle":
 			playing = false
-			_clear_menu("Away from the page", packet.message)
+			_clear_menu(tr("Away from the page"), tr(packet.message))
 			_button("REJOIN", func(): network.send_packet({"type": "join", "code": packet.code}))
 			_button("MAIN MENU", show_main_menu)
 		"error":
@@ -3478,8 +3551,14 @@ func _network_packet(packet: Dictionary) -> void:
 
 func _network_failure(message: String) -> void:
 	playing = false
-	_clear_menu("Connection", message)
+	_clear_menu(tr("Connection"), tr(message))
 	_back_button(show_online_menu, "BACK TO ONLINE")
+
+func _network_display_name(entry: Dictionary) -> String:
+	var id = str(entry.get("id", ""))
+	if id.begins_with("bot_") and id.substr(4).is_valid_int():
+		return tr("Doodler Bot %d") % (id.substr(4).to_int() + 1)
+	return entry.name
 
 func _clear_remote_players() -> void:
 	for remote in remote_players.values():
@@ -3501,13 +3580,13 @@ func update_online(delta: float) -> void:
 	for entry in network.roster:
 		if entry.id == network.peer_id:
 			own_kills = int(entry.kills)
-	hud.score_text = "Kills %d / %d" % [own_kills, network.kill_limit]
+	hud.score_text = tr("Kills %d / %d") % [own_kills, network.kill_limit]
 	hud.combo_text = ""
 	hud.boss_name = ""
-	hud.info = [["%02d:%02d" % [network.remaining / 60, network.remaining % 60], true], ["Lobby " + network.code, false]]
+	hud.info = [["%02d:%02d" % [network.remaining / 60, network.remaining % 60], true], [tr("Lobby ") + network.code, false]]
 	var standings = network.roster.duplicate()
 	standings.sort_custom(func(a, b): return int(a.kills) > int(b.kills))
-	scoreboard.text = "FREE FOR ALL\n" + "\n".join(standings.map(func(entry): return "%s     %d K / %d D" % [entry.name, entry.kills, entry.deaths]))
+	scoreboard.text = tr("FREE FOR ALL\n") + "\n".join(standings.map(func(entry): return tr("%s     %d K / %d D") % [_network_display_name(entry), entry.kills, entry.deaths]))
 	scoreboard.visible = Input.is_action_pressed("scoreboard") or touchpad_scoreboard
 	center_text.text = ""
 	scope.visible = player.weapon_index == 2 and player.aiming
@@ -3516,9 +3595,9 @@ func update_online(delta: float) -> void:
 	hurt_overlay.color.a = hurt_flash * flash_scale
 	if not player.alive:
 		death_timer -= delta
-		center_text.text = "You got erased · respawn in %d" % maxi(0, ceili(death_timer))
+		center_text.text = tr("You got erased · respawn in %d") % maxi(0, ceili(death_timer))
 		if death_timer <= 0 and not menu.visible:
-			_clear_menu("You got erased", "Rejoin the fight with a two-second shield")
+			_clear_menu(tr("You got erased"), tr("Rejoin the fight with a two-second shield"))
 			_button("RESPAWN", func(): network.send_packet({"type": "respawn"}))
 			_button("LEAVE MATCH", show_main_menu)
 	for dot in trajectory_nodes:
@@ -3546,7 +3625,7 @@ func reset_arena_player(index: int) -> void:
 	trajectory.clear()
 
 func show_offline_menu() -> void:
-	_clear_menu("Play offline", "No Internet connection or server needed")
+	_clear_menu(tr("Play offline"), tr("No Internet connection or server needed"))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
@@ -3557,7 +3636,7 @@ func show_offline_menu() -> void:
 	_populate_map_cards(map_row, true, func(key: String):
 		map_key = key)
 	var survival_start = menu_items.get_child_count()
-	_credit_section("Survival · Enemy waves", "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game.")
+	_credit_section(tr("Survival · Enemy waves"), tr("Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."))
 	if checkpoint >= 5:
 		var heading = menu_items.get_child(survival_start)
 		var heading_row = HBoxContainer.new()
@@ -3567,24 +3646,24 @@ func show_offline_menu() -> void:
 		menu_items.move_child(heading_row, survival_start)
 		heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		heading.reparent(heading_row)
-		var resume = _button("CHECKPOINT · WAVE " + str(checkpoint), func(): match_mode = "survival"; start_game(checkpoint), "RedOutlineButton")
+		var resume = _button(tr("CHECKPOINT · WAVE ") + str(checkpoint), func(): match_mode = "survival"; start_game(checkpoint), "RedOutlineButton")
 		resume.name = "OfflineCheckpointButton"
 		resume.custom_minimum_size = Vector2(0, 34)
 		resume.add_theme_font_size_override("font_size", 18)
-		resume.tooltip_text = "Continue Survival from wave %d" % checkpoint
+		resume.tooltip_text = tr("Continue Survival from wave %d") % checkpoint
 		resume.reparent(heading_row)
-	_choices(["Easy", "Normal", "Hard", "Insane"], difficulty, func(index): difficulty = index; save_settings())
-	_choices(["Normal waves", "Large waves", "Huge waves"], wave_size, func(index): wave_size = index; save_settings())
+	_choices([tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")], difficulty, func(index): difficulty = index; save_settings())
+	_choices([tr("Normal waves"), tr("Large waves"), tr("Huge waves")], wave_size, func(index): wave_size = index; save_settings())
 	var survival = _button("START SURVIVAL", func(): match_mode = "survival"; start_game(1), "StartButton")
 	survival.add_theme_font_size_override("font_size", 40)
 	survival.custom_minimum_size.y = 76
 	var bots_start = menu_items.get_child_count()
-	var bot_rules = _credit_section("Free for all with bots", "")
-	_choices(["Easy", "Normal", "Hard", "Insane"], bot_difficulty, func(index): bot_difficulty = index)
+	var bot_rules = _credit_section(tr("Free for all with bots"), "")
+	_choices([tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")], bot_difficulty, func(index): bot_difficulty = index)
 	var selectors = HBoxContainer.new()
 	selectors.add_theme_constant_override("separation", 24)
 	menu_items.add_child(selectors)
-	_duration_selector(bot_rules, bot_minutes, func(m): bot_minutes = m; save_settings(), func(m): return "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game." % [m * DoodleBotMatch.KILLS_PER_MINUTE, m]).reparent(selectors)
+	_duration_selector(bot_rules, bot_minutes, func(m): bot_minutes = m; save_settings(), func(m): return tr("Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game.") % [m * DoodleBotMatch.KILLS_PER_MINUTE, m]).reparent(selectors)
 	_count_selector(bot_count, 1, func(c): bot_count = c).reparent(selectors)
 	var bots = _button("START BOT MATCH", func(): match_mode = "bots"; start_game(0), "StartButton")
 	bots.add_theme_font_size_override("font_size", 40)
@@ -3625,17 +3704,17 @@ func _duration_selector(rules: Node, current_minutes: int, on_change: Callable, 
 	duration.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	duration.custom_minimum_size.x = 80
 	var decrease = _button("−", func(): pass, "AltButton")
-	decrease.tooltip_text = "Shorter match"
+	decrease.tooltip_text = tr("Shorter match")
 	decrease.custom_minimum_size.x = 64
 	decrease.reparent(row)
 	row.add_child(duration)
 	var increase = _button("+", func(): pass, "AltButton")
-	increase.tooltip_text = "Longer match"
+	increase.tooltip_text = tr("Longer match")
 	increase.custom_minimum_size.x = 64
 	increase.reparent(row)
 	var minutes_state = [current_minutes]
 	var update_duration = func():
-		duration.text = "%d min" % minutes_state[0]
+		duration.text = tr("%d min") % minutes_state[0]
 		rules.text = format_rules.call(minutes_state[0])
 		_fit_menu.call_deferred()
 		decrease.disabled = minutes_state[0] <= DoodleBotMatch.MIN_MINUTES
@@ -3656,12 +3735,12 @@ func _count_selector(current_count: int, min_count: int, on_change: Callable) ->
 	count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	count.custom_minimum_size.x = 100
 	var decrease = _button("−", func(): pass, "AltButton")
-	decrease.tooltip_text = "Fewer bots"
+	decrease.tooltip_text = tr("Fewer bots")
 	decrease.custom_minimum_size.x = 64
 	decrease.reparent(row)
 	row.add_child(count)
 	var increase = _button("+", func(): pass, "AltButton")
-	increase.tooltip_text = "More bots"
+	increase.tooltip_text = tr("More bots")
 	increase.custom_minimum_size.x = 64
 	increase.reparent(row)
 	var warning = Label.new()
@@ -3673,8 +3752,8 @@ func _count_selector(current_count: int, min_count: int, on_change: Callable) ->
 	var count_state = [current_count]
 	var update_count = func():
 		warning.visible = count_state[0] >= 20
-		warning.text = "You're crazy! With 30 bots, the game might barely run!" if count_state[0] >= 30 else "20+ bots may reduce performance, especially on mobile devices."
-		count.text = "1 bot" if count_state[0] == 1 else "%d bots" % count_state[0]
+		warning.text = tr("You're crazy! With 30 bots, the game might barely run!") if count_state[0] >= 30 else tr("20+ bots may reduce performance, especially on mobile devices.")
+		count.text = tr("1 bot") if count_state[0] == 1 else tr("%d bots") % count_state[0]
 		decrease.disabled = count_state[0] <= min_count
 		increase.disabled = count_state[0] >= DoodleBotMatch.MAX_BOTS
 		_fit_menu.call_deferred()
@@ -3685,24 +3764,24 @@ func _count_selector(current_count: int, min_count: int, on_change: Callable) ->
 
 func show_lan_menu() -> void:
 	_close_network()
-	_clear_menu("Local network · LAN", "Use the same Wi-Fi network or hotspot. No Internet or separate server needed.")
+	_clear_menu(tr("Local network · LAN"), tr("Use the same Wi-Fi network or hotspot. No Internet or separate server needed."))
 	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	menu.custom_minimum_size.x = 1160
 	menu.offset_left = -580
 	menu.offset_right = 580
 	name_input = LineEdit.new()
-	name_input.placeholder_text = "Your name"
+	name_input.placeholder_text = tr("Your name")
 	name_input.text = player_name
 	name_input.custom_minimum_size = Vector2(360, 46)
 	name_input.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	menu_items.add_child(name_input)
 	var start = menu_items.get_child_count()
-	_credit_section("Host a room", "Create a local match on this device and share your host IP with friends on the same Wi-Fi or hotspot. Keep this device in the game while others play. Once inside the lobby, you can choose the map, time limit, and bots.\n\nHost IP: " + _local_ip_text())
+	_credit_section(tr("Host a room"), tr("Create a local match on this device and share your host IP with friends on the same Wi-Fi or hotspot. Keep this device in the game while others play. Once inside the lobby, you can choose the map, time limit, and bots.\n\nHost IP: ") + _local_ip_text())
 	_button("HOST LAN GAME", host_lan_game)
 	var split = menu_items.get_child_count()
-	_credit_section("Join a room", "Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other.")
+	_credit_section(tr("Join a room"), tr("Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other."))
 	server_input = LineEdit.new()
-	server_input.placeholder_text = "Host IP address, for example 192.168.1.10"
+	server_input.placeholder_text = tr("Host IP address, for example 192.168.1.10")
 	server_input.text = lan_address
 	server_input.custom_minimum_size.y = 46
 	menu_items.add_child(server_input)
@@ -3722,7 +3801,7 @@ func _local_ip_text() -> String:
 	for address in IP.get_local_addresses():
 		if address.is_valid_ip_address() and not ":" in address and not address.begins_with("127.") and not address.begins_with("169.254."):
 			addresses.append(address)
-	return ", ".join(addresses) if not addresses.is_empty() else "Check this device's Wi-Fi settings"
+	return ", ".join(addresses) if not addresses.is_empty() else tr("Check this device's Wi-Fi settings")
 
 func host_lan_game() -> void:
 	save_player_name()
@@ -3735,20 +3814,20 @@ func host_lan_game() -> void:
 	if error != OK:
 		lan_server.queue_free()
 		lan_server = null
-		_clear_menu("LAN hosting unavailable", "Could not open the local game port. Close another hosted room and try again.")
+		_clear_menu(tr("LAN hosting unavailable"), tr("Could not open the local game port. Close another hosted room and try again."))
 		_back_button(show_lan_menu, "BACK TO LAN")
 		return
 	lobby_return = show_lan_menu
-	lan_host_note = "\n\nHost IP: " + _local_ip_text() + "\nKeep this device in the game to host the room."
+	lan_host_note = tr("\n\nHost IP: ") + _local_ip_text() + tr("\nKeep this device in the game to host the room.")
 	network.connect_lobby("ws://127.0.0.1:%d" % DoodleLanServer.PORT, {"type": "host", "map": map_key, "minutes": lan_minutes, "bots": lan_bot_count, "difficulty": lan_bot_difficulty})
-	_clear_menu("Creating LAN room…", "Starting a game on this device")
+	_clear_menu(tr("Creating LAN room…"), tr("Starting a game on this device"))
 	_button("CANCEL", show_lan_menu)
 
 func join_lan_game() -> void:
 	save_player_name()
 	lan_address = server_input.text.strip_edges()
 	if lan_address.is_empty():
-		server_input.placeholder_text = "Enter the host's IP address first"
+		server_input.placeholder_text = tr("Enter the host's IP address first")
 		return
 	var url = lan_address
 	if not url.begins_with("ws://"):
@@ -3757,5 +3836,5 @@ func join_lan_game() -> void:
 		url = "ws://" + url
 	lobby_return = show_lan_menu
 	network.connect_lobby(url, {"type": "join", "code": "LAN"})
-	_clear_menu("Joining LAN room…", "Connecting to the host on your local network")
+	_clear_menu(tr("Joining LAN room…"), tr("Connecting to the host on your local network"))
 	_button("CANCEL", show_lan_menu)

@@ -499,7 +499,7 @@ func _draw() -> void:
 			continue
 		# Pen icons in play; the layout editor keeps the words so every control can be told apart.
 		if not _icon(b[2], b[0], b[1], tone):
-			_label(b[0], b[2], int(b[1] * (0.43 if action == "fire" else 0.47)), tone)
+			_label(b[0], tr(b[2]), int(b[1] * (0.43 if action == "fire" else 0.47)), tone)
 	# The weapon bar is one box; ammunition is already shown top-left, so each slot is just the weapon.
 	var live = is_instance_valid(player)
 	var bar = Rect2(slots[0].position, slots[-1].end - slots[0].position)
@@ -526,4 +526,4 @@ func _draw() -> void:
 		DoodlePen.sketch_circle(self, lock, 22, mark if run_locked else ink, 2.0)
 		var lock_tone = mark if run_locked else ink
 		if not _icon("RUN", lock, 22.0, lock_tone):
-			_label(lock, "RUN", 15, lock_tone)
+			_label(lock, tr("RUN"), 15, lock_tone)

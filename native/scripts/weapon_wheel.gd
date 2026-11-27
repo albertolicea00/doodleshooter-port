@@ -166,7 +166,7 @@ func _draw() -> void:
 			tone = Color(DoodlePen.INK, 0.72)
 		var icon_scale = 34.0 if is_hovered else 28.0
 		DoodleTouchControls.draw_weapon(self, i, slot_center + Vector2(0, -14), icon_scale, tone)
-		var title = "%d · %s" % [i + 1, DoodleTouchControls.NAMES[i]]
+		var title = "%d · %s" % [i + 1, tr(DoodleTouchControls.NAMES[i])]
 		_write_centered(slot_center + Vector2(0, 18), title, 20 if is_hovered else 17, DoodlePen.RED if is_hovered else tone)
 		var ammo = "∞" if i == 3 else "%d/%d" % [player.magazines[i], player.reserves[i]]
 		_write_centered(slot_center + Vector2(0, 36), ammo, 15, Color(tone, 0.85))
@@ -175,8 +175,8 @@ func _draw() -> void:
 	# Inner hub: active label + live red-ink touchpad cursor dot.
 	draw_circle(center, R_INNER - 1.0, Color(DoodlePen.PAPER, 0.96))
 	DoodlePen.sketch_circle(self, center, R_INNER, DoodlePen.INK, 2.5)
-	var center_label = DoodleTouchControls.NAMES[hovered] if hovered >= 0 else DoodleTouchControls.NAMES[player.weapon_index]
-	var sub_label = "release to equip" if hovered >= 0 and hovered != player.weapon_index else "slide touchpad"
+	var center_label = tr(DoodleTouchControls.NAMES[hovered if hovered >= 0 else player.weapon_index])
+	var sub_label = tr("release to equip") if hovered >= 0 and hovered != player.weapon_index else tr("slide touchpad")
 	_write_centered(center + Vector2(0, -6), center_label, 23, DoodlePen.RED if hovered >= 0 else DoodlePen.INK)
 	_write_centered(center + Vector2(0, 16), sub_label, 14, Color(DoodlePen.INK, 0.65))
 	var cursor = center + touch_vec * (R_INNER - 12.0)

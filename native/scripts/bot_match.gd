@@ -35,7 +35,7 @@ func begin(count: int, skill: int, minutes: int = 10) -> void:
 		game.add_child(bot)
 		bots.append(bot)
 		game.remote_players[bot.peer_id] = bot
-		scores[bot.peer_id] = {"name": "Doodler Bot %d" % (i + 1), "kills": 0, "deaths": 0}
+		scores[bot.peer_id] = {"name": "Doodler Bot %d" % (i + 1), "bot_number": i + 1, "kills": 0, "deaths": 0}
 		respawn_bot(bot, i + 1)
 	game.reset_arena_player(0)
 	for i in 7:
@@ -161,18 +161,18 @@ func update(delta: float) -> void:
 		if player_respawn <= 0:
 			game.reset_arena_player(randi_range(0, 15))
 			player_shield = 2
-	game.hud.score_text = "Kills %d / %d" % [scores.player.kills, kill_limit]
+	game.hud.score_text = tr("Kills %d / %d") % [scores.player.kills, kill_limit]
 	game.hud.combo_text = ""
 	game.hud.boss_name = ""
-	game.hud.info = [["%02d:%02d" % [int(remaining) / 60, int(remaining) % 60], true], ["%d bots · %s" % [bots.size(), ["Easy", "Normal", "Hard", "Insane"][difficulty]], false]]
+	game.hud.info = [["%02d:%02d" % [int(remaining) / 60, int(remaining) % 60], true], [tr("%d bots · %s") % [bots.size(), [tr("Easy"), tr("Normal"), tr("Hard"), tr("Insane")][difficulty]], false]]
 	var standings = sorted_scores()
-	game.scoreboard.text = "OFFLINE FREE FOR ALL\n" + "\n".join(standings.map(func(entry): return "%s     %d K / %d D" % [entry.name, entry.kills, entry.deaths]))
+	game.scoreboard.text = tr("OFFLINE FREE FOR ALL\n") + "\n".join(standings.map(func(entry): return tr("%s     %d K / %d D") % [_score_name(entry), entry.kills, entry.deaths]))
 	game.scoreboard.visible = Input.is_action_pressed("scoreboard") or game.touchpad_scoreboard
 	game.center_text.text = ""
 	if not game.player.alive:
-		game.center_text.text = "You got erased · respawn in %d" % maxi(0, ceili(player_respawn))
+		game.center_text.text = tr("You got erased · respawn in %d") % maxi(0, ceili(player_respawn))
 	elif player_shield > 0:
-		game.center_text.text = "Spawn shield"
+		game.center_text.text = tr("Spawn shield")
 	game.scope.visible = game.player.weapon_index == 2 and game.player.aiming
 	game.hit_marker = maxf(0, game.hit_marker - delta)
 	game.hurt_flash = maxf(0, game.hurt_flash - delta)
@@ -186,12 +186,15 @@ func sorted_scores() -> Array:
 	result.sort_custom(func(a, b): return a.kills > b.kills if a.kills != b.kills else a.deaths < b.deaths)
 	return result
 
+func _score_name(entry: Dictionary) -> String:
+	return tr("Doodler Bot %d") % entry.bot_number if entry.has("bot_number") else entry.name
+
 func finish() -> void:
 	active = false
 	game.playing = false
 	var text = ""
 	for row in sorted_scores():
-		text += "%s · %d kills · %d deaths\n" % [row.name, row.kills, row.deaths]
-	game._clear_menu("Offline match finished", text)
+		text += tr("%s · %d kills · %d deaths\n") % [_score_name(row), row.kills, row.deaths]
+	game._clear_menu(tr("Offline match finished"), text)
 	game._button("PLAY AGAIN", func(): game.start_game(0))
 	game._button("MAIN MENU", game.show_main_menu)
