@@ -6,6 +6,7 @@ const MAX_FRAMES := 450
 const MIN_SAVE_FRAMES := 45
 const REPLAY_PATH := "user://last_replay.json"
 const BUNDLED_DIRECTORY := "res://data/menu_replays"
+const DEFAULT_TAKE := "district-2026-11-27-15-29-10.json"
 const DEFAULT_MAP := "district"
 const DEFAULT_LOOP_SECONDS := 32.0
 
@@ -115,6 +116,12 @@ func load_recording(path: String = REPLAY_PATH) -> bool:
 	using_default = false
 	return true
 
+func load_default_recording(map_keys: Array[String]) -> bool:
+	if not load_recording(BUNDLED_DIRECTORY.path_join(DEFAULT_TAKE)) or not playback_map in map_keys:
+		return false
+	using_default = true
+	return true
+
 func load_bundled_recording(map_keys: Array[String], directory: String = BUNDLED_DIRECTORY) -> bool:
 	var folder = DirAccess.open(directory)
 	if folder == null:
@@ -122,7 +129,7 @@ func load_bundled_recording(map_keys: Array[String], directory: String = BUNDLED
 	var candidates = Array(folder.get_files())
 	candidates.shuffle()
 	for filename in candidates:
-		if filename.get_extension() == "json" and load_recording(directory.path_join(filename)) and playback_map in map_keys:
+		if filename != DEFAULT_TAKE and filename.get_extension() == "json" and load_recording(directory.path_join(filename)) and playback_map in map_keys:
 			using_default = true
 			return true
 	return false

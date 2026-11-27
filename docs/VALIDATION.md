@@ -224,6 +224,8 @@ The first-launch District background now uses a 32-second camera glide with the 
 
 The menu replay recorder produced separate three-second District and Jungle takes in headless Godot. The bundled library check selected both takes and skipped replays for unsupported maps. The temporary takes were removed after verification.
 
+On November 27, a headless startup check verified that the main menu loads all 450 frames from the bundled District take, starts the replay camera at the first recorded pose, and advances playback even when a usable personal replay is saved. The saved replay was unchanged. Windowed playback was not inspected.
+
 ## Normalized back buttons and desktop export presets (November 19)
 
 - **Back-button normalization (`native/scripts/game.gd`):** `_back_button` now defaults to `"BACK TO MAIN MENU"` (`RedButton`, red filled) when returning to the main menu. Submenus that return to an intermediate screen (`BACK TO PAUSE`, `BACK TO SETTINGS`, `BACK TO CONTROLS`, `BACK TO CREDITS`, `BACK TO LOBBY`, `BACK TO ONLINE`, `BACK TO LAN`) render the immediate back button on the left (`RedOutlineButton`) and `"BACK TO MAIN MENU"` (`RedButton`) on the right. `_find_back_button` matches `"RESUME"` or any `"BACK..."` label, and `run_smoke()` was updated to tap `"BACK TO MAIN MENU"`.

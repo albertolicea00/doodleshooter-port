@@ -213,9 +213,10 @@ func _load_menu_replay() -> void:
 	add_child(region)
 	level = DoodleLevel.new()
 	region.add_child(level)
-	var has_personal_replay = replay.load_recording() and replay.playback_map in map_keys
-	if not has_personal_replay and not replay.load_bundled_recording(map_keys):
-		replay.build_default()
+	if not replay.load_default_recording(map_keys):
+		var has_personal_replay = replay.load_recording() and replay.playback_map in map_keys
+		if not has_personal_replay and not replay.load_bundled_recording(map_keys):
+			replay.build_default()
 	level.load_map(replay.playback_map, false)
 	replay.step_playback(0.0, true)
 	_apply_main_menu_backdrop()

@@ -246,7 +246,7 @@ Run `make record-replay` to open District in a desktop recording session. The ga
 make record-replay MAP=jungle TAKE=jungle-bridge REPLAY_SECONDS=20
 ```
 
-`MAP` accepts the same map keys as the map previews. Omit `TAKE` to generate a name from the map and time. Recording duration can be 3–30 seconds. Closing the recorder window before it saves discards the take. To replace a take, record a new one and remove the old JSON from the folder. Keep the files you want to bundle. The menu chooses a random bundled take at launch when there is no usable personal replay.
+`MAP` accepts the same map keys as the map previews. Omit `TAKE` to generate a name from the map and time. Recording duration can be 3–30 seconds. Closing the recorder window before it saves discards the take. To change the take used at launch, set `DEFAULT_TAKE` in `native/scripts/replay.gd` to the new JSON filename. If the default take cannot be loaded, the menu tries the saved personal replay, then a random bundled take, then the District camera glide.
 
 Screenshots are written to `builds/validation/` (*override with `DOODLE_CAPTURE_DIR`*).
 
