@@ -3788,7 +3788,7 @@ func show_offline_menu() -> void:
 	_populate_map_cards(map_row, true, func(key: String):
 		map_key = key)
 	var survival_start = menu_items.get_child_count()
-	_credit_section(tr("Survival · Waves"), tr("Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."))
+	_credit_section(tr("Survival · Waves"), tr("Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close."))
 	var survival_heading = menu_items.get_child(survival_start) as Label
 	survival_heading.name = "SurvivalHeading"
 	survival_heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -910,8 +910,8 @@ msgstr "Iniciando uma partida neste dispositivo"
 msgid "Survival · Waves"
 msgstr "Sobrevivência · Ondas"
 
-msgid "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."
-msgstr "Sobreviva a ondas de inimigos e chefes cada vez maiores. O rifle de precisão e a bazuca causam mais dano, e a escopeta é mais forte de perto. Esses ajustes, as dificuldades e os tamanhos de onda são adições do port."
+msgid "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close."
+msgstr "Sobreviva a ondas de inimigos e chefes cada vez maiores. O rifle de precisão e a bazuca causam mais dano, e a escopeta é mais forte de perto."
 
 msgid "Swarm · more enemies, less health"
 msgstr "Enxame · mais inimigos, menos vida"
