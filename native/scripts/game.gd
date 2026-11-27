@@ -636,14 +636,15 @@ func _game_speed_label(multiplier: float) -> String:
 	return ("%d×" % multiplier) if is_equal_approx(multiplier, roundf(multiplier)) else ("%.1f×" % multiplier)
 
 func _game_speed_choices(label_text: String, selected: float, on_change: Callable) -> void:
-	_choices(GAME_SPEEDS.map(_game_speed_label), GAME_SPEEDS.find(selected), func(index: int): on_change.call(GAME_SPEEDS[index]))
-	var row = menu_items.get_child(-1)
-	row.add_theme_constant_override("separation", 16)
+	# Label above the row so seven choices fit inside the menu card.
 	var label = Label.new()
 	label.text = label_text
-	label.custom_minimum_size.x = 230
-	row.add_child(label)
-	row.move_child(label, 0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	menu_items.add_child(label)
+	_choices(GAME_SPEEDS.map(_game_speed_label), GAME_SPEEDS.find(selected), func(index: int): on_change.call(GAME_SPEEDS[index]))
+	for button in menu_items.get_child(-1).get_children():
+		button.custom_minimum_size.y = 42
+		button.add_theme_font_size_override("font_size", 20)
 
 func _toggle(text: String, value: bool, callback: Callable) -> void:
 	var button = _button("", func(): pass, "AltButton")
