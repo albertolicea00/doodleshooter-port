@@ -47,6 +47,11 @@ const MAPS = [
 const PREVIEW_FRAMES = 120
 const PREVIEW_COLUMNS = 12
 const PREVIEW_SIZE = 160
+const REPO_URL = "https://github.com/albertolicea00/doodleshooter-port"
+const RELEASES_PAGE_URL = "https://github.com/albertolicea00/doodleshooter-port/releases"
+const RELEASES_API_URL = "https://api.github.com/repos/albertolicea00/doodleshooter-port/releases?per_page=8"
+var update_request: HTTPRequest
+var update_dots_timer: Timer
 var show_fps = true
 var smokes: Array = []
 # Port additions: how smeared, swaying and greyed-out the view is right now.
@@ -439,6 +444,7 @@ func _clear_menu(title: String, subtitle: String) -> void:
 	auto_scroll_wait = 0.0
 	auto_scroll_pos = 0.0
 	menu_scroll.scroll_vertical = 0
+	menu_items.add_theme_constant_override("separation", 12)
 	for child in menu_items.get_children():
 		child.free()
 	var header = VBoxContainer.new()
@@ -468,13 +474,14 @@ func _clear_menu(title: String, subtitle: String) -> void:
 		scope.visible = false
 	if weapon_wheel != null:
 		weapon_wheel.reset()
+	_cancel_update_request()
 	touch.visible = false
 	touch.editing = false
 	editor_bar.visible = false
 	touch.reset()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-func _refresh_menu_hint(show_back_note: bool) -> void:
+func _refresh_menu_hint(show_back_note: bool, has_panel: bool = true) -> void:
 	if menu_hint == null:
 		return
 	var red_hex = DoodlePen.RED.to_html(false)
@@ -483,13 +490,15 @@ func _refresh_menu_hint(show_back_note: bool) -> void:
 	var second_line = "\n[color=#%s][i]The Back button is at the very bottom[/i][/color]" % sub_hex if show_back_note else ""
 	menu_hint.text = "[center]%s%s[/center]" % [top_line, second_line]
 	if menu_pad != null:
-		menu_pad.add_theme_constant_override("margin_top", 40 if show_back_note else 28)
+		menu_pad.add_theme_constant_override("margin_top", (6 if show_back_note else 0) if has_panel else (40 if show_back_note else 28))
+		menu_pad.add_theme_constant_override("margin_bottom", 2 if has_panel else 12)
 
 # Short screens shrink the sheet to their content; long ones scroll to the screen edges.
 func _fit_menu() -> void:
 	_prepare_menu_controls(menu_items)
 	var back_btn = _find_back_button(menu_items)
-	_refresh_menu_hint(back_btn != null and back_btn.text.begins_with("BACK"))
+	var has_panel = menu.get_theme_stylebox("panel").get_minimum_size().y > 0.0
+	_refresh_menu_hint(back_btn != null and back_btn.text.begins_with("BACK"), has_panel)
 	menu_scroll.follow_focus = false
 	var current_focus = get_viewport().gui_get_focus_owner()
 	if current_focus == null or not menu_items.is_ancestor_of(current_focus):
@@ -616,6 +625,7 @@ func show_main_menu() -> void:
 	playing = false
 	paused = false
 	_clear_menu("DOODLE SHOOTER ", "native port, portable too")
+	menu_items.add_theme_constant_override("separation", 9)
 	var header = menu_items.get_child(0)
 	var heading = header.get_child(0)
 	var title_row = HBoxContainer.new()
@@ -649,29 +659,48 @@ func show_main_menu() -> void:
 	foot.text = "[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]" % ProjectSettings.get_setting("application/config/version")
 	foot.meta_clicked.connect(func(meta): OS.shell_open(str(meta)))
 	header.add_child(foot)
-	_menu_gap(6)
+	var updates_pad = MarginContainer.new()
+	updates_pad.add_theme_constant_override("margin_top", 5)
+	updates_pad.add_theme_constant_override("margin_bottom", 8)
+	updates_pad.mouse_filter = Control.MOUSE_FILTER_PASS
+	header.add_child(updates_pad)
+	var updates_btn = _button("CHECK FOR UPDATES", show_updates_menu, "AltButton")
+	updates_btn.custom_minimum_size = Vector2(230, 34)
+	updates_btn.add_theme_font_size_override("font_size", 18)
+	updates_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	updates_btn.reparent(updates_pad)
 	var play_offline = _button("START SOLO", show_offline_menu, "StartButton")
-	play_offline.custom_minimum_size.x = 420
+	play_offline.custom_minimum_size = Vector2(420, 48)
 	play_offline.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	play_offline.rotation_degrees = -1.0
 	play_offline.resized.connect(func(): play_offline.pivot_offset = play_offline.size * 0.5)
+	play_offline.grab_focus()
 	var network_row = HBoxContainer.new()
 	network_row.add_theme_constant_override("separation", 10)
 	network_row.custom_minimum_size.x = 460
 	network_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	menu_items.add_child(network_row)
 	var online = _button("PLAY ONLINE", show_online_menu, "RedButton")
+	online.custom_minimum_size.y = 44
 	online.reparent(network_row)
 	online.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var local = _button("PLAY LAN", show_lan_menu, "RedOutlineButton")
+	local.custom_minimum_size.y = 44
 	local.reparent(network_row)
 	local.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_menu_gap(8)
+	var info_pad = MarginContainer.new()
+	info_pad.add_theme_constant_override("margin_top", 9)
+	info_pad.add_theme_constant_override("margin_bottom", 9)
+	info_pad.mouse_filter = Control.MOUSE_FILTER_PASS
+	menu_items.add_child(info_pad)
+	var info_col = VBoxContainer.new()
+	info_col.add_theme_constant_override("separation", 8)
+	info_pad.add_child(info_col)
 	for entry in [["CONTROLS", show_controls], ["SETTINGS", show_settings], ["CREDITS", show_credits]]:
 		var info_btn = _button(entry[0], entry[1], "AltButton")
-		info_btn.custom_minimum_size = Vector2(420, 44)
+		info_btn.custom_minimum_size = Vector2(420, 38)
 		info_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_menu_gap(6)
+		info_btn.reparent(info_col)
 	if not OS.has_feature("mobile"):
 		var bottom_row = HBoxContainer.new()
 		bottom_row.add_theme_constant_override("separation", 10)
@@ -679,6 +708,7 @@ func show_main_menu() -> void:
 		bottom_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		menu_items.add_child(bottom_row)
 		var fs_btn = _button("FULLSCREEN: ON" if fullscreen else "FULLSCREEN: OFF", func(): pass, "AltButton")
+		fs_btn.custom_minimum_size.y = 42
 		fs_btn.toggle_mode = true
 		fs_btn.button_pressed = fullscreen
 		fs_btn.toggled.connect(func(on: bool):
@@ -688,11 +718,12 @@ func show_main_menu() -> void:
 		fs_btn.reparent(bottom_row)
 		fs_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var exit_btn = _button("QUIT GAME", func(): get_tree().quit(), "RedOutlineButton")
+		exit_btn.custom_minimum_size.y = 42
 		exit_btn.reparent(bottom_row)
 		exit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	else:
 		var exit = _button("QUIT GAME", func(): get_tree().quit(), "RedOutlineButton")
-		exit.custom_minimum_size.x = 240
+		exit.custom_minimum_size = Vector2(240, 42)
 		exit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 func map_info(key: String) -> Dictionary:
@@ -1229,6 +1260,244 @@ func _credit_section(title: String, body: String) -> RichTextLabel:
 
 func show_credit_notices() -> void:
 	show_license("Full credits & notices", FileAccess.get_file_as_string("res://CREDITS.txt") + "\n\n" + FileAccess.get_file_as_string("res://assets/fonts/PatrickHand-OFL.txt"))
+
+func _cancel_update_request() -> void:
+	if is_instance_valid(update_dots_timer):
+		update_dots_timer.stop()
+		update_dots_timer.queue_free()
+		update_dots_timer = null
+	if is_instance_valid(update_request):
+		update_request.cancel_request()
+		update_request.queue_free()
+		update_request = null
+
+static func _parse_version(raw: String) -> Array[int]:
+	var clean = raw.strip_edges().trim_prefix("v").trim_prefix("V").get_slice("-", 0).get_slice("+", 0)
+	var parts: Array[int] = []
+	for token in clean.split("."):
+		if token.is_valid_int():
+			parts.append(int(token))
+	return parts
+
+static func _compare_versions(candidate: String, current: String) -> int:
+	var a = _parse_version(candidate)
+	var b = _parse_version(current)
+	var count = maxi(a.size(), b.size())
+	for i in count:
+		var av = a[i] if i < a.size() else 0
+		var bv = b[i] if i < b.size() else 0
+		if av != bv:
+			return 1 if av > bv else -1
+	return 0
+
+static func _format_release_notes(markdown: String) -> String:
+	var trimmed = markdown.strip_edges()
+	if trimmed.is_empty():
+		return "No release notes were provided for this release."
+	var red_hex = DoodlePen.RED.to_html(false)
+	var out: PackedStringArray = []
+	for raw_line in trimmed.split("\n"):
+		var line = raw_line.strip_edges(false, true).replace("[", "[lb]")
+		var stripped = line.strip_edges()
+		if stripped.begins_with("### "):
+			line = "[b]%s[/b]" % stripped.substr(4)
+		elif stripped.begins_with("## "):
+			line = "[font_size=24][b]%s[/b][/font_size]" % stripped.substr(3)
+		elif stripped.begins_with("# "):
+			line = "[font_size=26][b]%s[/b][/font_size]" % stripped.substr(2)
+		elif stripped.begins_with("- ") or stripped.begins_with("* "):
+			line = "  • " + stripped.substr(2)
+		while "**" in line:
+			var first = line.find("**")
+			var second = line.find("**", first + 2)
+			if second < 0:
+				break
+			line = line.substr(0, first) + "[b]" + line.substr(first + 2, second - first - 2) + "[/b]" + line.substr(second + 2)
+		while "`" in line:
+			var first_tick = line.find("`")
+			var second_tick = line.find("`", first_tick + 1)
+			if second_tick < 0:
+				break
+			line = line.substr(0, first_tick) + "[color=#%s]" % red_hex + line.substr(first_tick + 1, second_tick - first_tick - 1) + "[/color]" + line.substr(second_tick + 1)
+		out.append(line)
+	return "\n".join(out)
+
+static func _classify_release_asset(asset_name: String) -> Dictionary:
+	var lower = asset_name.to_lower()
+	var current_os = OS.get_name()
+	if lower.ends_with(".dmg"):
+		return {"label": "MACOS (.DMG)", "preferred": current_os == "macOS"}
+	if ("macos" in lower or ".app" in lower) and lower.ends_with(".zip"):
+		return {"label": "MACOS (.ZIP)", "preferred": current_os == "macOS"}
+	if lower.ends_with(".exe.zip") or ("windows" in lower and lower.ends_with(".zip")):
+		return {"label": "WINDOWS (.ZIP)", "preferred": current_os == "Windows"}
+	if lower.ends_with(".exe") or "windows" in lower:
+		return {"label": "WINDOWS (.EXE)", "preferred": current_os == "Windows"}
+	if lower.ends_with(".apk"):
+		var label = "ANDROID DEBUG (.APK)" if "debug" in lower else "ANDROID (.APK)"
+		return {"label": label, "preferred": current_os == "Android"}
+	if lower.ends_with(".ipa") or "ios" in lower:
+		return {"label": "IOS (.IPA)", "preferred": current_os == "iOS"}
+	if ".x86_64" in lower or "linux" in lower:
+		return {"label": "LINUX (.ZIP)" if lower.ends_with(".zip") else "LINUX (X86_64)", "preferred": current_os == "Linux"}
+	return {"label": asset_name.to_upper(), "preferred": false}
+
+func show_updates_menu() -> void:
+	var installed = str(ProjectSettings.get_setting("application/config/version"))
+	_clear_menu("Checking for updates…", "Installed v%s · contacting GitHub Releases" % installed)
+	var start = menu_items.get_child_count()
+	var status_label = _credit_section("GitHub Releases", "Connecting to github.com/albertolicea00/doodleshooter-port ·")
+	_button("VIEW SOURCE CODE", func(): OS.shell_open(REPO_URL), "AltButton")
+	_card_wrap(start)
+	_back_button(show_main_menu)
+	if "--smoke" in OS.get_cmdline_user_args():
+		return
+	var step_state = [1]
+	update_dots_timer = Timer.new()
+	update_dots_timer.wait_time = 0.35
+	update_dots_timer.autostart = true
+	update_dots_timer.timeout.connect(func():
+		if is_instance_valid(status_label):
+			step_state[0] = (step_state[0] % 3) + 1
+			status_label.text = "Connecting to github.com/albertolicea00/doodleshooter-port " + "·".repeat(step_state[0]))
+	add_child(update_dots_timer)
+	update_request = HTTPRequest.new()
+	update_request.timeout = 12.0
+	add_child(update_request)
+	update_request.request_completed.connect(_on_updates_response)
+	var headers = PackedStringArray(["Accept: application/vnd.github+json", "User-Agent: doodleshooter-port/" + installed])
+	var err = update_request.request(RELEASES_API_URL, headers)
+	if err != OK:
+		_render_update_error("Could not start the network request (error %d)." % err)
+
+func _on_updates_response(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	_cancel_update_request()
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		_render_update_error("Could not reach GitHub Releases (HTTP %d). Check your Internet connection and try again." % response_code if response_code > 0 else "Could not reach GitHub Releases. Check your Internet connection and try again.")
+		return
+	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	if not (parsed is Array) or parsed.is_empty():
+		_render_update_error("No published releases were found on GitHub yet.")
+		return
+	var chosen: Dictionary = {}
+	for entry in parsed:
+		if entry is Dictionary and not bool(entry.get("draft", false)):
+			if chosen.is_empty():
+				chosen = entry
+			if not bool(entry.get("prerelease", false)):
+				chosen = entry
+				break
+	if chosen.is_empty():
+		_render_update_error("No public releases are available yet.")
+		return
+	_render_update_release(chosen)
+
+func _render_update_error(message: String) -> void:
+	var installed = str(ProjectSettings.get_setting("application/config/version"))
+	_clear_menu("Updates", "Installed version v%s" % installed)
+	var top_row = HBoxContainer.new()
+	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_row.add_theme_constant_override("separation", 16)
+	menu_items.add_child(top_row)
+	var again_btn = _button("CHECK AGAIN", show_updates_menu, "RedOutlineButton")
+	again_btn.custom_minimum_size.x = 220
+	again_btn.reparent(top_row)
+	var src_btn = _button("VIEW SOURCE CODE", func(): OS.shell_open(REPO_URL), "AltButton")
+	src_btn.custom_minimum_size.x = 240
+	src_btn.reparent(top_row)
+	var start = menu_items.get_child_count()
+	_credit_section("Could not check automatically", message)
+	_button("OPEN GITHUB RELEASES", func(): OS.shell_open(RELEASES_PAGE_URL), "AltButton")
+	_card_wrap(start)
+	_back_button(show_main_menu)
+
+func _render_update_release(release: Dictionary) -> void:
+	var installed = str(ProjectSettings.get_setting("application/config/version"))
+	var tag = str(release.get("tag_name", "v" + installed))
+	var clean_tag = tag.trim_prefix("v").trim_prefix("V")
+	var published = str(release.get("published_at", "")).left(10)
+	var date_note = " · published " + published if published != "" else ""
+	var cmp = _compare_versions(tag, installed)
+	var heading = "Update available · v" + clean_tag if cmp > 0 else "Up to date · v" + installed
+	var subtitle = ("Installed v%s · new version v%s%s" % [installed, clean_tag, date_note]) if cmp > 0 else (
+		("You have the latest GitHub release (v%s%s)" % [clean_tag, date_note]) if cmp == 0 else (
+		"Installed v%s is ahead of the latest published release (v%s%s)" % [installed, clean_tag, date_note]))
+	_clear_menu(heading, subtitle)
+	menu.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	menu.custom_minimum_size.x = 1040
+	menu.offset_left = -520
+	menu.offset_right = 520
+	var top_row = HBoxContainer.new()
+	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_row.add_theme_constant_override("separation", 16)
+	menu_items.add_child(top_row)
+	var again_btn = _button("CHECK AGAIN", show_updates_menu, "RedOutlineButton")
+	again_btn.custom_minimum_size.x = 220
+	again_btn.reparent(top_row)
+	var src_btn = _button("VIEW SOURCE CODE", func(): OS.shell_open(REPO_URL), "AltButton")
+	src_btn.custom_minimum_size.x = 240
+	src_btn.reparent(top_row)
+	# Top card: Direct downloads.
+	var dl_start = menu_items.get_child_count()
+	_credit_section("Direct downloads · v" + clean_tag, "Packages attached to this GitHub release. Recommended builds for your device appear first.")
+	var raw_assets: Array = release.get("assets", [])
+	var decorated: Array[Dictionary] = []
+	for item in raw_assets:
+		if item is Dictionary and str(item.get("browser_download_url", "")) != "":
+			var info = _classify_release_asset(str(item.get("name", "build")))
+			var mb = float(item.get("size", 0)) / 1048576.0
+			var size_text = " · %.1f MB" % mb if mb >= 0.1 else ""
+			decorated.append({
+				"label": info.label + size_text,
+				"url": str(item.browser_download_url),
+				"preferred": bool(info.preferred)
+			})
+	decorated.sort_custom(func(a, b): return a.preferred and not b.preferred)
+	if decorated.is_empty():
+		var zip_url = str(release.get("zipball_url", ""))
+		if zip_url != "":
+			_button("SOURCE ARCHIVE (.ZIP)", func(): OS.shell_open(zip_url), "AltButton")
+	elif decorated.size() >= 2:
+		var dl_grid = GridContainer.new()
+		dl_grid.columns = mini(3, decorated.size())
+		dl_grid.add_theme_constant_override("h_separation", 12)
+		dl_grid.add_theme_constant_override("v_separation", 10)
+		menu_items.add_child(dl_grid)
+		for asset in decorated:
+			var url: String = asset.url
+			var style = ("GreenButton" if cmp > 0 else "") if asset.preferred else "AltButton"
+			var dl_btn = _button(asset.label, func(): OS.shell_open(url), style)
+			dl_btn.add_theme_font_size_override("font_size", 19)
+			dl_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			dl_btn.reparent(dl_grid)
+	else:
+		var url: String = decorated[0].url
+		var style = ("GreenButton" if cmp > 0 else "") if decorated[0].preferred else "AltButton"
+		_button(decorated[0].label, func(): OS.shell_open(url), style)
+	_card_wrap(dl_start)
+	# Bottom card: Full release notes (with OPEN RELEASE ON GITHUB on the right of the card title).
+	var notes_start = menu_items.get_child_count()
+	var notes_title = str(release.get("name", "")).strip_edges()
+	if notes_title.is_empty():
+		notes_title = "v" + clean_tag
+	var release_url = str(release.get("html_url", RELEASES_PAGE_URL))
+	var notes = _credit_section("Release notes · " + notes_title, "")
+	var notes_heading = menu_items.get_child(notes_start) as Label
+	var notes_header = HBoxContainer.new()
+	notes_header.add_theme_constant_override("separation", 16)
+	notes_heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notes_heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	menu_items.add_child(notes_header)
+	menu_items.move_child(notes_header, notes_start)
+	notes_heading.reparent(notes_header)
+	var open_rel = _button("OPEN RELEASE ON GITHUB", func(): OS.shell_open(release_url), "AltButton")
+	open_rel.custom_minimum_size = Vector2(250, 40)
+	open_rel.add_theme_font_size_override("font_size", 18)
+	open_rel.reparent(notes_header)
+	notes.bbcode_enabled = true
+	notes.text = _format_release_notes(str(release.get("body", "")))
+	_card_wrap(notes_start)
+	_back_button(show_main_menu)
 
 func show_license(title: String, text: String) -> void:
 	_clear_menu(title, "Attribution and license notices")
@@ -2064,6 +2333,37 @@ func run_smoke() -> void:
 	await smoke_tap_button("CONTROLLER & MOTION")
 	assert(menu_items.get_child(0).get_child(0).text == "Controller & motion", "CONTROLLER & MOTION must open its dedicated settings screen")
 	await smoke_tap_button("BACK TO SETTINGS")
+	await smoke_tap_button("BACK TO MAIN MENU")
+	assert(_compare_versions("v2.1.0", "2.0.2") == 1 and _compare_versions("2.0.2", "v2.0.2") == 0 and _compare_versions("v1.9.9", "2.0.2") == -1, "Semantic version comparison must rank releases accurately")
+	var main_updates_btn = await smoke_menu_button("CHECK FOR UPDATES")
+	var main_start_btn = await smoke_menu_button("START SOLO")
+	var main_quit_btn = await smoke_menu_button("QUIT GAME")
+	assert(main_updates_btn.global_position.y < main_start_btn.global_position.y and main_updates_btn.size.x < main_start_btn.size.x, "CHECK FOR UPDATES must sit above START SOLO and be narrower")
+	assert(menu_pad.get_combined_minimum_size().y <= menu_scroll.size.y + 1.0 and main_quit_btn.get_global_rect().end.y <= menu.get_global_rect().end.y, "Entire main menu including FULLSCREEN and QUIT GAME must fit visibly inside the panel without scrolling")
+	await smoke_tap_button("CHECK FOR UPDATES")
+	assert(menu_items.get_child(0).get_child(0).text == "Checking for updates…", "CHECK FOR UPDATES must open the loading updater screen")
+	_render_update_release({
+		"tag_name": "v9.9.0",
+		"name": "v9.9.0",
+		"published_at": "2026-11-26T12:00:00Z",
+		"html_url": RELEASES_PAGE_URL,
+		"body": "## Highlights\n- **Controller** radial wheel\n- `Dark board` mode\n- Gyroscope aiming\n- Light bar states\n- Edge shadow\n- Colorblind inks\n- Touchpad scoreboard",
+		"assets": [
+			{"name": "doodleshooter-port-v9.9.0-10-release.apk", "size": 44040192, "browser_download_url": RELEASES_PAGE_URL + "/download/v9.9.0/app.apk"},
+			{"name": "doodleshooter-port-v9.9.0-10-release.dmg", "size": 52428800, "browser_download_url": RELEASES_PAGE_URL + "/download/v9.9.0/app.dmg"},
+			{"name": "doodleshooter-port-v9.9.0-10-release.exe.zip", "size": 48234496, "browser_download_url": RELEASES_PAGE_URL + "/download/v9.9.0/app.exe.zip"}
+		]
+	})
+	await get_tree().process_frame
+	assert(menu_items.get_child(0).get_child(0).text == "Update available · v9.9.0", "Newer GitHub release must display Update available heading")
+	var gh_rel_btn = await smoke_menu_button("OPEN RELEASE ON GITHUB")
+	var dmg_btn = await smoke_menu_button("MACOS (.DMG) · 50.0 MB")
+	var apk_btn = await smoke_menu_button("ANDROID (.APK) · 42.0 MB")
+	var win_zip_btn = await smoke_menu_button("WINDOWS (.ZIP) · 46.0 MB")
+	var src_btn = await smoke_menu_button("VIEW SOURCE CODE")
+	assert(gh_rel_btn != null and dmg_btn != null and apk_btn != null and win_zip_btn != null and src_btn != null, "Updater must render GitHub release button, direct downloads without DOWNLOAD prefix, and source button")
+	assert(dmg_btn.global_position.y < gh_rel_btn.global_position.y, "Direct downloads card must appear above the full release notes card")
+	assert((dmg_btn.get_parent() as GridContainer).columns == 3 and is_equal_approx(dmg_btn.position.y, apk_btn.position.y) and is_equal_approx(dmg_btn.position.y, win_zip_btn.position.y), "Three release download buttons must fit on the same row")
 	await smoke_tap_button("BACK TO MAIN MENU")
 	if not OS.has_feature("mobile"):
 		await smoke_tap_button("FULLSCREEN: OFF")
