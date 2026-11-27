@@ -918,6 +918,10 @@ func apply_visual_settings() -> void:
 		paper_rect.visible = paper_lines
 	if is_instance_valid(menu_backdrop):
 		menu_backdrop.color = Color(eff_paper, 0.55)
+	if is_instance_valid(scope):
+		var scope_material := scope.material as ShaderMaterial
+		scope_material.set_shader_parameter("paper_color", eff_paper)
+		scope_material.set_shader_parameter("ink_color", ReferenceAssets.outline_ink())
 	if is_instance_valid(vignette_overlay):
 		var dim = clampf((1.0 - paper_brightness) * 0.22 + (0.14 if paper_theme == 3 else 0.0), 0.0, 0.36)
 		var mat := vignette_overlay.material as ShaderMaterial
@@ -2314,14 +2318,24 @@ func run_smoke() -> void:
 	await smoke_tap_button("ACCESSIBILITY")
 	assert(menu_items.get_child(0).get_child(0).text == "Accessibility", "ACCESSIBILITY must open its dedicated settings screen")
 	assert(is_equal_approx(paper_brightness, 0.95) and is_equal_approx(edge_shadow, 0.05), "Default paper brightness and edge shadow must be 95% and 5%")
+	var scope_material := scope.material as ShaderMaterial
 	paper_brightness = 0.2
 	edge_shadow = 0.6
 	apply_visual_settings()
 	assert(ReferenceAssets.effective_paper().get_luminance() < 0.25 and ReferenceAssets.effective_ink(2).get_luminance() > 0.7 and vignette_overlay.visible, "Lowering paper brightness must darken paper, lighten dark inks, and show the vignette overlay")
+	assert(scope_material.get_shader_parameter("paper_color").is_equal_approx(ReferenceAssets.effective_paper()), "The scope mask must follow paper brightness")
 	paper_brightness = 1.0
 	edge_shadow = 0.0
 	apply_visual_settings()
 	assert(not vignette_overlay.visible and ReferenceAssets.effective_paper().is_equal_approx(ReferenceAssets.map_paper), "Zeroing dim and edge shadow must hide the vignette overlay")
+	var light_scope_ink: Color = scope_material.get_shader_parameter("ink_color")
+	paper_theme = 3
+	apply_visual_settings()
+	var dark_scope_paper: Color = scope_material.get_shader_parameter("paper_color")
+	var dark_scope_ink: Color = scope_material.get_shader_parameter("ink_color")
+	assert(dark_scope_paper.is_equal_approx(ReferenceAssets.effective_paper()) and dark_scope_paper.get_luminance() < 0.2, "Dark board must darken the scope mask at full brightness")
+	assert(dark_scope_ink.get_luminance() > light_scope_ink.get_luminance(), "The scope reticle must lighten for Dark board")
+	paper_theme = 0
 	paper_brightness = 0.95
 	edge_shadow = 0.05
 	apply_visual_settings()
