@@ -2716,6 +2716,7 @@ func run_smoke() -> void:
 	player.fire_cd = 0
 	player.fire()
 	assert(projectiles.size() > 0 and projectiles[-1].reflected and player.magazines[6] == 0, "The bazooka must launch a friendly rocket")
+	assert(is_equal_approx(projectiles[-1].damage, 210.0) and is_equal_approx(projectiles[-1].blast, 5.0), "Survival rockets must gain damage with the same blast radius")
 	player.switch_weapon(0)
 	player.switch_weapon(1)
 	player.magazines[1] = 2
@@ -2766,6 +2767,36 @@ func run_smoke() -> void:
 	var previous_hp = target.hp
 	head_hit.collider.take_damage(1, head_hit.position)
 	assert(target.hp == previous_hp - 1, "Hitbox damage must reach the owning enemy")
+	target.hp = 1000.0
+	player.switch_weapon(2)
+	player.aiming = true
+	player.camera.look_at(head.global_position)
+	player.camera.rotation.x -= 0.055 * 0.55
+	player.fire_cd = 0.0
+	player.fire()
+	assert(is_equal_approx(target.hp, 400.0), "A Survival sniper headshot must deal 600 damage")
+	player.switch_weapon(1)
+	var shotgun: Dictionary = player.weapons.shotgun
+	var saved_spread: float = shotgun.ads_spread
+	shotgun.ads_spread = 0.0
+	for shot_range in [4.0, 12.0]:
+		player.position = target.position + Vector3.BACK * shot_range
+		await get_tree().physics_frame
+		player.camera.look_at(head.global_position)
+		player.camera.rotation.x -= 0.05 * 0.55
+		player.fire_cd = 0.0
+		player.cycle_time = 0.0
+		target.hp = 1000.0
+		player.fire()
+		var pellet_hit = player.ray(20)
+		assert(not pellet_hit.is_empty() and pellet_hit.collider == head, "The shotgun test must aim at the head hitbox")
+		var distance := player.camera.global_position.distance_to(pellet_hit.position)
+		var expected_damage := 432.0 if shot_range < 6.0 else 342.0 * (1.0 - (distance - 11.0) / 21.0)
+		assert(is_equal_approx(1000.0 - target.hp, expected_damage), "Only close shotgun hits must gain damage in Survival")
+	shotgun.ads_spread = saved_spread
+	player.aiming = false
+	player.switch_weapon(0)
+	player.camera.rotation = Vector3.ZERO
 	player.position = saved_position
 	player.set_physics_process(true)
 	var boss = spawn_enemy("boss")
@@ -3526,7 +3557,7 @@ func show_offline_menu() -> void:
 	_populate_map_cards(map_row, true, func(key: String):
 		map_key = key)
 	var survival_start = menu_items.get_child_count()
-	_credit_section("Survival · Enemy waves", "Survive growing waves of enemies and bosses. Difficulty and wave-size choices are port additions, not part of the original game.")
+	_credit_section("Survival · Enemy waves", "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game.")
 	if checkpoint >= 5:
 		var heading = menu_items.get_child(survival_start)
 		var heading_row = HBoxContainer.new()

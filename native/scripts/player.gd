@@ -452,6 +452,7 @@ func fire() -> void:
 		reload()
 		return
 	var config: Dictionary = weapons[weapon_names[weapon_index]]
+	var survival: bool = game.match_mode == "survival" and not game.network.in_match
 	magazines[weapon_index] -= 1
 	last_attack = weapon_names[weapon_index]
 	cycle_time = 0.85 if weapon_index == 2 else (0.45 if weapon_index == 1 else 0.0)
@@ -464,7 +465,8 @@ func fire() -> void:
 	game.rumble(shot_rumble[0], shot_rumble[1], shot_rumble[2])
 	if weapon_index == 6:
 		# The rocket is a friendly projectile that explodes on the first thing it touches.
-		game.fire_projectile(parts[6].muzzle.global_position, -camera.global_basis.z, 46.0, 160.0, true, 5.0)
+		var damage := float(config.damage) + (50.0 if survival else 0.0)
+		game.fire_projectile(parts[6].muzzle.global_position, -camera.global_basis.z, 46.0, damage, true, 5.0)
 		return
 	var remote_hits: Dictionary = {}
 	for i in int(config.pellets):
@@ -475,12 +477,18 @@ func fire() -> void:
 		if not hit.is_empty():
 			end = hit.position
 			if hit.collider.has_method("take_damage"):
-				var amount: float = [19, 16, 150, 0, 48, 12][weapon_index] if hit.collider.get_meta("remote", false) else float(config.damage)
-				if hit.collider.get_meta("part", "") == "head" or (not hit.collider is DoodleHitbox and hit.position.y > hit.collider.global_position.y + 1.45 * hit.collider.model_scale):
-					amount *= ([1.8, 1.6, 1.5, 1.0, 1.6, 1.6][weapon_index] if hit.collider.get_meta("remote", false) else [2.6, 1.8, 3.0, 1.0, 3.0, 2.0][weapon_index])
+				var remote: bool = hit.collider.get_meta("remote", false)
+				var amount: float = [19, 16, 150, 0, 48, 12][weapon_index] if remote else float(config.damage)
+				if survival and weapon_index == 2:
+					amount += 50.0
 				if weapon_index == 1:
-					amount *= clampf(1.0 - maxf(0, camera.global_position.distance_to(end) - 11) / 21, 0.22, 1)
-				if hit.collider.get_meta("remote", false):
+					var distance := camera.global_position.distance_to(end)
+					if survival:
+						amount += 5.0 * (1.0 - smoothstep(6.0, 11.0, distance))
+					amount *= clampf(1.0 - maxf(0, distance - 11) / 21, 0.22, 1)
+				if hit.collider.get_meta("part", "") == "head" or (not hit.collider is DoodleHitbox and hit.position.y > hit.collider.global_position.y + 1.45 * hit.collider.model_scale):
+					amount *= ([1.8, 1.6, 1.5, 1.0, 1.6, 1.6][weapon_index] if remote else [2.6, 1.8, 3.0, 1.0, 3.0, 2.0][weapon_index])
+				if remote:
 					remote_hits[hit.collider.peer_id] = {"target": hit.collider, "amount": float(remote_hits.get(hit.collider.peer_id, {}).get("amount", 0.0)) + amount}
 				else:
 					hit.collider.take_damage(amount, hit.position)
