@@ -49,4 +49,4 @@ Port-only menu presentation additions: the main menu shows `DOODLE SHOOTER` with
 
 Play Offline has an experimental port-only `Game speed` control in the Survival and bot-match pause menus. It applies 1×, 1.5×, 2×, 2.5×, 3×, 4×, or 5× game time on resume and defaults to 1× for each new match. Online and LAN matches use their normal game clock.
 
-The pause menu shows `RESUME`, the offline `Game speed` row, `CONTROLS` / `SETTINGS`, and a red-outlined `MAIN MENU` button. `CREDITS` is only reachable from the main menu.
+The pause menu shows `RESUME`, the offline `Game speed` row, `CONTROLS` / `SETTINGS`, and a compact, centered, red-outlined `MAIN MENU` button. `CREDITS` is only reachable from the main menu.

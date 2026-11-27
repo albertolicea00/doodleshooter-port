@@ -1781,7 +1781,10 @@ func pause_menu() -> void:
 	if _can_set_offline_speed():
 		_game_speed_choices(tr("Game speed"), game_speed, func(multiplier: float): game_speed = multiplier)
 	_info_row()
-	_button("MAIN MENU", show_main_menu, "RedOutlineButton")
+	var main_btn = _button("MAIN MENU", show_main_menu, "RedOutlineButton")
+	main_btn.custom_minimum_size = Vector2(260, 42)
+	main_btn.add_theme_font_size_override("font_size", 20)
+	main_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and playing:
