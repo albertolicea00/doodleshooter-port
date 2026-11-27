@@ -1,0 +1,1178 @@
+# Localization for doodleshooter-port.
+msgid ""
+msgstr ""
+"Project-Id-Version: doodleshooter-port\n"
+"PO-Revision-Date: 2026-11-26 00:00+0000\n"
+"Last-Translator: doodleshooter-port contributors\n"
+"Language-Team: pt_BR\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "\n\nHost IP: "
+msgstr "\n\nEndereço IP do anfitrião: "
+
+msgid "\n[color=#%s][i]The Back button is at the very bottom[/i][/color]"
+msgstr "\n[color=#%s][i]O botão Voltar está no fim da tela[/i][/color]"
+
+msgid "\nKeep this device in the game to host the room."
+msgstr "\nMantenha este dispositivo no jogo para hospedar a sala."
+
+msgid " (host)"
+msgstr " (anfitrião)"
+
+msgid " reloading…"
+msgstr " recarregando…"
+
+msgid " · %d bots"
+msgstr " · %d bots"
+
+msgid " · published "
+msgstr " · publicado "
+
+msgid "# Credits and provenance"
+msgstr "# Créditos e procedência"
+
+msgid "%d bots"
+msgstr "%d bots"
+
+msgid "%d bots · %s"
+msgstr "%d bots · %s"
+
+msgid "%d enemies left"
+msgstr "%d inimigos restantes"
+
+msgid "%d fps"
+msgstr "%d fps"
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "%d waves · %d kills · %d points\nBest score: %d"
+msgstr "%d ondas · %d abates · %d pontos\nRecorde: %d"
+
+msgid "%s\nMap: %s\nWaiting for the host to start the match."
+msgstr "%s\nMapa: %s\nAguardando o anfitrião iniciar a partida."
+
+msgid "%s     %d K / %d D"
+msgstr "%s     %d A / %d M"
+
+msgid "%s · %d kills · %d deaths\n"
+msgstr "%s · %d abates · %d mortes\n"
+
+msgid "1 bot"
+msgstr "1 bot"
+
+msgid "20+ bots may reduce performance, especially on mobile devices."
+msgstr "Mais de 20 bots podem reduzir o desempenho, especialmente em dispositivos móveis."
+
+msgid ": off"
+msgstr ": não"
+
+msgid ": on"
+msgstr ": sim"
+
+msgid "[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]"
+msgstr "[center]v%s · por [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]"
+
+msgid "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back"
+msgstr "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Selecionar · Setas / D-pad Mover e rolar · [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Voltar"
+
+msgid "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
+msgstr "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] no GitHub. É o código de referência, sem atribuir a autoria exclusiva do original ao dono do repositório."
+
+msgid "ACCESSIBILITY"
+msgstr "ACESSIBILIDADE"
+
+msgid "Accessibility"
+msgstr "Acessibilidade"
+
+msgid "AIM"
+msgstr "MIRAR"
+
+msgid "Always"
+msgstr "Sempre"
+
+msgid "ANDROID DEBUG (.APK)"
+msgstr "ANDROID DEBUG (.APK)"
+
+msgid "Applies to touch controls and the controller right stick."
+msgstr "Vale para os controles de toque e o analógico direito."
+
+msgid "Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other."
+msgstr "Peça ao anfitrião o endereço IP exibido na sua sala de espera. Insira-o abaixo e, em seguida, toque em \"Juntar\". Redes Wi-Fi de convidados podem impedir que os dispositivos se conectem uns aos outros."
+
+msgid "Attribution and license notices"
+msgstr "Avisos de atribuição e licenciamento"
+
+msgid "Auto fire on target"
+msgstr "Disparo automático no alvo"
+
+msgid "Away from the page"
+msgstr "Inatividade"
+
+msgid "BACK TO CONTROLS"
+msgstr "VOLTAR AOS CONTROLES"
+
+msgid "BACK TO CREDITS"
+msgstr "VOLTAR AOS CRÉDITOS"
+
+msgid "BACK TO LAN"
+msgstr "VOLTAR À REDE LOCAL"
+
+msgid "BACK TO LOBBY"
+msgstr "VOLTAR À SALA"
+
+msgid "BACK TO MAIN MENU"
+msgstr "VOLTAR AO MENU PRINCIPAL"
+
+msgid "BACK TO ONLINE"
+msgstr "VOLTAR AO MODO ONLINE"
+
+msgid "BACK TO PAUSE"
+msgstr "VOLTAR À PAUSA"
+
+msgid "BACK TO SETTINGS"
+msgstr "VOLTAR ÀS CONFIGURAÇÕES"
+
+msgid "Bazooka"
+msgstr "Bazuca"
+
+msgid "BIGGER"
+msgstr "MAIOR"
+
+msgid "BLOCK"
+msgstr "BLOQUEAR"
+
+msgid "Bold 3D outlines"
+msgstr "Contornos 3D grossos"
+
+msgid "BOLDER"
+msgstr "MAIS FORTE"
+
+msgid "BROWSE PUBLIC LOBBIES"
+msgstr "VER SALAS PÚBLICAS"
+
+msgid "Caffeine · faster enemies"
+msgstr "Cafeína · inimigos mais rápidos"
+
+msgid "CANCEL"
+msgstr "CANCELAR"
+
+msgid "Changes apply immediately and are saved on this device"
+msgstr "As alterações são aplicadas imediatamente e são salvas neste dispositivo"
+
+msgid "CHECK AGAIN"
+msgstr "VERIFICAR DE NOVO"
+
+msgid "CHECK FOR UPDATES"
+msgstr "VERIFICAR ATUALIZAÇÕES"
+
+msgid "Check this device's Wi-Fi settings"
+msgstr "Verificar as configurações de Wi-Fi deste dispositivo"
+
+msgid "Checking for updates…"
+msgstr "Verificando atualizações…"
+
+msgid "CHECKPOINT · WAVE "
+msgstr "CHECKPOINT · ONDA "
+
+msgid "Choose a custom map"
+msgstr "Escolha um mapa personalizado"
+
+msgid "Choose a map"
+msgstr "Escolha um mapa"
+
+msgid "Choose a map, adjust the match settings, and start when everyone is ready."
+msgstr "Escolha um mapa, ajuste as configurações da partida e comece quando todos estiverem prontos."
+
+msgid "Choose an open room"
+msgstr "Escolha uma sala aberta"
+
+msgid "choose from 9 maps"
+msgstr "escolha entre 9 mapas"
+
+msgid "Choose how you want to play"
+msgstr "Escolha como quer jogar"
+
+msgid "Choose the language for menus and gameplay."
+msgstr "Escolha o idioma dos menus e da partida."
+
+msgid "Colorblind-safe enemy & pickup inks"
+msgstr "Cores acessíveis para inimigos e itens"
+
+msgid "Coloured pencil"
+msgstr "Lápis de cor"
+
+msgid "Combo x%d"
+msgstr "Combo x%d"
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port "
+msgstr "Conectando a github.com/albertolicea00/doodleshooter-port "
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port ·"
+msgstr "Conectando a github.com/albertolicea00/doodleshooter-port ·"
+
+msgid "Connecting to the host on your local network"
+msgstr "Conectando ao servidor local na sua rede"
+
+msgid "Connecting…"
+msgstr "Conectando…"
+
+msgid "Connection"
+msgstr "Conexão"
+
+msgid "Contacting the lobby server"
+msgstr "Conectando ao servidor da sala"
+
+msgid "Continue Survival from wave %d"
+msgstr "Continuar Sobrevivência a partir da onda %d"
+
+msgid "CONTROLLER & MOTION"
+msgstr "CONTROLE E MOVIMENTO"
+
+msgid "Controller & motion"
+msgstr "Controle e sensor de movimento"
+
+msgid "Controller aiming, motion sensor and feedback · saved on this device"
+msgstr "Controle de mira, sensor de movimento e feedback · salvo neste dispositivo"
+
+msgid "Controller light bar"
+msgstr "Barra de luz do controle"
+
+msgid "Controller vibration"
+msgstr "Vibração do controle"
+
+msgid "CONTROLS"
+msgstr "CONTROLES"
+
+msgid "Controls"
+msgstr "Controles"
+
+msgid "Could not check automatically"
+msgstr "Não foi possível verificar automaticamente."
+
+msgid "Could not open the local game port. Close another hosted room and try again."
+msgstr "Não foi possível abrir a porta do jogo local. Feche outra sala hospedada e tente novamente."
+
+msgid "Could not reach GitHub Releases (HTTP %d). Check your Internet connection and try again."
+msgstr "Não foi possível acessar o GitHub Releases (HTTP %d). Verifique sua conexão com a internet e tente novamente."
+
+msgid "Could not reach GitHub Releases. Check your Internet connection and try again."
+msgstr "Não foi possível acessar o GitHub Releases. Verifique sua conexão com a internet e tente novamente."
+
+msgid "Could not start the network request (error %d)."
+msgstr "Não foi possível iniciar a solicitação de rede (erro %d)."
+
+msgid "Create a lobby"
+msgstr "Criar uma sala"
+
+msgid "Create a local match on this device and share your host IP with friends on the same Wi-Fi or hotspot. Keep this device in the game while others play. Once inside the lobby, you can choose the map, time limit, and bots.\n\nHost IP: "
+msgstr "Crie uma partida local e compartilhe o IP com amigos na mesma rede Wi-Fi ou ponto de acesso. Mantenha o jogo aberto enquanto jogam. Na sala, escolha mapa, tempo e bots.\n\nIP do anfitrião: "
+
+msgid "CREATE PRIVATE LOBBY"
+msgstr "CRIAR SALA PRIVADA"
+
+msgid "CREATE PUBLIC LOBBY"
+msgstr "CRIAR SALA PÚBLICA"
+
+msgid "Creating LAN room…"
+msgstr "Criando sala local…"
+
+msgid "CREDITS"
+msgstr "CRÉDITOS"
+
+msgid "Credits"
+msgstr "Créditos"
+
+msgid "custom map · tap to change"
+msgstr "mapa personalizado · toque para trocar"
+
+msgid "CUSTOMIZE LAYOUT"
+msgstr "PERSONALIZAR CONTROLES"
+
+msgid "Damage flash"
+msgstr "Flash de dano"
+
+msgid "Dark board"
+msgstr "Quadro escuro"
+
+msgid "DASH"
+msgstr "IMPULSO"
+
+msgid "default global map"
+msgstr "mapa padrão"
+
+msgid "DELETE"
+msgstr "EXCLUIR"
+
+msgid "Direct downloads · v"
+msgstr "Downloads diretos · v"
+
+msgid "Disconnected from the lobby server."
+msgstr "Desconectado do servidor da sala de espera."
+
+msgid "District, Jungle and Mexico are original · the rest are new in this port"
+msgstr "Distrito, Selva e México são originais · os demais são novos neste port"
+
+msgid "Dizzy screen sway"
+msgstr "Balanço de tontura"
+
+msgid "DONE"
+msgstr "CONCLUIR"
+
+msgid "Doodle Base"
+msgstr "Base Doodle"
+
+msgid "Doodle Castle"
+msgstr "Castelo Doodle"
+
+msgid "Doodle District"
+msgstr "Distrito Doodle"
+
+msgid "DOODLE DISTRICT"
+msgstr "DISTRITO DOODLE"
+
+msgid "Doodle Forest"
+msgstr "Floresta Doodle"
+
+msgid "Doodle Harbor"
+msgstr "Porto Doodle"
+
+msgid "Doodle Jungle"
+msgstr "Selva Doodle"
+
+msgid "Doodle Mexico"
+msgstr "México Doodle"
+
+msgid "Doodle Pyramid"
+msgstr "Pirâmide Doodle"
+
+msgid "Doodle School"
+msgstr "Escola Doodle"
+
+msgid "Doodle Station"
+msgstr "Estação Doodle"
+
+msgid "Doodler Bot %d"
+msgstr "Bot Doodler %d"
+
+msgid "doodleshooter-port · unofficial native adaptation"
+msgstr "doodleshooter-port · adaptação não oficial"
+
+msgid "Drag a control to move it · tap one to resize, fade, copy or delete it"
+msgstr "Arraste um controle para movê-lo · toque em um para redimensionar, desvanecer, copiar ou excluir"
+
+msgid "DRAW AGAIN"
+msgstr "DESENHAR DE NOVO"
+
+msgid "Drawing the world…"
+msgstr "Desenhando o mundo…"
+
+msgid "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready."
+msgstr "LEDs do DualShock e DualSense: tinta azul durante o jogo, vermelha quando ferido ou com pouca saúde, laranja quando o foco do katana está pronto."
+
+msgid "DUPLICATE"
+msgstr "DUPLICAR"
+
+msgid "Easy"
+msgstr "Fácil"
+
+msgid "Edge shadow"
+msgstr "Sombra nas bordas"
+
+msgid "Effects volume"
+msgstr "Volume dos efeitos"
+
+msgid "Engine and font"
+msgstr "Motor e fonte"
+
+msgid "Enter a five-character room code from a friend, or browse open public rooms to jump into a match."
+msgstr "Insira um código de sala de 5 caracteres fornecido por um amigo, ou navegue pelas salas públicas abertas para entrar em uma partida."
+
+msgid "Enter the host's IP address first"
+msgstr "Insira primeiro o endereço IP do anfitrião"
+
+msgid "FAINTER"
+msgstr "MAIS CLARO"
+
+msgid "Fewer bots"
+msgstr "Menos bots"
+
+msgid "FIRE"
+msgstr "ATIRAR"
+
+msgid "Five-character lobby code"
+msgstr "Código de cinco caracteres"
+
+msgid "Fixed joystick"
+msgstr "Analógico fixo"
+
+msgid "Frame rate counter"
+msgstr "Contador de FPS"
+
+msgid "FREE FOR ALL\n"
+msgstr "TODOS CONTRA TODOS\n"
+
+msgid "Free for all with bots"
+msgstr "Todos contra todos com bots"
+
+msgid "Free for all · 10 players · first to 20 kills · Connect to a native lobby server"
+msgstr "Todos contra todos · 10 jogadores · vence quem fizer 20 abates primeiro · conecte-se a um servidor de salas"
+
+msgid "Free for all · first to %d · %d minute limit%s"
+msgstr "Todos contra todos · %d abates para vencer · limite de %d min%s"
+
+msgid "Free for all · the match continues while this menu is open"
+msgstr "Todos contra todos · a partida continua com o menu aberto"
+
+msgid "FROM CHECKPOINT"
+msgstr "DO CHECKPOINT"
+
+msgid "FULL CREDITS & NOTICES"
+msgstr "CRÉDITOS E AVISOS COMPLETOS"
+
+msgid "Full credits & notices"
+msgstr "Créditos e avisos completos"
+
+msgid "FULLSCREEN: OFF"
+msgstr "TELA CHEIA: NÃO"
+
+msgid "FULLSCREEN: ON"
+msgstr "TELA CHEIA: SIM"
+
+msgid "Godot Engine license"
+msgstr "Licença do motor Godot"
+
+msgid "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1"
+msgstr "Godot Engine · licença MIT\nPatrick Hand · autores da Patrick Hand\nSIL Open Font License 1.1"
+
+msgid "GODOT LICENSE"
+msgstr "LICENÇA GODOT"
+
+msgid "Graphics detail"
+msgstr "Qualidade gráfica"
+
+msgid "Gyroscope"
+msgstr "Giroscópio"
+
+msgid "Gyroscope sensitivity"
+msgstr "Sensibilidade do giroscópio"
+
+msgid "Hard"
+msgstr "Difícil"
+
+msgid "Health"
+msgstr "Vida"
+
+msgid "Heavy Ink · harder hits"
+msgstr "Tinta pesada · impactos mais fortes"
+
+msgid "High"
+msgstr "Alta"
+
+msgid "High contrast"
+msgstr "Alto contraste"
+
+msgid "Hold to aim"
+msgstr "Segurar para mirar"
+
+msgid "HOOK"
+msgstr "GANCHO"
+
+msgid "Host a room"
+msgstr "Criar uma sala"
+
+msgid "Host IP address, for example 192.168.1.10"
+msgstr "Endereço IP para hospedar, por exemplo, 192.168.1.10"
+
+msgid "HOST LAN GAME"
+msgstr "CRIAR PARTIDA LOCAL"
+
+msgid "Huge waves"
+msgstr "Ondas enormes"
+
+msgid "Insane"
+msgstr "Insano"
+
+msgid "Installed v%s is ahead of the latest published release (v%s%s)"
+msgstr "A v%s instalada é mais recente que a última versão publicada (v%s%s)"
+
+msgid "Installed v%s · contacting GitHub Releases"
+msgstr "Versão instalada (v%s) · entrando em contato com as versões do GitHub"
+
+msgid "Installed v%s · new version v%s%s"
+msgstr "v%s instalada · nova versão v%s%s"
+
+msgid "Installed version v%s"
+msgstr "Versão instalada (v%s)"
+
+msgid "Invalid message."
+msgstr "Mensagem inválida."
+
+msgid "Invert vertical look"
+msgstr "Inverter câmera vertical"
+
+msgid "Join a lobby"
+msgstr "Entrar em uma sala"
+
+msgid "Join a room"
+msgstr "Entrar na sala"
+
+msgid "JOIN CODE"
+msgstr "ENTRAR COM CÓDIGO"
+
+msgid "JOIN LAN GAME"
+msgstr "ENTRAR EM PARTIDA LOCAL"
+
+msgid "Joining LAN room…"
+msgstr "Entrando na sala local…"
+
+msgid "JUMP"
+msgstr "PULAR"
+
+msgid "Katana"
+msgstr "Katana"
+
+msgid "Kills %d / %d"
+msgstr "Abates %d / %d"
+
+msgid "LAN hosting unavailable"
+msgstr "Não é possível hospedar a rede local"
+
+msgid "LANGUAGE"
+msgstr "IDIOMA"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Language selection is a port addition."
+msgstr "A seleção de idioma é um recurso do port."
+
+msgid "Large"
+msgstr "Grande"
+
+msgid "Large waves"
+msgstr "Ondas grandes"
+
+msgid "LEAVE LOBBY"
+msgstr "SAIR DA SALA"
+
+msgid "LEAVE MATCH"
+msgstr "SAIR DA PARTIDA"
+
+msgid "Light bar"
+msgstr "Barra luminosa"
+
+msgid "Loading original geometry and native navigation"
+msgstr "Carregando geometria original e navegação nativa"
+
+msgid "Lobby "
+msgstr "Sala "
+
+msgid "Lobby not found. Check its five-character code."
+msgstr "Sala não encontrada. Confira o código de cinco caracteres."
+
+msgid "Local network · LAN"
+msgstr "Rede local · LAN"
+
+msgid "Longer match"
+msgstr "Partida mais longa"
+
+msgid "Look sensitivity"
+msgstr "Sensibilidade da câmera"
+
+msgid "Looking"
+msgstr "Câmera"
+
+msgid "Low"
+msgstr "Baixa"
+
+msgid "Lower brightness or choose Dark board to rest your eyes; inks adapt automatically."
+msgstr "Diminua o brilho ou escolha o modo escuro para descansar os olhos; as cores se adaptam automaticamente."
+
+msgid "MAIN MENU"
+msgstr "MENU PRINCIPAL"
+
+msgid "map"
+msgstr "mapa"
+
+msgid "MAP · "
+msgstr "MAPA · "
+
+msgid "Match finished"
+msgstr "Partida encerrada"
+
+msgid "Match setup"
+msgstr "Configuração da partida"
+
+msgid "Medium"
+msgstr "Média"
+
+msgid "More bots"
+msgstr "Mais bots"
+
+msgid "Motion & flashes"
+msgstr "Movimento e flashes"
+
+msgid "MOUSE + KEYBOARD"
+msgstr "MOUSE + TECLADO"
+
+msgid "Moving"
+msgstr "Movimento"
+
+msgid "Music volume"
+msgstr "Volume da música"
+
+msgid "NADE"
+msgstr "GRANADA"
+
+msgid "Native adaptation"
+msgstr "Adaptação nativa"
+
+msgid "native port, portable too"
+msgstr "port nativo e portátil"
+
+msgid "Next wave in %d"
+msgstr "Próxima onda em %d"
+
+msgid "No Internet connection or server needed"
+msgstr "Não precisa de internet nem de servidor"
+
+msgid "No public releases are available yet."
+msgstr "Ainda não há versões públicas."
+
+msgid "No published releases were found on GitHub yet."
+msgstr "Ainda não há versões publicadas no GitHub."
+
+msgid "No release notes were provided for this release."
+msgstr "Esta versão não tem notas."
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Normal 3D outlines"
+msgstr "Contornos 3D normais"
+
+msgid "Normal crosshair"
+msgstr "Mira normal"
+
+msgid "Normal waves"
+msgstr "Ondas normais"
+
+msgid "Off"
+msgstr "Desligado"
+
+msgid "OFFLINE FREE FOR ALL\n"
+msgstr "TODOS CONTRA TODOS OFFLINE\n"
+
+msgid "Offline free for all · %d / %d kills"
+msgstr "Todos contra todos offline · %d / %d abates"
+
+msgid "Offline match finished"
+msgstr "Partida offline encerrada"
+
+msgid "Open a new room on the lobby server and share its code with friends, or list it publicly."
+msgstr "Abra uma sala no servidor e compartilhe o código com amigos ou publique a sala na lista."
+
+msgid "OPEN GITHUB RELEASES"
+msgstr "ABRIR VERSÕES NO GITHUB"
+
+msgid "OPEN ORIGINAL GAME"
+msgstr "ABRIR JOGO ORIGINAL"
+
+msgid "OPEN RELEASE ON GITHUB"
+msgstr "ABRIR VERSÃO NO GITHUB"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Original game · Doodle District"
+msgstr "Jogo original · Doodle District"
+
+msgid "Original hatching"
+msgstr "Hachuras originais"
+
+msgid "Original soundtrack"
+msgstr "Trilha sonora original"
+
+msgid "Packages attached to this GitHub release. Recommended builds for your device appear first."
+msgstr "Pacotes desta versão do GitHub. As versões recomendadas para seu dispositivo aparecem primeiro."
+
+msgid "Paper & brightness"
+msgstr "Papel e brilho"
+
+msgid "Paper brightness"
+msgstr "Brilho do papel"
+
+msgid "Paused"
+msgstr "Pausado"
+
+msgid "PLAY AGAIN"
+msgstr "JOGAR DE NOVO"
+
+msgid "PLAY LAN"
+msgstr "JOGAR EM REDE LOCAL"
+
+msgid "Play offline"
+msgstr "Jogar offline"
+
+msgid "PLAY ONLINE"
+msgstr "JOGAR ONLINE"
+
+msgid "Play online"
+msgstr "Jogar online"
+
+msgid "Players (%d/12)"
+msgstr "Jogadores (%d/12)"
+
+msgid "PORT REPOSITORY"
+msgstr "REPOSITÓRIO DO PORT"
+
+msgid "Ported by @albertolicea00. Shared Android, iOS, and desktop project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator."
+msgstr "Port de @albertolicea00. Projeto compartilhado para Android, iOS e desktop, feito com Godot Engine. Distrito, Selva e México são mapas originais, convertidos junto com os modelos. A música procedural e os efeitos originais foram renderizados com o gerador de áudio de referência."
+
+msgid "PS CONTROLLER"
+msgstr "CONTROLE PS"
+
+msgid "Public lobbies"
+msgstr "Salas públicas"
+
+msgid "QUICK PLAY"
+msgstr "JOGO RÁPIDO"
+
+msgid "QUIT GAME"
+msgstr "SAIR DO JOGO"
+
+msgid "Readability"
+msgstr "Legibilidade"
+
+msgid "Ready"
+msgstr "Pronta"
+
+msgid "Reference dependencies"
+msgstr "Dependências da referência"
+
+msgid "Reference source"
+msgstr "Código de referência"
+
+msgid "REJOIN"
+msgstr "ENTRAR DE NOVO"
+
+msgid "Rejoin the fight with a two-second shield"
+msgstr "Volte à luta com dois segundos de escudo"
+
+msgid "Release notes · "
+msgstr "Notas da versão · "
+
+msgid "release to equip"
+msgstr "solte para equipar"
+
+msgid "RELOAD"
+msgstr "RECARREGAR"
+
+msgid "Reload button"
+msgstr "Botão de recarga"
+
+msgid "Removed after 150 seconds without input."
+msgstr "Você saiu após 150 segundos de inatividade."
+
+msgid "RESET"
+msgstr "REDEFINIR"
+
+msgid "RESPAWN"
+msgstr "REAPARECER"
+
+msgid "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game."
+msgstr "Renasça e enfrente todos. Vence quem alcançar %d abates primeiro ou tiver mais após %d minutos. Adição do port, ausente no jogo original."
+
+msgid "RESUME"
+msgstr "CONTINUAR"
+
+msgid "Review the match settings and players while the host prepares the match."
+msgstr "Veja as configurações e os jogadores enquanto o anfitrião prepara a partida."
+
+msgid "Revolver"
+msgstr "Revólver"
+
+msgid "Rifle"
+msgstr "Fuzil"
+
+msgid "Right stick"
+msgstr "Analógico direito"
+
+msgid "Ruled notebook lines"
+msgstr "Linhas de caderno"
+
+msgid "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts."
+msgstr "Vibração ao disparar, golpear com a katana, aparar, usar o gancho, aterrissar com força, sofrer dano e com explosões."
+
+msgid "RUN"
+msgstr "CORRER"
+
+msgid "Run lock marker"
+msgstr "Indicador de corrida contínua"
+
+msgid "SCORE"
+msgstr "PLACAR"
+
+msgid "Score %d"
+msgstr "Pontos %d"
+
+msgid "Screen shake"
+msgstr "Tremor da tela"
+
+msgid "Second fire button on the left"
+msgstr "Segundo botão de tiro à esquerda"
+
+msgid "SELECT CUSTOM MAP"
+msgstr "ESCOLHER MAPA PERSONALIZADO"
+
+msgid "Sensitivity while aiming"
+msgstr "Sensibilidade ao mirar"
+
+msgid "Server connection timed out. Check the URL and server."
+msgstr "A conexão expirou. Confira o endereço e o servidor."
+
+msgid "SETTINGS"
+msgstr "CONFIGURAÇÕES"
+
+msgid "Settings"
+msgstr "Configurações"
+
+msgid "Shading"
+msgstr "Sombreamento"
+
+msgid "Shooting"
+msgstr "Disparo"
+
+msgid "Shorter match"
+msgstr "Partida mais curta"
+
+msgid "Shotgun"
+msgstr "Escopeta"
+
+msgid "SLASH"
+msgstr "GOLPE"
+
+msgid "SLIDE"
+msgstr "DESLIZAR"
+
+msgid "slide touchpad"
+msgstr "deslize no touchpad"
+
+msgid "SMALLER"
+msgstr "MENOR"
+
+msgid "SMG"
+msgstr "Submetralhadora"
+
+msgid "SMOKE"
+msgstr "FUMAÇA"
+
+msgid "Sniper"
+msgstr "Precisão"
+
+msgid "Soft slate"
+msgstr "Cinza ardósia"
+
+msgid "Sound"
+msgstr "Som"
+
+msgid "Sound effects"
+msgstr "Efeitos sonoros"
+
+msgid "SOURCE ARCHIVE (.ZIP)"
+msgstr "CÓDIGO-FONTE (.ZIP)"
+
+msgid "Spawn shield"
+msgstr "Escudo de reaparecimento"
+
+msgid "Sprint with a full forward push"
+msgstr "Correr ao empurrar o analógico até o fim"
+
+msgid "START BOT MATCH"
+msgstr "JOGAR COM BOTS"
+
+msgid "START MATCH"
+msgstr "INICIAR PARTIDA"
+
+msgid "START SOLO"
+msgstr "JOGAR SOZINHO"
+
+msgid "START SURVIVAL"
+msgstr "INICIAR SOBREVIVÊNCIA"
+
+msgid "Starting a game on this device"
+msgstr "Iniciando uma partida neste dispositivo"
+
+msgid "Survival · Waves"
+msgstr "Sobrevivência · Ondas"
+
+msgid "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."
+msgstr "Sobreviva a ondas de inimigos e chefes cada vez maiores. O rifle de precisão e a bazuca causam mais dano, e a escopeta é mais forte de perto. Esses ajustes, as dificuldades e os tamanhos de onda são adições do port."
+
+msgid "Swarm · more enemies, less health"
+msgstr "Enxame · mais inimigos, menos vida"
+
+msgid "TEST VIBRATION"
+msgstr "TESTAR VIBRAÇÃO"
+
+msgid "That lobby is full (10 players)."
+msgstr "A sala está cheia (10 jogadores)."
+
+msgid "That match has finished. Join another lobby."
+msgstr "Essa partida acabou. Entre em outra sala."
+
+msgid "The Doodler"
+msgstr "O Rabiscador"
+
+msgid "The Eraser"
+msgstr "A Borracha"
+
+msgid "The Inkblot"
+msgstr "A Mancha de Tinta"
+
+msgid "The LAN host closed the room."
+msgstr "O anfitrião fechou a sala local."
+
+msgid "The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation."
+msgstr "O conceito, design, mapas, personagens, armas, mecânicas, arte, trilha e sons originais pertencem aos criadores do jogo. Este port é independente e não oficial."
+
+msgid "This LAN room is full, unavailable, or finished."
+msgstr "A sala local está cheia, indisponível ou encerrada."
+
+msgid "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause."
+msgstr "Three.js e PeerJS são preservados com seus avisos na cópia histórica do código. Não são distribuídos com o jogo nativo. A renderização de áudio na compilação usa node-web-audio-api da IRCAM sob BSD-3-Clause."
+
+msgid "Tilt your motion controller (DualShock / DualSense) or phone to aim."
+msgstr "Incline o controle de movimento (DualShock / DualSense) ou o celular para mirar."
+
+msgid "Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden."
+msgstr "Incline o celular ou o controle de movimento (DualShock / DualSense) para mirar, mesmo com os controles de toque ocultos."
+
+msgid "TOUCH"
+msgstr "TOQUE"
+
+msgid "TOUCH & AIMING"
+msgstr "TOQUE E MIRA"
+
+msgid "Touch & aiming"
+msgstr "Toque e mira"
+
+msgid "Unable to connect to that server URL."
+msgstr "Não foi possível conectar a esse endereço."
+
+msgid "Up to date · v"
+msgstr "Em dia · v"
+
+msgid "Update available · v"
+msgstr "Atualização disponível · v"
+
+msgid "Updates"
+msgstr "Atualizações"
+
+msgid "Use the same Wi-Fi network or hotspot. No Internet or separate server needed."
+msgstr "Use a mesma rede Wi-Fi ou ponto de acesso. Não precisa de internet nem de servidor separado."
+
+msgid "Vibration"
+msgstr "Vibração"
+
+msgid "VIEW SOURCE CODE"
+msgstr "VER CÓDIGO-FONTE"
+
+msgid "Visual comfort, dark paper, motion reduction and readability"
+msgstr "Conforto visual, papel escuro, redução de movimento e legibilidade"
+
+msgid "Warm sepia"
+msgstr "Sépia quente"
+
+msgid "Wave %d"
+msgstr "Onda %d"
+
+msgid "Wave %d · %d points"
+msgstr "Onda %d · %d pontos"
+
+msgid "While aiming"
+msgstr "Ao mirar"
+
+msgid "wss://your-lobby-server"
+msgstr "wss://seu-servidor"
+
+msgid "XBOX CONTROLLER"
+msgstr "CONTROLE XBOX"
+
+msgid "You got erased"
+msgstr "Você foi apagado"
+
+msgid "You got erased · respawn in %d"
+msgstr "Você foi apagado · renasce em %d"
+
+msgid "You have the latest GitHub release (v%s%s)"
+msgstr "Você tem a versão mais recente do GitHub (v%s%s)"
+
+msgid "You're crazy! With 30 bots, the game might barely run!"
+msgstr "Com 30 bots, o jogo pode ficar bem lento!"
+
+msgid "Your name"
+msgstr "Seu nome"
+
+msgid "{1–7 / Wheel}"
+msgstr "{1–7 / Roda}"
+
+msgid "{1–7 / Wheel} switch weapons"
+msgstr "{1–7 / Wheel} trocar armas"
+
+msgid "{C} slide on the ground · air dash in the air"
+msgstr "{C} deslizar no chão · impulso no ar"
+
+msgid "{D-pad Right}"
+msgstr "{Direcional →}"
+
+msgid "{D-pad Up / Down}"
+msgstr "{Direcional ↑ / ↓}"
+
+msgid "{D-pad Up / Down} previous / next weapon"
+msgstr "{D-pad Up / Down} arma anterior ou seguinte"
+
+msgid "{DASH}"
+msgstr "{IMPULSO}"
+
+msgid "{Drag elsewhere}"
+msgstr "{Arraste fora do controle}"
+
+msgid "{F} quick katana slash   {R} reload"
+msgstr "{F} golpe rápido de katana   {R} recarregar"
+
+msgid "{G} grenade · hold to throw further   {H} smoke"
+msgstr "{G} granada · segure para lançar mais longe   {H} fumaça"
+
+msgid "{L stick}"
+msgstr "{Analógico esq.}"
+
+msgid "{L stick} move   {R stick / Gyro} look   {L3} toggle sprint"
+msgstr "{L stick} mover   {R stick / Gyro} olhar   {L3} alternar corrida"
+
+msgid "{L1} grapple: tap to swing, hold to reel"
+msgstr "{L1} gancho: toque para balançar, segure para recolher"
+
+msgid "{L2 + R2} charged katana execution in survival"
+msgstr "{L2 + R2} finalização carregada com katana na Sobrevivência"
+
+msgid "{Left thumb}"
+msgstr "{Polegar esquerdo}"
+
+msgid "{Left thumb} move and sprint · drag up to the runner marker to keep running   {Drag elsewhere} look, even while firing"
+msgstr "{Left thumb} mova e corra · arraste até o ícone para continuar correndo   {Drag elsewhere} olhe, mesmo enquanto atira"
+
+msgid "{LMB + RMB}"
+msgstr "{Botões esq. + dir.}"
+
+msgid "{LMB + RMB} charged katana execution in survival"
+msgstr "{LMB + RMB} finalização carregada com katana na Sobrevivência"
+
+msgid "{LMB}"
+msgstr "{Botão esq.}"
+
+msgid "{LMB} fire / slash   {RMB} aim / block"
+msgstr "{LMB} atirar ou golpear   {RMB} mirar ou bloquear"
+
+msgid "{LS click}"
+msgstr "{Pressionar LS}"
+
+msgid "{Mouse}"
+msgstr "{Mouse}"
+
+msgid "{Options}"
+msgstr "{Options}"
+
+msgid "{Q} grapple: tap to swing, hold to reel"
+msgstr "{Q} gancho: toque para balançar, segure para recolher"
+
+msgid "{R stick / Gyro}"
+msgstr "{Analógico dir. / Giro}"
+
+msgid "{R1} quick katana slash, then back to your gun"
+msgstr "{R1} golpe rápido de katana, depois volta à arma"
+
+msgid "{R2} fire / slash   {L2} aim / block"
+msgstr "{R2} atirar ou golpear   {L2} mirar ou bloquear"
+
+msgid "{R3 / D-pad Left}"
+msgstr "{R3 / Direcional ←}"
+
+msgid "{R3 / D-pad Left} grenade · hold to throw   {D-pad Right} smoke"
+msgstr "{R3 / D-pad Left} granada · segure para lançar   {D-pad Right} fumaça"
+
+msgid "{RMB}"
+msgstr "{Botão dir.}"
+
+msgid "{RS / Gyro}"
+msgstr "{RS / Giro}"
+
+msgid "{RS click / D-pad Left}"
+msgstr "{Pressionar RS / Direcional ←}"
+
+msgid "{Shift}"
+msgstr "{Shift}"
+
+msgid "{SLIDE}"
+msgstr "{DESLIZAR}"
+
+msgid "{SLIDE} becomes {DASH} in the air   {Weapon bar} tap a weapon to switch · tap it again or use reload to reload"
+msgstr "{SLIDE} vira {DASH} no ar   {Weapon bar} toque para selecionar a arma · toque de novo ou use recarregar"
+
+msgid "{Space}"
+msgstr "{Espaço}"
+
+msgid "{Space} again in the air: double jump"
+msgstr "{Space} de novo no ar: salto duplo"
+
+msgid "{Space} jump · press against a wall to wall jump"
+msgstr "{Space} pular · pressione junto à parede para pular nela"
+
+msgid "{Space} launch from the rope   {Q} again: release"
+msgstr "{Space} saltar da corda   {Q} de novo: soltar"
+
+msgid "{Tab} scoreboard (bot / network matches)   {Esc} pause"
+msgstr "{Tab} placar (partidas com bots ou em rede)   {Esc} pausar"
+
+msgid "{Touchpad click / Create}"
+msgstr "{Pressionar touchpad / Create}"
+
+msgid "{Touchpad click / Create} scoreboard   {Options} pause"
+msgstr "{Touchpad click / Create} placar   {Options} pausar"
+
+msgid "{Touchpad swipe}"
+msgstr "{Deslizar no touchpad}"
+
+msgid "{Touchpad swipe} radial weapon wheel (1–7)"
+msgstr "{Touchpad swipe} roda de armas (1–7)"
+
+msgid "{WASD} move   {Mouse} look   {Shift} sprint"
+msgstr "{WASD} mover   {Mouse} olhar   {Shift} correr"
+
+msgid "{Weapon bar}"
+msgstr "{Barra de armas}"
+
+msgid "{×} jump / wall jump / double jump"
+msgstr "{×} pular, pular na parede ou salto duplo"
+
+msgid "{×} launch from the rope   {L1} again: release"
+msgstr "{×} saltar da corda   {L1} de novo: soltar"
+
+msgid "{□} reload   {△} next weapon"
+msgstr "{□} recarregar   {△} próxima arma"
+
+msgid "{○} slide on the ground · air dash in the air"
+msgstr "{○} deslizar no chão · impulso no ar"
+
+msgid "~ drag this line to move the bar ~"
+msgstr "~ arraste esta linha para mover a barra ~"
+
+msgid "• %d bots"
+msgstr "• %d bots"
+
+msgid "• 1 bot"
+msgstr "• 1 bot"

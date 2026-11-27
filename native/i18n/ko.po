@@ -1,0 +1,1178 @@
+# Localization for doodleshooter-port.
+msgid ""
+msgstr ""
+"Project-Id-Version: doodleshooter-port\n"
+"PO-Revision-Date: 2026-11-26 00:00+0000\n"
+"Last-Translator: doodleshooter-port contributors\n"
+"Language-Team: ko\n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "\n\nHost IP: "
+msgstr "\n\n호스트 IP: "
+
+msgid "\n[color=#%s][i]The Back button is at the very bottom[/i][/color]"
+msgstr "\n[color=#%s][i]돌아가기 버튼은 화면 맨 아래에 있습니다[/i][/color]"
+
+msgid "\nKeep this device in the game to host the room."
+msgstr "\n이 장치를 게임에 유지하여 방을 호스트합니다."
+
+msgid " (host)"
+msgstr " (호스트)"
+
+msgid " reloading…"
+msgstr " 재장전 중…"
+
+msgid " · %d bots"
+msgstr " · 봇 %d명"
+
+msgid " · published "
+msgstr " · 게시됨 "
+
+msgid "# Credits and provenance"
+msgstr "# 크레딧 및 출처"
+
+msgid "%d bots"
+msgstr "봇 %d명"
+
+msgid "%d bots · %s"
+msgstr "봇 %d명 · %s"
+
+msgid "%d enemies left"
+msgstr "남은 적 %d명"
+
+msgid "%d fps"
+msgstr "%d fps"
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "%d waves · %d kills · %d points\nBest score: %d"
+msgstr "%d 웨이브 · %d 처치 · %d점\n최고 점수: %d"
+
+msgid "%s\nMap: %s\nWaiting for the host to start the match."
+msgstr "%s\n맵: %s\n호스트가 대전을 시작하기를 기다리는 중입니다."
+
+msgid "%s     %d K / %d D"
+msgstr "%s     %d 처치 / %d 사망"
+
+msgid "%s · %d kills · %d deaths\n"
+msgstr "%s · %d 처치 · %d 사망\n"
+
+msgid "1 bot"
+msgstr "봇 1명"
+
+msgid "20+ bots may reduce performance, especially on mobile devices."
+msgstr "20개 이상의 봇은 특히 모바일 장치에서 성능 저하를 유발할 수 있습니다."
+
+msgid ": off"
+msgstr ": 끔"
+
+msgid ": on"
+msgstr ": 켬"
+
+msgid "[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]"
+msgstr "[center]v%s · [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]에 의해"
+
+msgid "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back"
+msgstr "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] 선택 · 화살 / D-패드 이동 및 스크롤 · [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] 뒤로 가기"
+
+msgid "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
+msgstr "GitHub의 [url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url]를 소스 참조로 사용했습니다. 저장소 소유자에게 원작의 단독 저작권을 부여하는 것은 아닙니다."
+
+msgid "ACCESSIBILITY"
+msgstr "접근성"
+
+msgid "Accessibility"
+msgstr "접근성"
+
+msgid "AIM"
+msgstr "조준"
+
+msgid "Always"
+msgstr "항상"
+
+msgid "ANDROID DEBUG (.APK)"
+msgstr "안드로이드 디버그 (.APK)"
+
+msgid "Applies to touch controls and the controller right stick."
+msgstr "터치 조작과 컨트롤러의 오른쪽 스틱에 적용됩니다."
+
+msgid "Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other."
+msgstr "호스트가 대기실에 표시된 IP 주소를 문의하십시오. 아래에 입력한 다음, \"가입\"을 누릅니다. 게스트 Wi-Fi 네트워크는 장치 간의 연결을 방지할 수 있습니다."
+
+msgid "Attribution and license notices"
+msgstr "저작권 및 라이선스 고지"
+
+msgid "Auto fire on target"
+msgstr "목표에 자동 발사"
+
+msgid "Away from the page"
+msgstr "자리 비움"
+
+msgid "BACK TO CONTROLS"
+msgstr "조작법으로 돌아가기"
+
+msgid "BACK TO CREDITS"
+msgstr "크레딧으로 돌아가기"
+
+msgid "BACK TO LAN"
+msgstr "LAN으로 돌아가기"
+
+msgid "BACK TO LOBBY"
+msgstr "대기실로 돌아가기"
+
+msgid "BACK TO MAIN MENU"
+msgstr "메인 메뉴로 돌아가기"
+
+msgid "BACK TO ONLINE"
+msgstr "온라인으로 돌아가기"
+
+msgid "BACK TO PAUSE"
+msgstr "일시 정지로 돌아가기"
+
+msgid "BACK TO SETTINGS"
+msgstr "설정으로 돌아가기"
+
+msgid "Bazooka"
+msgstr "바주카"
+
+msgid "BIGGER"
+msgstr "확대"
+
+msgid "BLOCK"
+msgstr "막기"
+
+msgid "Bold 3D outlines"
+msgstr "굵은 3D 윤곽선"
+
+msgid "BOLDER"
+msgstr "진하게"
+
+msgid "BROWSE PUBLIC LOBBIES"
+msgstr "공개 대기실 찾기"
+
+msgid "Caffeine · faster enemies"
+msgstr "카페인 · 적이 더 빠름"
+
+msgid "CANCEL"
+msgstr "취소"
+
+msgid "Changes apply immediately and are saved on this device"
+msgstr "변경 사항은 즉시 적용되며 이 장치에 저장됩니다."
+
+msgid "CHECK AGAIN"
+msgstr "다시 확인"
+
+msgid "CHECK FOR UPDATES"
+msgstr "업데이트 확인"
+
+msgid "Check this device's Wi-Fi settings"
+msgstr "이 장치의 Wi-Fi 설정을 확인"
+
+msgid "Checking for updates…"
+msgstr "업데이트 확인 중…"
+
+msgid "CHECKPOINT · WAVE "
+msgstr "체크포인트 · 웨이브 "
+
+msgid "Choose a custom map"
+msgstr "커스텀 맵 선택"
+
+msgid "Choose a map"
+msgstr "맵 선택"
+
+msgid "Choose a map, adjust the match settings, and start when everyone is ready."
+msgstr "맵 선택, 매치 설정을 조정하고, 모두 준비되면 시작합니다."
+
+msgid "Choose an open room"
+msgstr "열린 대기실을 선택하세요"
+
+msgid "choose from 9 maps"
+msgstr "맵 9개 중에 선택"
+
+msgid "Choose how you want to play"
+msgstr "원하는 플레이 방식을 선택하세요"
+
+msgid "Choose the language for menus and gameplay."
+msgstr "메뉴와 게임에서 사용할 언어를 선택하세요."
+
+msgid "Colorblind-safe enemy & pickup inks"
+msgstr "적 및 아이템 색각 보정"
+
+msgid "Coloured pencil"
+msgstr "색연필"
+
+msgid "Combo x%d"
+msgstr "콤보 x%d"
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port "
+msgstr "github.com/albertolicea00/doodleshooter-port에 연결 "
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port ·"
+msgstr "github.com/albertolicea00/doodleshooter-port에 연결"
+
+msgid "Connecting to the host on your local network"
+msgstr "로컬 네트워크의 호스트에 연결"
+
+msgid "Connecting…"
+msgstr "연결 중…"
+
+msgid "Connection"
+msgstr "연결"
+
+msgid "Contacting the lobby server"
+msgstr "대기실 서버에 연결 중"
+
+msgid "Continue Survival from wave %d"
+msgstr "웨이브 %d부터 생존 모드 계속"
+
+msgid "CONTROLLER & MOTION"
+msgstr "컨트롤러 및 모션"
+
+msgid "Controller & motion"
+msgstr "컨트롤러 및 움직임"
+
+msgid "Controller aiming, motion sensor and feedback · saved on this device"
+msgstr "컨트롤러 조준, 움직임 센서 및 피드백 (이 장치에 저장)"
+
+msgid "Controller light bar"
+msgstr "컨트롤러 조명 바"
+
+msgid "Controller vibration"
+msgstr "컨트롤러 진동"
+
+msgid "CONTROLS"
+msgstr "조작법"
+
+msgid "Controls"
+msgstr "조작법"
+
+msgid "Could not check automatically"
+msgstr "자동 확인 불가"
+
+msgid "Could not open the local game port. Close another hosted room and try again."
+msgstr "로컬 게임 포트를 열 수 없습니다. 다른 호스트 방을 닫고 다시 시도해 보세요."
+
+msgid "Could not reach GitHub Releases (HTTP %d). Check your Internet connection and try again."
+msgstr "GitHub Releases (HTTP %d)에 접속할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해 보세요."
+
+msgid "Could not reach GitHub Releases. Check your Internet connection and try again."
+msgstr "GitHub Releases에 접속할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해 보세요."
+
+msgid "Could not start the network request (error %d)."
+msgstr "네트워크 요청을 시작할 수 없습니다 (오류 %d)."
+
+msgid "Create a lobby"
+msgstr "대기실 만들기"
+
+msgid "Create a local match on this device and share your host IP with friends on the same Wi-Fi or hotspot. Keep this device in the game while others play. Once inside the lobby, you can choose the map, time limit, and bots.\n\nHost IP: "
+msgstr "이 기기에서 로컬 대전을 만들고 같은 Wi-Fi 또는 핫스팟에 접속한 친구에게 IP를 공유하세요. 대전 중 이 기기에서 게임을 계속 실행하세요. 대기실에서 맵, 제한 시간, 봇을 선택할 수 있습니다.\n\n호스트 IP: "
+
+msgid "CREATE PRIVATE LOBBY"
+msgstr "비공개 대기실 만들기"
+
+msgid "CREATE PUBLIC LOBBY"
+msgstr "공개 대기실 만들기"
+
+msgid "Creating LAN room…"
+msgstr "LAN 대기실 생성 중…"
+
+msgid "CREDITS"
+msgstr "크레딧"
+
+msgid "Credits"
+msgstr "크레딧"
+
+msgid "custom map · tap to change"
+msgstr "커스텀 맵 · 눌러 변경"
+
+msgid "CUSTOMIZE LAYOUT"
+msgstr "배치 편집"
+
+msgid "Damage flash"
+msgstr "피해 섬광"
+
+msgid "Dark board"
+msgstr "어두운 칠판"
+
+msgid "DASH"
+msgstr "돌진"
+
+msgid "default global map"
+msgstr "기본 맵"
+
+msgid "DELETE"
+msgstr "삭제"
+
+msgid "Direct downloads · v"
+msgstr "직접 다운로드 · v"
+
+msgid "Disconnected from the lobby server."
+msgstr "로비 서버와 연결이 끊어졌습니다."
+
+msgid "District, Jungle and Mexico are original · the rest are new in this port"
+msgstr "District, Jungle, Mexico는 원본이며, 나머지는 이 포트에 새로 추가되었습니다."
+
+msgid "Dizzy screen sway"
+msgstr "어지러움 화면 흔들림"
+
+msgid "DONE"
+msgstr "완료"
+
+msgid "Doodle Base"
+msgstr "두들 기지"
+
+msgid "Doodle Castle"
+msgstr "두들 성"
+
+msgid "Doodle District"
+msgstr "두들 지역"
+
+msgid "DOODLE DISTRICT"
+msgstr "두들 지역"
+
+msgid "Doodle Forest"
+msgstr "두들 숲"
+
+msgid "Doodle Harbor"
+msgstr "두들 항구"
+
+msgid "Doodle Jungle"
+msgstr "두들 정글"
+
+msgid "Doodle Mexico"
+msgstr "두들 멕시코"
+
+msgid "Doodle Pyramid"
+msgstr "두들 피라미드"
+
+msgid "Doodle School"
+msgstr "두들 학교"
+
+msgid "Doodle Station"
+msgstr "두들 역"
+
+msgid "Doodler Bot %d"
+msgstr "Doodler 봇 %d"
+
+msgid "doodleshooter-port · unofficial native adaptation"
+msgstr "doodleshooter-port · 비공식적인 현지 적응"
+
+msgid "Drag a control to move it · tap one to resize, fade, copy or delete it"
+msgstr "컨트롤을 드래그하여 이동 · 하나의 버튼을 눌러 크기, 흐림 효과, 복사 또는 삭제"
+
+msgid "DRAW AGAIN"
+msgstr "다시 그리기"
+
+msgid "Drawing the world…"
+msgstr "세계를 그리는 중…"
+
+msgid "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready."
+msgstr "DualShock 및 DualSense LED: 플레이 중에는 파란색 잉크, 부상 또는 건강이 낮을 때에는 빨간색, 카타나 집중이 준비되었을 때에는 주황색"
+
+msgid "DUPLICATE"
+msgstr "복제"
+
+msgid "Easy"
+msgstr "쉬움"
+
+msgid "Edge shadow"
+msgstr "가장자리 그림자"
+
+msgid "Effects volume"
+msgstr "효과음 볼륨"
+
+msgid "Engine and font"
+msgstr "엔진 및 글꼴"
+
+msgid "Enter a five-character room code from a friend, or browse open public rooms to jump into a match."
+msgstr "친구로부터 5자리 방 코드를 입력하거나, 공개된 방을 찾아 게임에 참여합니다."
+
+msgid "Enter the host's IP address first"
+msgstr "먼저 호스트의 IP 주소를 입력합니다."
+
+msgid "FAINTER"
+msgstr "흐리게"
+
+msgid "Fewer bots"
+msgstr "봇 줄이기"
+
+msgid "FIRE"
+msgstr "발사"
+
+msgid "Five-character lobby code"
+msgstr "5자 대기실 코드"
+
+msgid "Fixed joystick"
+msgstr "고정 스틱"
+
+msgid "Frame rate counter"
+msgstr "프레임 표시"
+
+msgid "FREE FOR ALL\n"
+msgstr "개인전\n"
+
+msgid "Free for all with bots"
+msgstr "봇과 개인전"
+
+msgid "Free for all · 10 players · first to 20 kills · Connect to a native lobby server"
+msgstr "개인전 · 10명 · 20처치 먼저 달성하면 승리 · 대기실 서버 연결"
+
+msgid "Free for all · first to %d · %d minute limit%s"
+msgstr "개인전 · 목표 %d 처치 · 제한 %d분%s"
+
+msgid "Free for all · the match continues while this menu is open"
+msgstr "개인전 · 메뉴가 열려 있어도 대전이 계속됩니다"
+
+msgid "FROM CHECKPOINT"
+msgstr "체크포인트부터"
+
+msgid "FULL CREDITS & NOTICES"
+msgstr "전체 제작진 및 고지"
+
+msgid "Full credits & notices"
+msgstr "전체 제작진 및 고지"
+
+msgid "FULLSCREEN: OFF"
+msgstr "전체 화면: 끔"
+
+msgid "FULLSCREEN: ON"
+msgstr "전체 화면: 켬"
+
+msgid "Godot Engine license"
+msgstr "Godot 엔진 라이선스"
+
+msgid "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1"
+msgstr "Godot Engine · MIT 라이선스\nPatrick Hand · Patrick Hand 제작자\nSIL Open Font License 1.1"
+
+msgid "GODOT LICENSE"
+msgstr "GODOT 라이선스"
+
+msgid "Graphics detail"
+msgstr "그래픽 품질"
+
+msgid "Gyroscope"
+msgstr "자이로"
+
+msgid "Gyroscope sensitivity"
+msgstr "자이로 감도"
+
+msgid "Hard"
+msgstr "어려움"
+
+msgid "Health"
+msgstr "체력"
+
+msgid "Heavy Ink · harder hits"
+msgstr "짙은 잉크 · 강한 타격"
+
+msgid "High"
+msgstr "높음"
+
+msgid "High contrast"
+msgstr "높은 대비"
+
+msgid "Hold to aim"
+msgstr "길게 눌러 조준"
+
+msgid "HOOK"
+msgstr "갈고리"
+
+msgid "Host a room"
+msgstr "방 만들기"
+
+msgid "Host IP address, for example 192.168.1.10"
+msgstr "호스트 IP 주소, 예를 들어 192.168.1.10"
+
+msgid "HOST LAN GAME"
+msgstr "LAN 게임 만들기"
+
+msgid "Huge waves"
+msgstr "초대형 웨이브"
+
+msgid "Insane"
+msgstr "극한"
+
+msgid "Installed v%s is ahead of the latest published release (v%s%s)"
+msgstr "설치된 v%s는 최근 공개 버전(v%s%s)보다 새 버전입니다"
+
+msgid "Installed v%s · contacting GitHub Releases"
+msgstr "설치된 v%s · GitHub Releases에 문의"
+
+msgid "Installed v%s · new version v%s%s"
+msgstr "v%s 설치됨 · 새 버전 v%s%s"
+
+msgid "Installed version v%s"
+msgstr "설치된 버전 v%s"
+
+msgid "Invalid message."
+msgstr "유효하지 않은 메시지."
+
+msgid "Invert vertical look"
+msgstr "상하 시점 반전"
+
+msgid "Join a lobby"
+msgstr "대기실 참가"
+
+msgid "Join a room"
+msgstr "방 참가"
+
+msgid "JOIN CODE"
+msgstr "코드로 참가"
+
+msgid "JOIN LAN GAME"
+msgstr "LAN 게임 참가"
+
+msgid "Joining LAN room…"
+msgstr "LAN 대기실 참가 중…"
+
+msgid "JUMP"
+msgstr "점프"
+
+msgid "Katana"
+msgstr "카타나"
+
+msgid "Kills %d / %d"
+msgstr "처치 %d / %d"
+
+msgid "LAN hosting unavailable"
+msgstr "LAN 호스팅 불가능"
+
+msgid "LANGUAGE"
+msgstr "언어"
+
+msgid "Language"
+msgstr "언어"
+
+msgid "Language selection is a port addition."
+msgstr "언어 선택은 이식판에서 추가된 기능입니다."
+
+msgid "Large"
+msgstr "큼"
+
+msgid "Large waves"
+msgstr "대형 웨이브"
+
+msgid "LEAVE LOBBY"
+msgstr "대기실 나가기"
+
+msgid "LEAVE MATCH"
+msgstr "대전 나가기"
+
+msgid "Light bar"
+msgstr "라이트 바"
+
+msgid "Loading original geometry and native navigation"
+msgstr "원본 지오메트리 및 기본 내비게이션 로딩"
+
+msgid "Lobby "
+msgstr "대기실 "
+
+msgid "Lobby not found. Check its five-character code."
+msgstr "대기실을 찾을 수 없습니다. 5자 코드를 확인하세요."
+
+msgid "Local network · LAN"
+msgstr "로컬 네트워크 · LAN"
+
+msgid "Longer match"
+msgstr "대전 시간 늘리기"
+
+msgid "Look sensitivity"
+msgstr "시점 감도"
+
+msgid "Looking"
+msgstr "시점"
+
+msgid "Low"
+msgstr "낮음"
+
+msgid "Lower brightness or choose Dark board to rest your eyes; inks adapt automatically."
+msgstr "밝기를 낮추거나 어두운 화면을 선택하여 눈을 쉬세요. 잉크는 자동으로 조절됩니다."
+
+msgid "MAIN MENU"
+msgstr "메인 메뉴"
+
+msgid "map"
+msgstr "맵"
+
+msgid "MAP · "
+msgstr "맵 · "
+
+msgid "Match finished"
+msgstr "대전 종료"
+
+msgid "Match setup"
+msgstr "대전 설정"
+
+msgid "Medium"
+msgstr "보통"
+
+msgid "More bots"
+msgstr "봇 늘리기"
+
+msgid "Motion & flashes"
+msgstr "움직임 및 번쩍임"
+
+msgid "MOUSE + KEYBOARD"
+msgstr "마우스 + 키보드"
+
+msgid "Moving"
+msgstr "이동"
+
+msgid "Music volume"
+msgstr "음악 볼륨"
+
+msgid "NADE"
+msgstr "수류탄"
+
+msgid "Native adaptation"
+msgstr "네이티브 이식판"
+
+msgid "native port, portable too"
+msgstr "네이티브 이식판 · 휴대 가능"
+
+msgid "Next wave in %d"
+msgstr "다음 웨이브까지 %d"
+
+msgid "No Internet connection or server needed"
+msgstr "인터넷 연결이나 서버가 필요하지 않습니다"
+
+msgid "No public releases are available yet."
+msgstr "아직 공개 버전이 없습니다."
+
+msgid "No published releases were found on GitHub yet."
+msgstr "GitHub에 게시된 버전이 아직 없습니다."
+
+msgid "No release notes were provided for this release."
+msgstr "이 버전의 릴리스 노트가 없습니다."
+
+msgid "Normal"
+msgstr "보통"
+
+msgid "Normal 3D outlines"
+msgstr "기본 3D 윤곽선"
+
+msgid "Normal crosshair"
+msgstr "기본 조준점"
+
+msgid "Normal waves"
+msgstr "기본 웨이브"
+
+msgid "Off"
+msgstr "끔"
+
+msgid "OFFLINE FREE FOR ALL\n"
+msgstr "오프라인 개인전\n"
+
+msgid "Offline free for all · %d / %d kills"
+msgstr "오프라인 개인전 · %d / %d 처치"
+
+msgid "Offline match finished"
+msgstr "오프라인 대전 종료"
+
+msgid "Open a new room on the lobby server and share its code with friends, or list it publicly."
+msgstr "대기실 서버에서 방을 만들고 친구에게 코드를 공유하거나 공개 목록에 올리세요."
+
+msgid "OPEN GITHUB RELEASES"
+msgstr "GITHUB 릴리스 열기"
+
+msgid "OPEN ORIGINAL GAME"
+msgstr "원본 게임 열기"
+
+msgid "OPEN RELEASE ON GITHUB"
+msgstr "GITHUB에서 릴리스 열기"
+
+msgid "Original"
+msgstr "원본"
+
+msgid "Original game · Doodle District"
+msgstr "원본 게임 · Doodle District"
+
+msgid "Original hatching"
+msgstr "원본 빗금"
+
+msgid "Original soundtrack"
+msgstr "오리지널 사운드트랙"
+
+msgid "Packages attached to this GitHub release. Recommended builds for your device appear first."
+msgstr "이 GitHub 릴리스의 패키지입니다. 기기에 맞는 권장 빌드가 먼저 표시됩니다."
+
+msgid "Paper & brightness"
+msgstr "용지 및 밝기"
+
+msgid "Paper brightness"
+msgstr "용지 밝기"
+
+msgid "Paused"
+msgstr "일시 정지"
+
+msgid "PLAY AGAIN"
+msgstr "다시 플레이"
+
+msgid "PLAY LAN"
+msgstr "LAN 플레이"
+
+msgid "Play offline"
+msgstr "오프라인 플레이"
+
+msgid "PLAY ONLINE"
+msgstr "온라인 플레이"
+
+msgid "Play online"
+msgstr "온라인 플레이"
+
+msgid "Players (%d/12)"
+msgstr "플레이어 (%d/12)"
+
+msgid "PORT REPOSITORY"
+msgstr "이식판 저장소"
+
+msgid "Ported by @albertolicea00. Shared Android, iOS, and desktop project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator."
+msgstr "@albertolicea00이 Godot Engine으로 제작한 Android, iOS, 데스크톱 공통 이식판입니다. 지역, 정글, 멕시코는 원본 맵이며 모델과 함께 변환되었습니다. 원본 절차적 음악과 효과음은 참조 오디오 생성기로 렌더링했습니다."
+
+msgid "PS CONTROLLER"
+msgstr "PS 컨트롤러"
+
+msgid "Public lobbies"
+msgstr "공개 대기실"
+
+msgid "QUICK PLAY"
+msgstr "빠른 플레이"
+
+msgid "QUIT GAME"
+msgstr "게임 종료"
+
+msgid "Readability"
+msgstr "가독성"
+
+msgid "Ready"
+msgstr "준비 완료"
+
+msgid "Reference dependencies"
+msgstr "참조 소스 종속성"
+
+msgid "Reference source"
+msgstr "참조 소스"
+
+msgid "REJOIN"
+msgstr "다시 참가"
+
+msgid "Rejoin the fight with a two-second shield"
+msgstr "2초 동안 보호막을 두르고 전투에 복귀하세요"
+
+msgid "Release notes · "
+msgstr "릴리스 노트 · "
+
+msgid "release to equip"
+msgstr "놓아서 장착"
+
+msgid "RELOAD"
+msgstr "재장전"
+
+msgid "Reload button"
+msgstr "재장전 버튼"
+
+msgid "Removed after 150 seconds without input."
+msgstr "150초 동안 입력이 없어 퇴장되었습니다."
+
+msgid "RESET"
+msgstr "초기화"
+
+msgid "RESPAWN"
+msgstr "부활"
+
+msgid "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game."
+msgstr "부활하여 모두와 싸우세요. 먼저 %d 처치를 달성하거나 %d분 후 처치 수가 가장 많은 플레이어가 승리합니다. 이식판에서 추가된 모드입니다."
+
+msgid "RESUME"
+msgstr "계속하기"
+
+msgid "Review the match settings and players while the host prepares the match."
+msgstr "호스트가 대전을 준비하는 동안 설정과 플레이어를 확인하세요."
+
+msgid "Revolver"
+msgstr "리볼버"
+
+msgid "Rifle"
+msgstr "소총"
+
+msgid "Right stick"
+msgstr "오른쪽 스틱"
+
+msgid "Ruled notebook lines"
+msgstr "노트 줄"
+
+msgid "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts."
+msgstr "총격, 카타나 적중, 쳐내기, 갈고리, 강한 착지, 피해, 폭발 시 진동합니다."
+
+msgid "RUN"
+msgstr "달리기"
+
+msgid "Run lock marker"
+msgstr "연속 달리기 표식"
+
+msgid "SCORE"
+msgstr "점수"
+
+msgid "Score %d"
+msgstr "점수 %d"
+
+msgid "Screen shake"
+msgstr "화면 흔들림"
+
+msgid "Second fire button on the left"
+msgstr "왼쪽에 보조 발사 버튼"
+
+msgid "SELECT CUSTOM MAP"
+msgstr "커스텀 맵 선택"
+
+msgid "Sensitivity while aiming"
+msgstr "조준 감도"
+
+msgid "Server connection timed out. Check the URL and server."
+msgstr "연결 시간이 초과되었습니다. 주소와 서버를 확인하세요."
+
+msgid "SETTINGS"
+msgstr "설정"
+
+msgid "Settings"
+msgstr "설정"
+
+msgid "Shading"
+msgstr "음영"
+
+msgid "Shooting"
+msgstr "사격"
+
+msgid "Shorter match"
+msgstr "대전 시간 줄이기"
+
+msgid "Shotgun"
+msgstr "산탄총"
+
+msgid "SLASH"
+msgstr "베기"
+
+msgid "SLIDE"
+msgstr "슬라이딩"
+
+msgid "slide touchpad"
+msgstr "터치패드 밀기"
+
+msgid "SMALLER"
+msgstr "축소"
+
+msgid "SMG"
+msgstr "기관단총"
+
+msgid "SMOKE"
+msgstr "연막"
+
+msgid "Sniper"
+msgstr "저격총"
+
+msgid "Soft slate"
+msgstr "은은한 슬레이트"
+
+msgid "Sound"
+msgstr "오디오"
+
+msgid "Sound effects"
+msgstr "효과음"
+
+msgid "SOURCE ARCHIVE (.ZIP)"
+msgstr "소스 아카이브 (.ZIP)"
+
+msgid "Spawn shield"
+msgstr "부활 보호막"
+
+msgid "Sprint with a full forward push"
+msgstr "스틱을 끝까지 밀어 달리기"
+
+msgid "START BOT MATCH"
+msgstr "봇 대전 시작"
+
+msgid "START MATCH"
+msgstr "대전 시작"
+
+msgid "START SOLO"
+msgstr "혼자 플레이"
+
+msgid "START SURVIVAL"
+msgstr "생존 모드 시작"
+
+msgid "Starting a game on this device"
+msgstr "이 기기에서 게임 시작 중"
+
+msgid "Survival · Waves"
+msgstr "생존 · 웨이브"
+
+msgid "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."
+msgstr "점점 커지는 적과 보스의 웨이브에서 살아남으세요. 저격총과 바주카의 위력이 높고, 산탄총은 근거리에서 더 강력합니다. 피해량 조정, 난이도, 웨이브 규모 선택은 이식판에서 추가되었습니다."
+
+msgid "Swarm · more enemies, less health"
+msgstr "군집 · 적 증가, 체력 감소"
+
+msgid "TEST VIBRATION"
+msgstr "진동 테스트"
+
+msgid "That lobby is full (10 players)."
+msgstr "대기실이 가득 찼습니다 (10명)."
+
+msgid "That match has finished. Join another lobby."
+msgstr "대전이 종료되었습니다. 다른 대기실에 참가하세요."
+
+msgid "The Doodler"
+msgstr "낙서꾼"
+
+msgid "The Eraser"
+msgstr "지우개"
+
+msgid "The Inkblot"
+msgstr "잉크 얼룩"
+
+msgid "The LAN host closed the room."
+msgstr "LAN 호스트가 방을 닫았습니다."
+
+msgid "The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation."
+msgstr "원본 콘셉트, 디자인, 맵, 캐릭터, 무기, 규칙, 그래픽, 음악, 효과음은 원작 제작자에게 속합니다. 이 이식판은 독립적으로 제작된 비공식 버전입니다."
+
+msgid "This LAN room is full, unavailable, or finished."
+msgstr "LAN 대기실이 가득 찼거나 사용할 수 없거나 종료되었습니다."
+
+msgid "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause."
+msgstr "Three.js와 PeerJS는 고지문과 함께 과거 소스 사본에 보존되며 네이티브 게임에 포함되지 않습니다. 빌드 시 오디오 렌더링에는 IRCAM의 node-web-audio-api(BSD-3-Clause)를 사용합니다."
+
+msgid "Tilt your motion controller (DualShock / DualSense) or phone to aim."
+msgstr "모션 컨트롤러(DualShock / DualSense)나 휴대전화를 기울여 조준합니다."
+
+msgid "Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden."
+msgstr "휴대전화나 모션 컨트롤러(DualShock / DualSense)를 기울여 조준합니다. 터치 조작을 숨겨도 사용할 수 있습니다."
+
+msgid "TOUCH"
+msgstr "터치 조작"
+
+msgid "TOUCH & AIMING"
+msgstr "터치 및 조준"
+
+msgid "Touch & aiming"
+msgstr "터치 및 조준"
+
+msgid "Unable to connect to that server URL."
+msgstr "해당 서버 주소에 연결할 수 없습니다."
+
+msgid "Up to date · v"
+msgstr "최신 버전 · v"
+
+msgid "Update available · v"
+msgstr "업데이트 가능 · v"
+
+msgid "Updates"
+msgstr "업데이트"
+
+msgid "Use the same Wi-Fi network or hotspot. No Internet or separate server needed."
+msgstr "같은 Wi-Fi 또는 핫스팟을 사용하세요. 인터넷이나 별도의 서버는 필요하지 않습니다."
+
+msgid "Vibration"
+msgstr "진동"
+
+msgid "VIEW SOURCE CODE"
+msgstr "소스 코드 보기"
+
+msgid "Visual comfort, dark paper, motion reduction and readability"
+msgstr "시각 편의, 어두운 용지, 움직임 감소, 가독성"
+
+msgid "Warm sepia"
+msgstr "따뜻한 세피아"
+
+msgid "Wave %d"
+msgstr "웨이브 %d"
+
+msgid "Wave %d · %d points"
+msgstr "웨이브 %d · %d점"
+
+msgid "While aiming"
+msgstr "조준 중"
+
+msgid "wss://your-lobby-server"
+msgstr "wss://your-lobby-server"
+
+msgid "XBOX CONTROLLER"
+msgstr "XBOX 컨트롤러"
+
+msgid "You got erased"
+msgstr "지워졌습니다"
+
+msgid "You got erased · respawn in %d"
+msgstr "지워졌습니다 · 부활까지 %d"
+
+msgid "You have the latest GitHub release (v%s%s)"
+msgstr "GitHub에서 제공하는 최신 버전입니다 (v%s%s)"
+
+msgid "You're crazy! With 30 bots, the game might barely run!"
+msgstr "봇이 30명이면 게임이 크게 느려질 수 있습니다!"
+
+msgid "Your name"
+msgstr "이름"
+
+msgid "{1–7 / Wheel}"
+msgstr "{1–7 / 휠}"
+
+msgid "{1–7 / Wheel} switch weapons"
+msgstr "{1–7 / Wheel} 무기 전환"
+
+msgid "{C} slide on the ground · air dash in the air"
+msgstr "{C} 지상에서 슬라이딩 · 공중에서 돌진"
+
+msgid "{D-pad Right}"
+msgstr "{방향 패드 →}"
+
+msgid "{D-pad Up / Down}"
+msgstr "{방향 패드 ↑ / ↓}"
+
+msgid "{D-pad Up / Down} previous / next weapon"
+msgstr "{D-pad Up / Down} 이전 또는 다음 무기"
+
+msgid "{DASH}"
+msgstr "{돌진}"
+
+msgid "{Drag elsewhere}"
+msgstr "{다른 곳을 드래그}"
+
+msgid "{F} quick katana slash   {R} reload"
+msgstr "{F} 카타나 빠른 베기   {R} 재장전"
+
+msgid "{G} grenade · hold to throw further   {H} smoke"
+msgstr "{G} 수류탄 · 길게 눌러 멀리 던지기   {H} 연막"
+
+msgid "{L stick}"
+msgstr "{왼쪽 스틱}"
+
+msgid "{L stick} move   {R stick / Gyro} look   {L3} toggle sprint"
+msgstr "{L stick} 이동   {R stick / Gyro} 시점 조작   {L3} 달리기 전환"
+
+msgid "{L1} grapple: tap to swing, hold to reel"
+msgstr "{L1} 갈고리: 눌러 흔들기, 길게 눌러 감기"
+
+msgid "{L2 + R2} charged katana execution in survival"
+msgstr "{L2 + R2} 생존 모드에서 카타나 충전 마무리"
+
+msgid "{Left thumb}"
+msgstr "{왼쪽 엄지}"
+
+msgid "{Left thumb} move and sprint · drag up to the runner marker to keep running   {Drag elsewhere} look, even while firing"
+msgstr "{Left thumb} 이동 및 달리기 · 달리기 표식까지 끌면 계속 달리기   {Drag elsewhere} 발사 중에도 시점 조작"
+
+msgid "{LMB + RMB}"
+msgstr "{왼쪽 + 오른쪽 클릭}"
+
+msgid "{LMB + RMB} charged katana execution in survival"
+msgstr "{LMB + RMB} 생존 모드에서 카타나 충전 마무리"
+
+msgid "{LMB}"
+msgstr "{왼쪽 클릭}"
+
+msgid "{LMB} fire / slash   {RMB} aim / block"
+msgstr "{LMB} 발사 또는 베기   {RMB} 조준 또는 막기"
+
+msgid "{LS click}"
+msgstr "{LS 누르기}"
+
+msgid "{Mouse}"
+msgstr "{마우스}"
+
+msgid "{Options}"
+msgstr "{Options}"
+
+msgid "{Q} grapple: tap to swing, hold to reel"
+msgstr "{Q} 갈고리: 눌러 흔들기, 길게 눌러 감기"
+
+msgid "{R stick / Gyro}"
+msgstr "{오른쪽 스틱 / 자이로}"
+
+msgid "{R1} quick katana slash, then back to your gun"
+msgstr "{R1} 카타나로 빠르게 벤 뒤 총으로 복귀"
+
+msgid "{R2} fire / slash   {L2} aim / block"
+msgstr "{R2} 발사 또는 베기   {L2} 조준 또는 막기"
+
+msgid "{R3 / D-pad Left}"
+msgstr "{R3 / 방향 패드 ←}"
+
+msgid "{R3 / D-pad Left} grenade · hold to throw   {D-pad Right} smoke"
+msgstr "{R3 / D-pad Left} 수류탄 · 길게 눌러 던지기   {D-pad Right} 연막"
+
+msgid "{RMB}"
+msgstr "{오른쪽 클릭}"
+
+msgid "{RS / Gyro}"
+msgstr "{RS / 자이로}"
+
+msgid "{RS click / D-pad Left}"
+msgstr "{RS 누르기 / 방향 패드 ←}"
+
+msgid "{Shift}"
+msgstr "{Shift}"
+
+msgid "{SLIDE}"
+msgstr "{슬라이딩}"
+
+msgid "{SLIDE} becomes {DASH} in the air   {Weapon bar} tap a weapon to switch · tap it again or use reload to reload"
+msgstr "{SLIDE}는 공중에서 {DASH}로 변경   {Weapon bar} 눌러 무기 전환 · 다시 누르거나 재장전 버튼 이용"
+
+msgid "{Space}"
+msgstr "{스페이스}"
+
+msgid "{Space} again in the air: double jump"
+msgstr "{Space} 공중에서 다시 누르면 이중 점프"
+
+msgid "{Space} jump · press against a wall to wall jump"
+msgstr "{Space} 점프 · 벽에 닿은 상태에서 누르면 벽 점프"
+
+msgid "{Space} launch from the rope   {Q} again: release"
+msgstr "{Space} 줄에서 뛰기   {Q} 다시 누르면 놓기"
+
+msgid "{Tab} scoreboard (bot / network matches)   {Esc} pause"
+msgstr "{Tab} 점수판 (봇·네트워크 대전)   {Esc} 일시 정지"
+
+msgid "{Touchpad click / Create}"
+msgstr "{터치패드 누르기 / Create}"
+
+msgid "{Touchpad click / Create} scoreboard   {Options} pause"
+msgstr "{Touchpad click / Create} 점수판   {Options} 일시 정지"
+
+msgid "{Touchpad swipe}"
+msgstr "{터치패드 밀기}"
+
+msgid "{Touchpad swipe} radial weapon wheel (1–7)"
+msgstr "{Touchpad swipe} 무기 휠 (1–7)"
+
+msgid "{WASD} move   {Mouse} look   {Shift} sprint"
+msgstr "{WASD} 이동   {Mouse} 시점 조작   {Shift} 달리기"
+
+msgid "{Weapon bar}"
+msgstr "{무기 표시줄}"
+
+msgid "{×} jump / wall jump / double jump"
+msgstr "{×} 점프 / 벽 점프 / 이중 점프"
+
+msgid "{×} launch from the rope   {L1} again: release"
+msgstr "{×} 줄에서 뛰기   {L1} 다시 누르면 놓기"
+
+msgid "{□} reload   {△} next weapon"
+msgstr "{□} 재장전   {△} 다음 무기"
+
+msgid "{○} slide on the ground · air dash in the air"
+msgstr "{○} 지상에서 슬라이딩 · 공중에서 돌진"
+
+msgid "~ drag this line to move the bar ~"
+msgstr "~ 이 줄을 끌어 막대를 이동 ~"
+
+msgid "• %d bots"
+msgstr "• 봇 %d명"
+
+msgid "• 1 bot"
+msgstr "• 봇 1명"

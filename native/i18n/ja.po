@@ -1,0 +1,1178 @@
+# Localization for doodleshooter-port.
+msgid ""
+msgstr ""
+"Project-Id-Version: doodleshooter-port\n"
+"PO-Revision-Date: 2026-11-26 00:00+0000\n"
+"Last-Translator: doodleshooter-port contributors\n"
+"Language-Team: ja\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "\n\nHost IP: "
+msgstr "\n\nホストのIPアドレス: "
+
+msgid "\n[color=#%s][i]The Back button is at the very bottom[/i][/color]"
+msgstr "\n[color=#%s][i]戻るボタンは画面の一番下にあります[/i][/color]"
+
+msgid "\nKeep this device in the game to host the room."
+msgstr "\nこのデバイスをゲーム内でホストとして使用してください。"
+
+msgid " (host)"
+msgstr " (ホスト)"
+
+msgid " reloading…"
+msgstr " リロード中…"
+
+msgid " · %d bots"
+msgstr "・ボット %d 体"
+
+msgid " · published "
+msgstr " ・公開 "
+
+msgid "# Credits and provenance"
+msgstr "# クレジットと出典"
+
+msgid "%d bots"
+msgstr "ボット %d 体"
+
+msgid "%d bots · %s"
+msgstr "ボット %d 体・%s"
+
+msgid "%d enemies left"
+msgstr "残りの敵: %d"
+
+msgid "%d fps"
+msgstr "%d fps"
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "%d waves · %d kills · %d points\nBest score: %d"
+msgstr "%d ウェーブ・%d 撃破・%d ポイント\n最高スコア: %d"
+
+msgid "%s\nMap: %s\nWaiting for the host to start the match."
+msgstr "%s\nマップ：%s\nホストの対戦開始を待っています。"
+
+msgid "%s     %d K / %d D"
+msgstr "%s     %d 撃破 / %d デス"
+
+msgid "%s · %d kills · %d deaths\n"
+msgstr "%s・%d 撃破・%d デス\n"
+
+msgid "1 bot"
+msgstr "ボット 1 体"
+
+msgid "20+ bots may reduce performance, especially on mobile devices."
+msgstr "20体以上のボットがパフォーマンスに影響を与える可能性があります。特にモバイルデバイスでは。"
+
+msgid ": off"
+msgstr ": オフ"
+
+msgid ": on"
+msgstr ": オン"
+
+msgid "[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]"
+msgstr "[center]v%s ・[url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]"
+
+msgid "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back"
+msgstr "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] 選択 · アロー/D-pad で移動・スクロール · [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] 戻る"
+
+msgid "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
+msgstr "GitHubの[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url]を参照しています。リポジトリ所有者を原作の唯一の作者とするものではありません。"
+
+msgid "ACCESSIBILITY"
+msgstr "アクセシビリティ"
+
+msgid "Accessibility"
+msgstr "アクセシビリティ"
+
+msgid "AIM"
+msgstr "照準"
+
+msgid "Always"
+msgstr "常時"
+
+msgid "ANDROID DEBUG (.APK)"
+msgstr "ANDROID デバッグ (.APK)"
+
+msgid "Applies to touch controls and the controller right stick."
+msgstr "タッチ操作と右スティックに適用されます。"
+
+msgid "Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other."
+msgstr "ホストから、彼らのロビーに表示されているIPアドレスを尋ねてください。以下に入力し、「参加」をタップしてください。ゲストWi-Fiネットワークは、デバイス同士の接続を妨げる可能性があります。"
+
+msgid "Attribution and license notices"
+msgstr "著作権およびライセンスに関する通知"
+
+msgid "Auto fire on target"
+msgstr "ターゲットへの自動射撃"
+
+msgid "Away from the page"
+msgstr "操作なし"
+
+msgid "BACK TO CONTROLS"
+msgstr "操作方法に戻る"
+
+msgid "BACK TO CREDITS"
+msgstr "クレジットに戻る"
+
+msgid "BACK TO LAN"
+msgstr "LANに戻る"
+
+msgid "BACK TO LOBBY"
+msgstr "ロビーに戻る"
+
+msgid "BACK TO MAIN MENU"
+msgstr "メインメニューに戻る"
+
+msgid "BACK TO ONLINE"
+msgstr "オンラインに戻る"
+
+msgid "BACK TO PAUSE"
+msgstr "ポーズ画面に戻る"
+
+msgid "BACK TO SETTINGS"
+msgstr "設定に戻る"
+
+msgid "Bazooka"
+msgstr "バズーカ"
+
+msgid "BIGGER"
+msgstr "拡大"
+
+msgid "BLOCK"
+msgstr "ガード"
+
+msgid "Bold 3D outlines"
+msgstr "太い3D輪郭"
+
+msgid "BOLDER"
+msgstr "濃く"
+
+msgid "BROWSE PUBLIC LOBBIES"
+msgstr "公開ロビーを探す"
+
+msgid "Caffeine · faster enemies"
+msgstr "カフェイン・敵が素早い"
+
+msgid "CANCEL"
+msgstr "キャンセル"
+
+msgid "Changes apply immediately and are saved on this device"
+msgstr "変更は即座に適用され、このデバイスに保存されます"
+
+msgid "CHECK AGAIN"
+msgstr "もう一度確認"
+
+msgid "CHECK FOR UPDATES"
+msgstr "アップデートを確認"
+
+msgid "Check this device's Wi-Fi settings"
+msgstr "このデバイスのWi-Fi設定を確認"
+
+msgid "Checking for updates…"
+msgstr "アップデートを確認中…"
+
+msgid "CHECKPOINT · WAVE "
+msgstr "チェックポイント・ウェーブ "
+
+msgid "Choose a custom map"
+msgstr "カスタムマップを選ぶ"
+
+msgid "Choose a map"
+msgstr "マップを選ぶ"
+
+msgid "Choose a map, adjust the match settings, and start when everyone is ready."
+msgstr "マップを選択し、対戦設定を調整し、全員が準備できたら開始。"
+
+msgid "Choose an open room"
+msgstr "空いているルームを選ぶ"
+
+msgid "choose from 9 maps"
+msgstr "9種類のマップから選択"
+
+msgid "Choose how you want to play"
+msgstr "遊び方を設定してください"
+
+msgid "Choose the language for menus and gameplay."
+msgstr "メニューとゲーム内の言語を選んでください。"
+
+msgid "Colorblind-safe enemy & pickup inks"
+msgstr "敵とアイテムの色覚サポート"
+
+msgid "Coloured pencil"
+msgstr "色鉛筆"
+
+msgid "Combo x%d"
+msgstr "コンボ x%d"
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port "
+msgstr "github.com/albertolicea00/doodleshooter-port への接続 "
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port ·"
+msgstr "github.com/albertolicea00/doodleshooter-port への接続"
+
+msgid "Connecting to the host on your local network"
+msgstr "自分のローカルネットワーク上のホストへの接続"
+
+msgid "Connecting…"
+msgstr "接続中…"
+
+msgid "Connection"
+msgstr "接続"
+
+msgid "Contacting the lobby server"
+msgstr "ロビーサーバーに接続中"
+
+msgid "Continue Survival from wave %d"
+msgstr "ウェーブ %d からサバイバルを再開"
+
+msgid "CONTROLLER & MOTION"
+msgstr "コントローラー・モーション"
+
+msgid "Controller & motion"
+msgstr "コントローラーとモーション"
+
+msgid "Controller aiming, motion sensor and feedback · saved on this device"
+msgstr "コントローラーでの照準、モーションセンサー、フィードバック（このデバイスに保存）"
+
+msgid "Controller light bar"
+msgstr "コントローラーのライトバー"
+
+msgid "Controller vibration"
+msgstr "コントローラーの振動"
+
+msgid "CONTROLS"
+msgstr "操作方法"
+
+msgid "Controls"
+msgstr "操作方法"
+
+msgid "Could not check automatically"
+msgstr "自動で確認できません"
+
+msgid "Could not open the local game port. Close another hosted room and try again."
+msgstr "ローカルゲームポートを開けません。別のホストルームを閉じ、再度試してください。"
+
+msgid "Could not reach GitHub Releases (HTTP %d). Check your Internet connection and try again."
+msgstr "GitHub Releases (HTTP %d) にアクセスできません。インターネット接続を確認し、再度試してください。"
+
+msgid "Could not reach GitHub Releases. Check your Internet connection and try again."
+msgstr "GitHub Releases にアクセスできません。インターネット接続を確認し、再度試してください。"
+
+msgid "Could not start the network request (error %d)."
+msgstr "ネットワークリクエストを開始できません（エラー %d）。"
+
+msgid "Create a lobby"
+msgstr "ロビーを作成"
+
+msgid "Create a local match on this device and share your host IP with friends on the same Wi-Fi or hotspot. Keep this device in the game while others play. Once inside the lobby, you can choose the map, time limit, and bots.\n\nHost IP: "
+msgstr "この端末でローカル対戦を作り、同じWi-Fiやアクセスポイントにいる友達にIPを共有してください。対戦中はこの端末でゲームを開いたままにしてください。ロビーでマップ・制限時間・ボットを選べます。\n\nホストのIP： "
+
+msgid "CREATE PRIVATE LOBBY"
+msgstr "非公開ロビーを作成"
+
+msgid "CREATE PUBLIC LOBBY"
+msgstr "公開ロビーを作成"
+
+msgid "Creating LAN room…"
+msgstr "LANルームを作成中…"
+
+msgid "CREDITS"
+msgstr "クレジット"
+
+msgid "Credits"
+msgstr "クレジット"
+
+msgid "custom map · tap to change"
+msgstr "カスタムマップ・タップで変更"
+
+msgid "CUSTOMIZE LAYOUT"
+msgstr "レイアウトを編集"
+
+msgid "Damage flash"
+msgstr "被弾時のフラッシュ"
+
+msgid "Dark board"
+msgstr "黒板"
+
+msgid "DASH"
+msgstr "ダッシュ"
+
+msgid "default global map"
+msgstr "デフォルトマップ"
+
+msgid "DELETE"
+msgstr "削除"
+
+msgid "Direct downloads · v"
+msgstr "直接ダウンロード · v"
+
+msgid "Disconnected from the lobby server."
+msgstr "ロビーサーバーから切断されました。"
+
+msgid "District, Jungle and Mexico are original · the rest are new in this port"
+msgstr "District, Jungle, Mexico はオリジナル · 残りはこのポートでの新要素"
+
+msgid "Dizzy screen sway"
+msgstr "めまい時の画面揺れ"
+
+msgid "DONE"
+msgstr "完了"
+
+msgid "Doodle Base"
+msgstr "ドゥードゥル基地"
+
+msgid "Doodle Castle"
+msgstr "ドゥードゥル城"
+
+msgid "Doodle District"
+msgstr "ドゥードゥル地区"
+
+msgid "DOODLE DISTRICT"
+msgstr "ドゥードゥル地区"
+
+msgid "Doodle Forest"
+msgstr "ドゥードゥルの森"
+
+msgid "Doodle Harbor"
+msgstr "ドゥードゥル港"
+
+msgid "Doodle Jungle"
+msgstr "ドゥードゥルジャングル"
+
+msgid "Doodle Mexico"
+msgstr "ドゥードゥルメキシコ"
+
+msgid "Doodle Pyramid"
+msgstr "ドゥードゥルピラミッド"
+
+msgid "Doodle School"
+msgstr "ドゥードゥル学校"
+
+msgid "Doodle Station"
+msgstr "ドゥードゥル駅"
+
+msgid "Doodler Bot %d"
+msgstr "Doodlerボット %d"
+
+msgid "doodleshooter-port · unofficial native adaptation"
+msgstr "doodleshooter-port · 非公式なローカル版"
+
+msgid "Drag a control to move it · tap one to resize, fade, copy or delete it"
+msgstr "コントロールをドラッグして移動する · 1つタップしてサイズ変更、ぼかす、コピー、または削除する"
+
+msgid "DRAW AGAIN"
+msgstr "もう一度描く"
+
+msgid "Drawing the world…"
+msgstr "世界を描画中…"
+
+msgid "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready."
+msgstr "DualShock および DualSense の LED: プレイ中は青、ダメージや体力低下時は赤、カタナ集中時はオレンジ"
+
+msgid "DUPLICATE"
+msgstr "複製"
+
+msgid "Easy"
+msgstr "イージー"
+
+msgid "Edge shadow"
+msgstr "画面端の影"
+
+msgid "Effects volume"
+msgstr "効果音の音量"
+
+msgid "Engine and font"
+msgstr "エンジンとフォント"
+
+msgid "Enter a five-character room code from a friend, or browse open public rooms to jump into a match."
+msgstr "友人の5文字のルームコードを入力するか、公開されているルームからゲームに参加する。"
+
+msgid "Enter the host's IP address first"
+msgstr "最初にホストのIPアドレスを入力"
+
+msgid "FAINTER"
+msgstr "薄く"
+
+msgid "Fewer bots"
+msgstr "ボットを減らす"
+
+msgid "FIRE"
+msgstr "射撃"
+
+msgid "Five-character lobby code"
+msgstr "5文字のロビーコード"
+
+msgid "Fixed joystick"
+msgstr "固定スティック"
+
+msgid "Frame rate counter"
+msgstr "フレームレート表示"
+
+msgid "FREE FOR ALL\n"
+msgstr "個人戦\n"
+
+msgid "Free for all with bots"
+msgstr "ボットとの個人戦"
+
+msgid "Free for all · 10 players · first to 20 kills · Connect to a native lobby server"
+msgstr "個人戦・10人・先に20撃破で勝利・ロビーサーバーに接続"
+
+msgid "Free for all · first to %d · %d minute limit%s"
+msgstr "個人戦・目標 %d 撃破・制限 %d 分%s"
+
+msgid "Free for all · the match continues while this menu is open"
+msgstr "個人戦・メニュー表示中も対戦は継続"
+
+msgid "FROM CHECKPOINT"
+msgstr "チェックポイントから"
+
+msgid "FULL CREDITS & NOTICES"
+msgstr "クレジットとライセンス"
+
+msgid "Full credits & notices"
+msgstr "クレジットとライセンス"
+
+msgid "FULLSCREEN: OFF"
+msgstr "全画面：オフ"
+
+msgid "FULLSCREEN: ON"
+msgstr "全画面：オン"
+
+msgid "Godot Engine license"
+msgstr "Godot Engine ライセンス"
+
+msgid "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1"
+msgstr "Godot Engine・MITライセンス\nPatrick Hand・Patrick Handの制作者\nSIL Open Font License 1.1"
+
+msgid "GODOT LICENSE"
+msgstr "GODOT ライセンス"
+
+msgid "Graphics detail"
+msgstr "描画品質"
+
+msgid "Gyroscope"
+msgstr "ジャイロ"
+
+msgid "Gyroscope sensitivity"
+msgstr "ジャイロ感度"
+
+msgid "Hard"
+msgstr "ハード"
+
+msgid "Health"
+msgstr "体力"
+
+msgid "Heavy Ink · harder hits"
+msgstr "ヘビーインク・より強い攻撃"
+
+msgid "High"
+msgstr "高"
+
+msgid "High contrast"
+msgstr "高コントラスト"
+
+msgid "Hold to aim"
+msgstr "長押しで照準"
+
+msgid "HOOK"
+msgstr "フック"
+
+msgid "Host a room"
+msgstr "ルームを作成"
+
+msgid "Host IP address, for example 192.168.1.10"
+msgstr "ホストIPアドレス（例：192.168.1.10）"
+
+msgid "HOST LAN GAME"
+msgstr "LANゲームを作成"
+
+msgid "Huge waves"
+msgstr "特大ウェーブ"
+
+msgid "Insane"
+msgstr "エクストリーム"
+
+msgid "Installed v%s is ahead of the latest published release (v%s%s)"
+msgstr "インストール済みの v%s は最新公開版（v%s%s）より新しいバージョンです"
+
+msgid "Installed v%s · contacting GitHub Releases"
+msgstr "インストールされているバージョン%s、GitHub Releasesへの問い合わせ"
+
+msgid "Installed v%s · new version v%s%s"
+msgstr "v%s インストール済み・新バージョン v%s%s"
+
+msgid "Installed version v%s"
+msgstr "インストールされているバージョン%s"
+
+msgid "Invalid message."
+msgstr "無効なメッセージ。"
+
+msgid "Invert vertical look"
+msgstr "視点の上下を反転"
+
+msgid "Join a lobby"
+msgstr "ロビーに参加"
+
+msgid "Join a room"
+msgstr "ルームに参加"
+
+msgid "JOIN CODE"
+msgstr "コードで参加"
+
+msgid "JOIN LAN GAME"
+msgstr "LANゲームに参加"
+
+msgid "Joining LAN room…"
+msgstr "LANルームに参加中…"
+
+msgid "JUMP"
+msgstr "ジャンプ"
+
+msgid "Katana"
+msgstr "刀"
+
+msgid "Kills %d / %d"
+msgstr "撃破 %d / %d"
+
+msgid "LAN hosting unavailable"
+msgstr "ローカルネットワークホスティングが利用できません"
+
+msgid "LANGUAGE"
+msgstr "言語"
+
+msgid "Language"
+msgstr "言語"
+
+msgid "Language selection is a port addition."
+msgstr "言語選択は移植版で追加された機能です。"
+
+msgid "Large"
+msgstr "大"
+
+msgid "Large waves"
+msgstr "大ウェーブ"
+
+msgid "LEAVE LOBBY"
+msgstr "ロビーを退出"
+
+msgid "LEAVE MATCH"
+msgstr "対戦から退出"
+
+msgid "Light bar"
+msgstr "ライトバー"
+
+msgid "Loading original geometry and native navigation"
+msgstr "元のジオメトリとネイティブなナビゲーションの読み込み"
+
+msgid "Lobby "
+msgstr "ロビー "
+
+msgid "Lobby not found. Check its five-character code."
+msgstr "ロビーが見つかりません。5文字のコードを確認してください。"
+
+msgid "Local network · LAN"
+msgstr "ローカルネットワーク・LAN"
+
+msgid "Longer match"
+msgstr "対戦時間を長く"
+
+msgid "Look sensitivity"
+msgstr "視点感度"
+
+msgid "Looking"
+msgstr "視点"
+
+msgid "Low"
+msgstr "低"
+
+msgid "Lower brightness or choose Dark board to rest your eyes; inks adapt automatically."
+msgstr "画面の明るさを調整するか、暗い背景を選択して目を休めてください。インクは自動的に調整されます。"
+
+msgid "MAIN MENU"
+msgstr "メインメニュー"
+
+msgid "map"
+msgstr "マップ"
+
+msgid "MAP · "
+msgstr "マップ・"
+
+msgid "Match finished"
+msgstr "対戦終了"
+
+msgid "Match setup"
+msgstr "対戦設定"
+
+msgid "Medium"
+msgstr "中"
+
+msgid "More bots"
+msgstr "ボットを増やす"
+
+msgid "Motion & flashes"
+msgstr "動きとフラッシュ"
+
+msgid "MOUSE + KEYBOARD"
+msgstr "マウス＋キーボード"
+
+msgid "Moving"
+msgstr "移動"
+
+msgid "Music volume"
+msgstr "音楽の音量"
+
+msgid "NADE"
+msgstr "手榴弾"
+
+msgid "Native adaptation"
+msgstr "ネイティブ移植版"
+
+msgid "native port, portable too"
+msgstr "ネイティブ移植版・持ち運んで遊べる"
+
+msgid "Next wave in %d"
+msgstr "次のウェーブまで %d"
+
+msgid "No Internet connection or server needed"
+msgstr "インターネット接続やサーバーは不要です"
+
+msgid "No public releases are available yet."
+msgstr "公開バージョンはまだありません。"
+
+msgid "No published releases were found on GitHub yet."
+msgstr "GitHubに公開済みのバージョンはまだありません。"
+
+msgid "No release notes were provided for this release."
+msgstr "このバージョンにリリースノートはありません。"
+
+msgid "Normal"
+msgstr "ノーマル"
+
+msgid "Normal 3D outlines"
+msgstr "標準の3D輪郭"
+
+msgid "Normal crosshair"
+msgstr "標準の照準"
+
+msgid "Normal waves"
+msgstr "標準ウェーブ"
+
+msgid "Off"
+msgstr "オフ"
+
+msgid "OFFLINE FREE FOR ALL\n"
+msgstr "オフライン個人戦\n"
+
+msgid "Offline free for all · %d / %d kills"
+msgstr "オフライン個人戦・%d / %d 撃破"
+
+msgid "Offline match finished"
+msgstr "オフライン対戦終了"
+
+msgid "Open a new room on the lobby server and share its code with friends, or list it publicly."
+msgstr "ロビーサーバーでルームを作成し、コードを友達と共有するか、公開リストに登録します。"
+
+msgid "OPEN GITHUB RELEASES"
+msgstr "GITHUBのリリースを開く"
+
+msgid "OPEN ORIGINAL GAME"
+msgstr "オリジナルゲームを開く"
+
+msgid "OPEN RELEASE ON GITHUB"
+msgstr "GITHUBでリリースを開く"
+
+msgid "Original"
+msgstr "オリジナル"
+
+msgid "Original game · Doodle District"
+msgstr "オリジナルゲーム・Doodle District"
+
+msgid "Original hatching"
+msgstr "オリジナルのハッチング"
+
+msgid "Original soundtrack"
+msgstr "オリジナル楽曲"
+
+msgid "Packages attached to this GitHub release. Recommended builds for your device appear first."
+msgstr "このGitHubリリースのパッケージです。お使いの端末向けの推奨ビルドが先に表示されます。"
+
+msgid "Paper & brightness"
+msgstr "用紙と明るさ"
+
+msgid "Paper brightness"
+msgstr "用紙の明るさ"
+
+msgid "Paused"
+msgstr "一時停止"
+
+msgid "PLAY AGAIN"
+msgstr "もう一度プレイ"
+
+msgid "PLAY LAN"
+msgstr "LANプレイ"
+
+msgid "Play offline"
+msgstr "オフラインプレイ"
+
+msgid "PLAY ONLINE"
+msgstr "オンラインプレイ"
+
+msgid "Play online"
+msgstr "オンラインプレイ"
+
+msgid "Players (%d/12)"
+msgstr "プレイヤー（%d/12）"
+
+msgid "PORT REPOSITORY"
+msgstr "移植版リポジトリ"
+
+msgid "Ported by @albertolicea00. Shared Android, iOS, and desktop project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator."
+msgstr "@albertolicea00によるGodot Engine製のAndroid・iOS・デスクトップ向け移植版。地区、ジャングル、メキシコはオリジナルのマップで、モデルとともに変換されました。原作のプロシージャル音楽と効果音は参照元の音声ジェネレーターから生成しています。"
+
+msgid "PS CONTROLLER"
+msgstr "PSコントローラー"
+
+msgid "Public lobbies"
+msgstr "公開ロビー"
+
+msgid "QUICK PLAY"
+msgstr "クイックプレイ"
+
+msgid "QUIT GAME"
+msgstr "ゲームを終了"
+
+msgid "Readability"
+msgstr "視認性"
+
+msgid "Ready"
+msgstr "準備完了"
+
+msgid "Reference dependencies"
+msgstr "参照元の依存関係"
+
+msgid "Reference source"
+msgstr "参照ソース"
+
+msgid "REJOIN"
+msgstr "もう一度参加"
+
+msgid "Rejoin the fight with a two-second shield"
+msgstr "2秒間のシールド付きで戦闘に復帰"
+
+msgid "Release notes · "
+msgstr "リリースノート・"
+
+msgid "release to equip"
+msgstr "離して装備"
+
+msgid "RELOAD"
+msgstr "リロード"
+
+msgid "Reload button"
+msgstr "リロードボタン"
+
+msgid "Removed after 150 seconds without input."
+msgstr "150秒間操作がなかったため退出しました。"
+
+msgid "RESET"
+msgstr "リセット"
+
+msgid "RESPAWN"
+msgstr "復活する"
+
+msgid "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game."
+msgstr "復活して全員と戦います。最初に %d 撃破に達するか、%d 分後に最多のプレイヤーが勝利。移植版で追加されたモードです。"
+
+msgid "RESUME"
+msgstr "再開"
+
+msgid "Review the match settings and players while the host prepares the match."
+msgstr "ホストの対戦準備中に設定とプレイヤーを確認できます。"
+
+msgid "Revolver"
+msgstr "リボルバー"
+
+msgid "Rifle"
+msgstr "ライフル"
+
+msgid "Right stick"
+msgstr "右スティック"
+
+msgid "Ruled notebook lines"
+msgstr "ノートの罫線"
+
+msgid "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts."
+msgstr "射撃、刀の命中、受け流し、フック、強い着地、被弾、爆発で振動します。"
+
+msgid "RUN"
+msgstr "走る"
+
+msgid "Run lock marker"
+msgstr "走り続けるマーカー"
+
+msgid "SCORE"
+msgstr "スコア"
+
+msgid "Score %d"
+msgstr "スコア %d"
+
+msgid "Screen shake"
+msgstr "画面の揺れ"
+
+msgid "Second fire button on the left"
+msgstr "左側に追加の射撃ボタン"
+
+msgid "SELECT CUSTOM MAP"
+msgstr "カスタムマップを選ぶ"
+
+msgid "Sensitivity while aiming"
+msgstr "照準時の感度"
+
+msgid "Server connection timed out. Check the URL and server."
+msgstr "接続がタイムアウトしました。URLとサーバーを確認してください。"
+
+msgid "SETTINGS"
+msgstr "設定"
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Shading"
+msgstr "陰影"
+
+msgid "Shooting"
+msgstr "射撃"
+
+msgid "Shorter match"
+msgstr "対戦時間を短く"
+
+msgid "Shotgun"
+msgstr "ショットガン"
+
+msgid "SLASH"
+msgstr "斬撃"
+
+msgid "SLIDE"
+msgstr "スライド"
+
+msgid "slide touchpad"
+msgstr "タッチパッドをスライド"
+
+msgid "SMALLER"
+msgstr "縮小"
+
+msgid "SMG"
+msgstr "サブマシンガン"
+
+msgid "SMOKE"
+msgstr "煙幕"
+
+msgid "Sniper"
+msgstr "スナイパーライフル"
+
+msgid "Soft slate"
+msgstr "柔らかな石板色"
+
+msgid "Sound"
+msgstr "サウンド"
+
+msgid "Sound effects"
+msgstr "効果音"
+
+msgid "SOURCE ARCHIVE (.ZIP)"
+msgstr "ソースアーカイブ（.ZIP）"
+
+msgid "Spawn shield"
+msgstr "復活シールド"
+
+msgid "Sprint with a full forward push"
+msgstr "スティックをいっぱいに倒すとダッシュ"
+
+msgid "START BOT MATCH"
+msgstr "ボット戦を開始"
+
+msgid "START MATCH"
+msgstr "対戦を開始"
+
+msgid "START SOLO"
+msgstr "ソロプレイ"
+
+msgid "START SURVIVAL"
+msgstr "サバイバルを開始"
+
+msgid "Starting a game on this device"
+msgstr "この端末でゲームを開始中"
+
+msgid "Survival · Waves"
+msgstr "サバイバル・ウェーブ"
+
+msgid "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."
+msgstr "増えていく敵とボスのウェーブを生き延びましょう。スナイパーライフルとバズーカの威力が高く、ショットガンは近距離で強力です。威力調整、難易度、ウェーブ規模の選択は移植版で追加されました。"
+
+msgid "Swarm · more enemies, less health"
+msgstr "群れ・敵が増えるが体力は低下"
+
+msgid "TEST VIBRATION"
+msgstr "振動をテスト"
+
+msgid "That lobby is full (10 players)."
+msgstr "ロビーが満員です（10人）。"
+
+msgid "That match has finished. Join another lobby."
+msgstr "対戦は終了しました。別のロビーに参加してください。"
+
+msgid "The Doodler"
+msgstr "落書き屋"
+
+msgid "The Eraser"
+msgstr "消しゴム"
+
+msgid "The Inkblot"
+msgstr "インクの染み"
+
+msgid "The LAN host closed the room."
+msgstr "LANホストがルームを閉じました。"
+
+msgid "The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation."
+msgstr "コンセプト、デザイン、マップ、キャラクター、武器、仕組み、イラスト、音楽、効果音は原作の開発者に帰属します。この移植版は独立した非公式版です。"
+
+msgid "This LAN room is full, unavailable, or finished."
+msgstr "LANルームは満員、利用不可、または終了済みです。"
+
+msgid "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause."
+msgstr "Three.jsとPeerJSはライセンス表示とともに過去のソースに保存されており、ネイティブ版には同梱されません。ビルド時の音声生成にはIRCAMのnode-web-audio-api（BSD-3-Clause）を使います。"
+
+msgid "Tilt your motion controller (DualShock / DualSense) or phone to aim."
+msgstr "モーション対応コントローラー（DualShock / DualSense）やスマートフォンを傾けて照準を合わせます。"
+
+msgid "Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden."
+msgstr "スマートフォンやモーション対応コントローラー（DualShock / DualSense）を傾けて照準を合わせます。タッチ操作が非表示でも使えます。"
+
+msgid "TOUCH"
+msgstr "タッチ操作"
+
+msgid "TOUCH & AIMING"
+msgstr "タッチ操作・照準"
+
+msgid "Touch & aiming"
+msgstr "タッチ操作・照準"
+
+msgid "Unable to connect to that server URL."
+msgstr "指定のサーバーURLに接続できません。"
+
+msgid "Up to date · v"
+msgstr "最新版・v"
+
+msgid "Update available · v"
+msgstr "アップデートあり・v"
+
+msgid "Updates"
+msgstr "アップデート"
+
+msgid "Use the same Wi-Fi network or hotspot. No Internet or separate server needed."
+msgstr "同じWi-Fiまたはアクセスポイントを使用してください。インターネットや専用サーバーは不要です。"
+
+msgid "Vibration"
+msgstr "振動"
+
+msgid "VIEW SOURCE CODE"
+msgstr "ソースコードを見る"
+
+msgid "Visual comfort, dark paper, motion reduction and readability"
+msgstr "目の負担を軽減、暗い用紙、揺れの軽減、視認性"
+
+msgid "Warm sepia"
+msgstr "暖かいセピア"
+
+msgid "Wave %d"
+msgstr "ウェーブ %d"
+
+msgid "Wave %d · %d points"
+msgstr "ウェーブ %d・%d ポイント"
+
+msgid "While aiming"
+msgstr "照準中"
+
+msgid "wss://your-lobby-server"
+msgstr "wss://your-lobby-server"
+
+msgid "XBOX CONTROLLER"
+msgstr "XBOXコントローラー"
+
+msgid "You got erased"
+msgstr "消されました"
+
+msgid "You got erased · respawn in %d"
+msgstr "消されました・復活まで %d"
+
+msgid "You have the latest GitHub release (v%s%s)"
+msgstr "GitHubの最新版です（v%s%s）"
+
+msgid "You're crazy! With 30 bots, the game might barely run!"
+msgstr "ボットが30体いると、ゲームが非常に重くなることがあります！"
+
+msgid "Your name"
+msgstr "名前"
+
+msgid "{1–7 / Wheel}"
+msgstr "{1–7 / ホイール}"
+
+msgid "{1–7 / Wheel} switch weapons"
+msgstr "{1–7 / Wheel} 武器変更"
+
+msgid "{C} slide on the ground · air dash in the air"
+msgstr "{C} 地上でスライド・空中でダッシュ"
+
+msgid "{D-pad Right}"
+msgstr "{方向キー →}"
+
+msgid "{D-pad Up / Down}"
+msgstr "{方向キー ↑ / ↓}"
+
+msgid "{D-pad Up / Down} previous / next weapon"
+msgstr "{D-pad Up / Down} 前後の武器に切り替え"
+
+msgid "{DASH}"
+msgstr "{ダッシュ}"
+
+msgid "{Drag elsewhere}"
+msgstr "{ほかの場所をドラッグ}"
+
+msgid "{F} quick katana slash   {R} reload"
+msgstr "{F} 刀で素早く斬る   {R} リロード"
+
+msgid "{G} grenade · hold to throw further   {H} smoke"
+msgstr "{G} 手榴弾・長押しで遠くに投げる   {H} 煙幕"
+
+msgid "{L stick}"
+msgstr "{左スティック}"
+
+msgid "{L stick} move   {R stick / Gyro} look   {L3} toggle sprint"
+msgstr "{L stick} 移動   {R stick / Gyro} 視点操作   {L3} ダッシュ切替"
+
+msgid "{L1} grapple: tap to swing, hold to reel"
+msgstr "{L1} フック：短押しでスイング、長押しで巻き取る"
+
+msgid "{L2 + R2} charged katana execution in survival"
+msgstr "{L2 + R2} サバイバルで刀のチャージフィニッシュ"
+
+msgid "{Left thumb}"
+msgstr "{左親指}"
+
+msgid "{Left thumb} move and sprint · drag up to the runner marker to keep running   {Drag elsewhere} look, even while firing"
+msgstr "{Left thumb} 移動とダッシュ・走るアイコンまでドラッグして走り続ける   {Drag elsewhere} 射撃中でも視点を操作"
+
+msgid "{LMB + RMB}"
+msgstr "{左＋右クリック}"
+
+msgid "{LMB + RMB} charged katana execution in survival"
+msgstr "{LMB + RMB} サバイバルで刀のチャージフィニッシュ"
+
+msgid "{LMB}"
+msgstr "{左クリック}"
+
+msgid "{LMB} fire / slash   {RMB} aim / block"
+msgstr "{LMB} 射撃・斬撃   {RMB} 照準・ガード"
+
+msgid "{LS click}"
+msgstr "{LS押し込み}"
+
+msgid "{Mouse}"
+msgstr "{マウス}"
+
+msgid "{Options}"
+msgstr "{Options}"
+
+msgid "{Q} grapple: tap to swing, hold to reel"
+msgstr "{Q} フック：短押しでスイング、長押しで巻き取る"
+
+msgid "{R stick / Gyro}"
+msgstr "{右スティック / ジャイロ}"
+
+msgid "{R1} quick katana slash, then back to your gun"
+msgstr "{R1} 刀で素早く斬って元の銃に戻る"
+
+msgid "{R2} fire / slash   {L2} aim / block"
+msgstr "{R2} 射撃・斬撃   {L2} 照準・ガード"
+
+msgid "{R3 / D-pad Left}"
+msgstr "{R3 / 方向キー ←}"
+
+msgid "{R3 / D-pad Left} grenade · hold to throw   {D-pad Right} smoke"
+msgstr "{R3 / D-pad Left} 手榴弾・長押しで投げる   {D-pad Right} 煙幕"
+
+msgid "{RMB}"
+msgstr "{右クリック}"
+
+msgid "{RS / Gyro}"
+msgstr "{RS / ジャイロ}"
+
+msgid "{RS click / D-pad Left}"
+msgstr "{RS押し込み / 方向キー ←}"
+
+msgid "{Shift}"
+msgstr "{Shift}"
+
+msgid "{SLIDE}"
+msgstr "{スライド}"
+
+msgid "{SLIDE} becomes {DASH} in the air   {Weapon bar} tap a weapon to switch · tap it again or use reload to reload"
+msgstr "{SLIDE} は空中で {DASH} に変化   {Weapon bar} タップで武器を切替・再タップかリロードボタンで装填"
+
+msgid "{Space}"
+msgstr "{スペース}"
+
+msgid "{Space} again in the air: double jump"
+msgstr "{Space} 空中でもう一度押すと二段ジャンプ"
+
+msgid "{Space} jump · press against a wall to wall jump"
+msgstr "{Space} ジャンプ・壁に触れた状態で押すと壁ジャンプ"
+
+msgid "{Space} launch from the rope   {Q} again: release"
+msgstr "{Space} ロープから飛ぶ   {Q} 再入力でロープを離す"
+
+msgid "{Tab} scoreboard (bot / network matches)   {Esc} pause"
+msgstr "{Tab} スコアボード（ボット戦・ネット対戦）   {Esc} ポーズ"
+
+msgid "{Touchpad click / Create}"
+msgstr "{タッチパッド押し込み / Create}"
+
+msgid "{Touchpad click / Create} scoreboard   {Options} pause"
+msgstr "{Touchpad click / Create} スコアボード   {Options} ポーズ"
+
+msgid "{Touchpad swipe}"
+msgstr "{タッチパッドをスワイプ}"
+
+msgid "{Touchpad swipe} radial weapon wheel (1–7)"
+msgstr "{Touchpad swipe} 武器ホイール（1–7）"
+
+msgid "{WASD} move   {Mouse} look   {Shift} sprint"
+msgstr "{WASD} 移動   {Mouse} 視点操作   {Shift} ダッシュ"
+
+msgid "{Weapon bar}"
+msgstr "{武器バー}"
+
+msgid "{×} jump / wall jump / double jump"
+msgstr "{×} ジャンプ・壁ジャンプ・二段ジャンプ"
+
+msgid "{×} launch from the rope   {L1} again: release"
+msgstr "{×} ロープから飛ぶ   {L1} 再入力でロープを離す"
+
+msgid "{□} reload   {△} next weapon"
+msgstr "{□} リロード   {△} 次の武器"
+
+msgid "{○} slide on the ground · air dash in the air"
+msgstr "{○} 地上でスライド・空中でダッシュ"
+
+msgid "~ drag this line to move the bar ~"
+msgstr "～ この行をドラッグしてバーを移動 ～"
+
+msgid "• %d bots"
+msgstr "・%d ボット"
+
+msgid "• 1 bot"
+msgstr "・1 ボット"

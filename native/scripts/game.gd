@@ -50,8 +50,18 @@ const PREVIEW_SIZE = 160
 const REPO_URL = "https://github.com/albertolicea00/doodleshooter-port"
 const RELEASES_PAGE_URL = "https://github.com/albertolicea00/doodleshooter-port/releases"
 const RELEASES_API_URL = "https://api.github.com/repos/albertolicea00/doodleshooter-port/releases?per_page=8"
-const LANGUAGES = ["en", "es"]
-const LANGUAGE_NAMES = ["English", "Español"]
+const LANGUAGES = {
+	"en": "English",
+	"es": "Español",
+	"pt_BR": "Português",
+	"fr": "Français",
+	"de": "Deutsch",
+	"it": "Italiano",
+	"ru": "Русский",
+	"zh_Hans": "简体中文",
+	"ja": "日本語",
+	"ko": "한국어",
+}
 var update_request: HTTPRequest
 var update_dots_timer: Timer
 var show_fps = true
@@ -239,7 +249,10 @@ func _setup_ui() -> void:
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(ui)
-	ui.theme = DoodlePen.theme(load("res://assets/fonts/PatrickHand-Regular.ttf"))
+	var font = FontVariation.new()
+	font.base_font = load("res://assets/fonts/PatrickHand-Regular.ttf")
+	font.fallbacks = [load("res://assets/fonts/DoodleshooterFallback.otf")]
+	ui.theme = DoodlePen.theme(font)
 	paper_rect = ColorRect.new()
 	paper_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	paper_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -578,7 +591,7 @@ func _info_row() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 # Side-by-side outlined choices; the selected one is filled with ink (.mapbtn.on).
-func _choices(labels: Array, selected: int, callback: Callable) -> HBoxContainer:
+func _choices(labels: Array, selected: int, callback: Callable) -> void:
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	var group = ButtonGroup.new()
@@ -595,7 +608,6 @@ func _choices(labels: Array, selected: int, callback: Callable) -> HBoxContainer
 		button.pressed.connect(callback.bind(i))
 		row.add_child(button)
 	menu_items.add_child(row)
-	return row
 
 func _toggle(text: String, value: bool, callback: Callable) -> void:
 	var button = _button("", func(): pass, "AltButton")
@@ -911,16 +923,35 @@ func show_language_settings() -> void:
 	_clear_menu(tr("Language"), tr("Choose the language for menus and gameplay."))
 	var start = menu_items.get_child_count()
 	_credit_section("", tr("Language selection is a port addition."))
-	var selected = LANGUAGES.find(TranslationServer.get_locale())
-	var choices = _choices(LANGUAGE_NAMES, selected, func(index: int):
-		var locale: String = LANGUAGES[index]
-		TranslationServer.set_locale(locale)
-		preferences.set_value("ui", "language", locale)
-		preferences.save(save_path)
-		show_language_settings.call_deferred())
+	var grid = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	menu_items.add_child(grid)
+	var group = ButtonGroup.new()
+	var current_locale = TranslationServer.get_locale()
+	var selected: Button
+	for locale in LANGUAGES:
+		var option = _button(LANGUAGES[locale], _change_language.bind(locale), "AltButton")
+		option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		option.toggle_mode = true
+		option.button_group = group
+		option.button_pressed = locale == current_locale
+		option.reparent(grid)
+		if option.button_pressed:
+			selected = option
 	_card_wrap(start)
 	_back_button(show_settings, "BACK TO SETTINGS")
-	choices.get_child(selected).grab_focus()
+	if selected != null:
+		selected.grab_focus()
+
+func _change_language(locale: String) -> void:
+	if locale == TranslationServer.get_locale():
+		return
+	TranslationServer.set_locale(locale)
+	preferences.set_value("ui", "language", locale)
+	preferences.save(save_path)
+	show_language_settings()
 
 # Low renders the scene at 70% size with straight pen strokes and no edge
 # smoothing; Medium adds the hand-drawn stroke waver and 2x smoothing; High
@@ -1303,7 +1334,9 @@ func show_credit_notices() -> void:
 	var paragraphs: PackedStringArray = []
 	for paragraph in credits:
 		paragraphs.append(tr(paragraph))
-	show_license(tr("Full credits & notices"), "\n\n".join(paragraphs) + "\n\n" + FileAccess.get_file_as_string("res://assets/fonts/PatrickHand-OFL.txt"))
+	paragraphs.append(FileAccess.get_file_as_string("res://assets/fonts/PatrickHand-OFL.txt"))
+	paragraphs.append(FileAccess.get_file_as_string("res://assets/fonts/DoodleshooterFallback-OFL.txt"))
+	show_license(tr("Full credits & notices"), "\n\n".join(paragraphs))
 
 func _cancel_update_request() -> void:
 	if is_instance_valid(update_dots_timer):
@@ -2400,6 +2433,8 @@ func run_smoke() -> void:
 	var language = await smoke_menu_button("LANGUAGE")
 	assert(accessibility.get_parent() == language.get_parent() and language.get_index() == accessibility.get_index() + 1, "LANGUAGE must sit next to ACCESSIBILITY")
 	await smoke_tap_button("LANGUAGE")
+	for language_name in LANGUAGES.values():
+		await smoke_menu_button(language_name)
 	await smoke_tap_button("Español")
 	await smoke_menu_button("VOLVER A AJUSTES")
 	assert(menu_items.get_child(0).get_child(0).text == "Idioma", "Changing language must refresh the current screen")
@@ -2422,6 +2457,7 @@ func run_smoke() -> void:
 	await smoke_tap_button("English")
 	await smoke_tap_button("BACK TO SETTINGS")
 	await smoke_tap_button("BACK TO MAIN MENU")
+	await _smoke_survival_headings()
 	await smoke_tap_button("CHECK FOR UPDATES")
 	assert(menu_items.get_child(0).get_child(0).text == "Checking for updates…", "CHECK FOR UPDATES must open the loading updater screen")
 	_render_update_release({
@@ -3042,6 +3078,25 @@ func run_smoke() -> void:
 	await get_tree().create_timer(0.1).timeout
 	get_tree().quit()
 
+func _smoke_survival_headings() -> void:
+	var saved_checkpoint = checkpoint
+	var saved_locale = TranslationServer.get_locale()
+	checkpoint = 5
+	for locale in LANGUAGES:
+		TranslationServer.set_locale(locale)
+		assert(TranslationServer.get_locale() == locale, "Unsupported locale: " + locale)
+		assert(locale == "en" or tr("Language") != "Language", "Missing translation catalog: " + locale)
+		show_offline_menu()
+		for i in 3:
+			await get_tree().process_frame
+		var heading = menu_items.find_child("SurvivalHeading", true, false) as Label
+		var heading_font = heading.get_theme_font("font")
+		var heading_width = heading_font.get_string_size(heading.text, HORIZONTAL_ALIGNMENT_LEFT, -1, heading.get_theme_font_size("font_size")).x
+		assert(heading_width <= heading.size.x, "Survival heading must fit beside the checkpoint in " + locale)
+	checkpoint = saved_checkpoint
+	TranslationServer.set_locale(saved_locale)
+	show_main_menu()
+
 func smoke_menu_button(label: String) -> Button:
 	var target: Button
 	for child in menu_items.find_children("*", "Button", true, false):
@@ -3636,16 +3691,18 @@ func show_offline_menu() -> void:
 	_populate_map_cards(map_row, true, func(key: String):
 		map_key = key)
 	var survival_start = menu_items.get_child_count()
-	_credit_section(tr("Survival · Enemy waves"), tr("Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."))
+	_credit_section(tr("Survival · Waves"), tr("Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."))
+	var survival_heading = menu_items.get_child(survival_start) as Label
+	survival_heading.name = "SurvivalHeading"
+	survival_heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if checkpoint >= 5:
-		var heading = menu_items.get_child(survival_start)
 		var heading_row = HBoxContainer.new()
 		heading_row.add_theme_constant_override("separation", 12)
 		heading_row.alignment = BoxContainer.ALIGNMENT_CENTER
 		menu_items.add_child(heading_row)
 		menu_items.move_child(heading_row, survival_start)
-		heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		heading.reparent(heading_row)
+		survival_heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		survival_heading.reparent(heading_row)
 		var resume = _button(tr("CHECKPOINT · WAVE ") + str(checkpoint), func(): match_mode = "survival"; start_game(checkpoint), "RedOutlineButton")
 		resume.name = "OfflineCheckpointButton"
 		resume.custom_minimum_size = Vector2(0, 34)

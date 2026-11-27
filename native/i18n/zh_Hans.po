@@ -1,0 +1,1178 @@
+# Localization for doodleshooter-port.
+msgid ""
+msgstr ""
+"Project-Id-Version: doodleshooter-port\n"
+"PO-Revision-Date: 2026-11-26 00:00+0000\n"
+"Last-Translator: doodleshooter-port contributors\n"
+"Language-Team: zh_Hans\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "\n\nHost IP: "
+msgstr "\n\n主机 IP： "
+
+msgid "\n[color=#%s][i]The Back button is at the very bottom[/i][/color]"
+msgstr "\n[color=#%s][i]返回按钮位于最下方[/i][/color]"
+
+msgid "\nKeep this device in the game to host the room."
+msgstr "\n将此设备留在游戏中，以托管房间。"
+
+msgid " (host)"
+msgstr "（房主）"
+
+msgid " reloading…"
+msgstr " 换弹中…"
+
+msgid " · %d bots"
+msgstr " · %d 个机器人"
+
+msgid " · published "
+msgstr " · 已发布 "
+
+msgid "# Credits and provenance"
+msgstr "# 制作人员与来源"
+
+msgid "%d bots"
+msgstr "%d 个机器人"
+
+msgid "%d bots · %s"
+msgstr "%d 个机器人 · %s"
+
+msgid "%d enemies left"
+msgstr "剩余敌人 %d 名"
+
+msgid "%d fps"
+msgstr "%d fps"
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "%d waves · %d kills · %d points\nBest score: %d"
+msgstr "%d 波 · %d 击杀 · %d 分\n最高分：%d"
+
+msgid "%s\nMap: %s\nWaiting for the host to start the match."
+msgstr "%s\n地图：%s\n正在等待房主开始对战。"
+
+msgid "%s     %d K / %d D"
+msgstr "%s     %d 击杀 / %d 死亡"
+
+msgid "%s · %d kills · %d deaths\n"
+msgstr "%s · %d 次击杀 · %d 次死亡\n"
+
+msgid "1 bot"
+msgstr "1 个机器人"
+
+msgid "20+ bots may reduce performance, especially on mobile devices."
+msgstr "20+ 个机器人可能会降低性能，尤其是在移动设备上。"
+
+msgid ": off"
+msgstr "：关"
+
+msgid ": on"
+msgstr "：开"
+
+msgid "[center]v%s · by [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center]"
+msgstr "[center]v%s · 由 [url=https://github.com/albertolicea00/doodleshooter-port]@albertolicea00[/url][/center] 提供"
+
+msgid "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] Select   ·   Arrows / D-pad Move & Scroll   ·   [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] Back"
+msgstr "[color=#%s]A[/color] / [img=18x18]res://assets/ui/controller-cross.svg[/img] 选择 · 箭头/D-pad 移动和滚动 · [color=#%s]B[/color] / [img=18x18]res://assets/ui/controller-circle.svg[/img] 返回"
+
+msgid "[url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url] on GitHub. This is the source reference, without claiming that the repository owner is the sole original author."
+msgstr "参考源代码为 GitHub 上的 [url=https://github.com/iifor/doodleshooter]iifor/doodleshooter[/url]。仓库所有者并不因此被认定为原版的唯一作者。"
+
+msgid "ACCESSIBILITY"
+msgstr "无障碍"
+
+msgid "Accessibility"
+msgstr "无障碍"
+
+msgid "AIM"
+msgstr "瞄准"
+
+msgid "Always"
+msgstr "始终"
+
+msgid "ANDROID DEBUG (.APK)"
+msgstr "ANDROID 调试 (.APK)"
+
+msgid "Applies to touch controls and the controller right stick."
+msgstr "适用于触控和手柄右摇杆。"
+
+msgid "Ask the host for the IP address shown in their lobby. Enter it below, then tap Join. Guest Wi-Fi networks may prevent devices from connecting to each other."
+msgstr "请向主机索取其主界面上显示的 IP 地址。 在下方输入，然后点击“加入”。 访客 Wi-Fi 网络可能会阻止设备之间的连接。"
+
+msgid "Attribution and license notices"
+msgstr "署名和许可声明"
+
+msgid "Auto fire on target"
+msgstr "对准目标时自动开火"
+
+msgid "Away from the page"
+msgstr "长时间无操作"
+
+msgid "BACK TO CONTROLS"
+msgstr "返回操作说明"
+
+msgid "BACK TO CREDITS"
+msgstr "返回制作人员"
+
+msgid "BACK TO LAN"
+msgstr "返回局域网"
+
+msgid "BACK TO LOBBY"
+msgstr "返回大厅"
+
+msgid "BACK TO MAIN MENU"
+msgstr "返回主菜单"
+
+msgid "BACK TO ONLINE"
+msgstr "返回在线游戏"
+
+msgid "BACK TO PAUSE"
+msgstr "返回暂停菜单"
+
+msgid "BACK TO SETTINGS"
+msgstr "返回设置"
+
+msgid "Bazooka"
+msgstr "火箭筒"
+
+msgid "BIGGER"
+msgstr "放大"
+
+msgid "BLOCK"
+msgstr "格挡"
+
+msgid "Bold 3D outlines"
+msgstr "粗 3D 轮廓"
+
+msgid "BOLDER"
+msgstr "加深"
+
+msgid "BROWSE PUBLIC LOBBIES"
+msgstr "浏览公开大厅"
+
+msgid "Caffeine · faster enemies"
+msgstr "咖啡因 · 敌人速度更快"
+
+msgid "CANCEL"
+msgstr "取消"
+
+msgid "Changes apply immediately and are saved on this device"
+msgstr "更改立即生效，并保存在本设备上"
+
+msgid "CHECK AGAIN"
+msgstr "重新检查"
+
+msgid "CHECK FOR UPDATES"
+msgstr "检查更新"
+
+msgid "Check this device's Wi-Fi settings"
+msgstr "检查本设备的 Wi-Fi 设置"
+
+msgid "Checking for updates…"
+msgstr "正在检查更新…"
+
+msgid "CHECKPOINT · WAVE "
+msgstr "检查点 · 波次 "
+
+msgid "Choose a custom map"
+msgstr "选择自定义地图"
+
+msgid "Choose a map"
+msgstr "选择地图"
+
+msgid "Choose a map, adjust the match settings, and start when everyone is ready."
+msgstr "选择地图，调整匹配设置，并在所有人都准备好时开始。"
+
+msgid "Choose an open room"
+msgstr "选择开放房间"
+
+msgid "choose from 9 maps"
+msgstr "从 9 张地图中选择"
+
+msgid "Choose how you want to play"
+msgstr "选择你的游玩方式"
+
+msgid "Choose the language for menus and gameplay."
+msgstr "选择菜单和游戏中的语言。"
+
+msgid "Colorblind-safe enemy & pickup inks"
+msgstr "敌人与道具色觉辅助"
+
+msgid "Coloured pencil"
+msgstr "彩色铅笔"
+
+msgid "Combo x%d"
+msgstr "连击 x%d"
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port "
+msgstr "连接到 github.com/albertolicea00/doodleshooter-port "
+
+msgid "Connecting to github.com/albertolicea00/doodleshooter-port ·"
+msgstr "连接到 github.com/albertolicea00/doodleshooter-port ·"
+
+msgid "Connecting to the host on your local network"
+msgstr "连接到您本地网络的服务器"
+
+msgid "Connecting…"
+msgstr "正在连接…"
+
+msgid "Connection"
+msgstr "连接"
+
+msgid "Contacting the lobby server"
+msgstr "正在联系大厅服务器"
+
+msgid "Continue Survival from wave %d"
+msgstr "从第 %d 波继续生存模式"
+
+msgid "CONTROLLER & MOTION"
+msgstr "手柄与体感"
+
+msgid "Controller & motion"
+msgstr "控制器和运动"
+
+msgid "Controller aiming, motion sensor and feedback · saved on this device"
+msgstr "控制器瞄准、运动传感器和反馈 · 已保存在本设备上"
+
+msgid "Controller light bar"
+msgstr "控制器指示灯"
+
+msgid "Controller vibration"
+msgstr "控制器震动"
+
+msgid "CONTROLS"
+msgstr "操作说明"
+
+msgid "Controls"
+msgstr "操作说明"
+
+msgid "Could not check automatically"
+msgstr "无法自动检查"
+
+msgid "Could not open the local game port. Close another hosted room and try again."
+msgstr "无法打开本地游戏端口。 关闭其他已启动的房间，然后再次尝试。"
+
+msgid "Could not reach GitHub Releases (HTTP %d). Check your Internet connection and try again."
+msgstr "无法访问 GitHub Releases (HTTP %d)。 请检查您的网络连接，然后再次尝试。"
+
+msgid "Could not reach GitHub Releases. Check your Internet connection and try again."
+msgstr "无法访问 GitHub Releases。 请检查您的网络连接，然后再次尝试。"
+
+msgid "Could not start the network request (error %d)."
+msgstr "无法启动网络请求（错误代码 %d）。"
+
+msgid "Create a lobby"
+msgstr "创建大厅"
+
+msgid "Create a local match on this device and share your host IP with friends on the same Wi-Fi or hotspot. Keep this device in the game while others play. Once inside the lobby, you can choose the map, time limit, and bots.\n\nHost IP: "
+msgstr "在此设备上创建本地对战，并将主机 IP 分享给使用同一 Wi-Fi 或热点的朋友。对战期间请保持游戏运行。进入大厅后可选择地图、时限和机器人。\n\n主机 IP："
+
+msgid "CREATE PRIVATE LOBBY"
+msgstr "创建私人大厅"
+
+msgid "CREATE PUBLIC LOBBY"
+msgstr "创建公开大厅"
+
+msgid "Creating LAN room…"
+msgstr "正在创建局域网房间…"
+
+msgid "CREDITS"
+msgstr "制作人员"
+
+msgid "Credits"
+msgstr "制作人员"
+
+msgid "custom map · tap to change"
+msgstr "自定义地图 · 点击更换"
+
+msgid "CUSTOMIZE LAYOUT"
+msgstr "自定义布局"
+
+msgid "Damage flash"
+msgstr "受伤闪光"
+
+msgid "Dark board"
+msgstr "深色画板"
+
+msgid "DASH"
+msgstr "冲刺"
+
+msgid "default global map"
+msgstr "默认地图"
+
+msgid "DELETE"
+msgstr "删除"
+
+msgid "Direct downloads · v"
+msgstr "快速下载 · v"
+
+msgid "Disconnected from the lobby server."
+msgstr "已与游戏大厅服务器断开连接。"
+
+msgid "District, Jungle and Mexico are original · the rest are new in this port"
+msgstr "区域、丛林和墨西哥是原版地图，其余地图是本版本新增的。"
+
+msgid "Dizzy screen sway"
+msgstr "眩晕画面摇晃"
+
+msgid "DONE"
+msgstr "完成"
+
+msgid "Doodle Base"
+msgstr "涂鸦基地"
+
+msgid "Doodle Castle"
+msgstr "涂鸦城堡"
+
+msgid "Doodle District"
+msgstr "涂鸦街区"
+
+msgid "DOODLE DISTRICT"
+msgstr "涂鸦街区"
+
+msgid "Doodle Forest"
+msgstr "涂鸦森林"
+
+msgid "Doodle Harbor"
+msgstr "涂鸦港口"
+
+msgid "Doodle Jungle"
+msgstr "涂鸦丛林"
+
+msgid "Doodle Mexico"
+msgstr "涂鸦墨西哥"
+
+msgid "Doodle Pyramid"
+msgstr "涂鸦金字塔"
+
+msgid "Doodle School"
+msgstr "涂鸦学校"
+
+msgid "Doodle Station"
+msgstr "涂鸦车站"
+
+msgid "Doodler Bot %d"
+msgstr "Doodler 机器人 %d"
+
+msgid "doodleshooter-port · unofficial native adaptation"
+msgstr "doodleshooter-port · 非官方本地化版本"
+
+msgid "Drag a control to move it · tap one to resize, fade, copy or delete it"
+msgstr "拖动控件移动 · 单击一个以调整大小、淡化、复制或删除"
+
+msgid "DRAW AGAIN"
+msgstr "重新绘制"
+
+msgid "Drawing the world…"
+msgstr "正在绘制世界…"
+
+msgid "DualShock and DualSense LED: blue ink in play, red when hurt or low on health, orange when katana focus is ready."
+msgstr "DualShock 和 DualSense LED：游戏时为蓝色，受伤或生命值低时为红色，当刀剑集中时为橙色。"
+
+msgid "DUPLICATE"
+msgstr "复制"
+
+msgid "Easy"
+msgstr "简单"
+
+msgid "Edge shadow"
+msgstr "边缘阴影"
+
+msgid "Effects volume"
+msgstr "音效音量"
+
+msgid "Engine and font"
+msgstr "引擎与字体"
+
+msgid "Enter a five-character room code from a friend, or browse open public rooms to jump into a match."
+msgstr "输入朋友提供的五位字符房间代码，或浏览公开公共房间以进入游戏。"
+
+msgid "Enter the host's IP address first"
+msgstr "优先输入主机的 IP 地址"
+
+msgid "FAINTER"
+msgstr "调淡"
+
+msgid "Fewer bots"
+msgstr "减少机器人"
+
+msgid "FIRE"
+msgstr "开火"
+
+msgid "Five-character lobby code"
+msgstr "五位大厅代码"
+
+msgid "Fixed joystick"
+msgstr "固定摇杆"
+
+msgid "Frame rate counter"
+msgstr "帧率显示"
+
+msgid "FREE FOR ALL\n"
+msgstr "自由对战\n"
+
+msgid "Free for all with bots"
+msgstr "机器人自由对战"
+
+msgid "Free for all · 10 players · first to 20 kills · Connect to a native lobby server"
+msgstr "自由对战 · 10 名玩家 · 优先达到 20 次击杀者获胜 · 连接大厅服务器"
+
+msgid "Free for all · first to %d · %d minute limit%s"
+msgstr "自由对战 · 目标 %d 次击杀 · 限时 %d 分钟%s"
+
+msgid "Free for all · the match continues while this menu is open"
+msgstr "自由对战 · 此菜单打开时对战继续"
+
+msgid "FROM CHECKPOINT"
+msgstr "从检查点继续"
+
+msgid "FULL CREDITS & NOTICES"
+msgstr "完整制作人员与声明"
+
+msgid "Full credits & notices"
+msgstr "完整制作人员与声明"
+
+msgid "FULLSCREEN: OFF"
+msgstr "全屏：关"
+
+msgid "FULLSCREEN: ON"
+msgstr "全屏：开"
+
+msgid "Godot Engine license"
+msgstr "Godot Engine 授权"
+
+msgid "Godot Engine · MIT license\nPatrick Hand · the Patrick Hand authors\nSIL Open Font License 1.1"
+msgstr "Godot Engine · MIT 许可证\nPatrick Hand · Patrick Hand 的作者\nSIL Open Font License 1.1"
+
+msgid "GODOT LICENSE"
+msgstr "GODOT 授权"
+
+msgid "Graphics detail"
+msgstr "画质"
+
+msgid "Gyroscope"
+msgstr "陀螺仪"
+
+msgid "Gyroscope sensitivity"
+msgstr "陀螺仪灵敏度"
+
+msgid "Hard"
+msgstr "困难"
+
+msgid "Health"
+msgstr "生命值"
+
+msgid "Heavy Ink · harder hits"
+msgstr "Heavy Ink · 更强的打击"
+
+msgid "High"
+msgstr "高"
+
+msgid "High contrast"
+msgstr "高对比"
+
+msgid "Hold to aim"
+msgstr "长按瞄准"
+
+msgid "HOOK"
+msgstr "钩索"
+
+msgid "Host a room"
+msgstr "创建房间"
+
+msgid "Host IP address, for example 192.168.1.10"
+msgstr "托管 IP 地址，例如 192.168.1.10"
+
+msgid "HOST LAN GAME"
+msgstr "创建局域网游戏"
+
+msgid "Huge waves"
+msgstr "巨型波次"
+
+msgid "Insane"
+msgstr "极限"
+
+msgid "Installed v%s is ahead of the latest published release (v%s%s)"
+msgstr "已安装的 v%s 比最新发布版（v%s%s）更新"
+
+msgid "Installed v%s · contacting GitHub Releases"
+msgstr "已安装的 v%s · 联系 GitHub 发布"
+
+msgid "Installed v%s · new version v%s%s"
+msgstr "已安装 v%s · 新版本 v%s%s"
+
+msgid "Installed version v%s"
+msgstr "已安装的 v%s 版本"
+
+msgid "Invalid message."
+msgstr "无效消息。"
+
+msgid "Invert vertical look"
+msgstr "反转垂直视角"
+
+msgid "Join a lobby"
+msgstr "加入大厅"
+
+msgid "Join a room"
+msgstr "加入房间"
+
+msgid "JOIN CODE"
+msgstr "通过代码加入"
+
+msgid "JOIN LAN GAME"
+msgstr "加入局域网游戏"
+
+msgid "Joining LAN room…"
+msgstr "正在加入局域网房间…"
+
+msgid "JUMP"
+msgstr "跳跃"
+
+msgid "Katana"
+msgstr "武士刀"
+
+msgid "Kills %d / %d"
+msgstr "击杀 %d / %d"
+
+msgid "LAN hosting unavailable"
+msgstr "无法进行 LAN 托管"
+
+msgid "LANGUAGE"
+msgstr "语言"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Language selection is a port addition."
+msgstr "语言选择是移植版新增的功能。"
+
+msgid "Large"
+msgstr "大"
+
+msgid "Large waves"
+msgstr "大型波次"
+
+msgid "LEAVE LOBBY"
+msgstr "离开大厅"
+
+msgid "LEAVE MATCH"
+msgstr "离开对战"
+
+msgid "Light bar"
+msgstr "灯条"
+
+msgid "Loading original geometry and native navigation"
+msgstr "导入原始几何形状和原生导航"
+
+msgid "Lobby "
+msgstr "大厅 "
+
+msgid "Lobby not found. Check its five-character code."
+msgstr "找不到大厅，请检查五位代码。"
+
+msgid "Local network · LAN"
+msgstr "局域网 · LAN"
+
+msgid "Longer match"
+msgstr "延长对战"
+
+msgid "Look sensitivity"
+msgstr "视角灵敏度"
+
+msgid "Looking"
+msgstr "视角"
+
+msgid "Low"
+msgstr "低"
+
+msgid "Lower brightness or choose Dark board to rest your eyes; inks adapt automatically."
+msgstr "降低亮度或选择深色背景以减轻眼睛疲劳；墨水将自动调整。"
+
+msgid "MAIN MENU"
+msgstr "主菜单"
+
+msgid "map"
+msgstr "地图"
+
+msgid "MAP · "
+msgstr "地图 · "
+
+msgid "Match finished"
+msgstr "对战结束"
+
+msgid "Match setup"
+msgstr "对战设置"
+
+msgid "Medium"
+msgstr "中"
+
+msgid "More bots"
+msgstr "增加机器人"
+
+msgid "Motion & flashes"
+msgstr "晃动与闪光"
+
+msgid "MOUSE + KEYBOARD"
+msgstr "键鼠"
+
+msgid "Moving"
+msgstr "移动"
+
+msgid "Music volume"
+msgstr "音乐音量"
+
+msgid "NADE"
+msgstr "手雷"
+
+msgid "Native adaptation"
+msgstr "原生移植"
+
+msgid "native port, portable too"
+msgstr "原生移植，随身可玩"
+
+msgid "Next wave in %d"
+msgstr "距下一波还有 %d"
+
+msgid "No Internet connection or server needed"
+msgstr "无需联网或服务器"
+
+msgid "No public releases are available yet."
+msgstr "暂无公开版本。"
+
+msgid "No published releases were found on GitHub yet."
+msgstr "GitHub 上暂无已发布版本。"
+
+msgid "No release notes were provided for this release."
+msgstr "此版本暂无发行说明。"
+
+msgid "Normal"
+msgstr "普通"
+
+msgid "Normal 3D outlines"
+msgstr "普通 3D 轮廓"
+
+msgid "Normal crosshair"
+msgstr "普通准星"
+
+msgid "Normal waves"
+msgstr "普通波次"
+
+msgid "Off"
+msgstr "关闭"
+
+msgid "OFFLINE FREE FOR ALL\n"
+msgstr "离线自由对战\n"
+
+msgid "Offline free for all · %d / %d kills"
+msgstr "离线自由对战 · %d / %d 击杀"
+
+msgid "Offline match finished"
+msgstr "离线对战结束"
+
+msgid "Open a new room on the lobby server and share its code with friends, or list it publicly."
+msgstr "在大厅服务器上创建房间并与朋友分享代码，或将其公开列出。"
+
+msgid "OPEN GITHUB RELEASES"
+msgstr "打开 GitHub 发行版"
+
+msgid "OPEN ORIGINAL GAME"
+msgstr "打开原版游戏"
+
+msgid "OPEN RELEASE ON GITHUB"
+msgstr "在 GitHub 中打开发行版"
+
+msgid "Original"
+msgstr "原版"
+
+msgid "Original game · Doodle District"
+msgstr "原版游戏 · Doodle District"
+
+msgid "Original hatching"
+msgstr "原版排线"
+
+msgid "Original soundtrack"
+msgstr "原版配乐"
+
+msgid "Packages attached to this GitHub release. Recommended builds for your device appear first."
+msgstr "此 GitHub 发行版附带的软件包。适合你设备的推荐版本优先显示。"
+
+msgid "Paper & brightness"
+msgstr "纸张与亮度"
+
+msgid "Paper brightness"
+msgstr "纸张亮度"
+
+msgid "Paused"
+msgstr "已暂停"
+
+msgid "PLAY AGAIN"
+msgstr "再玩一次"
+
+msgid "PLAY LAN"
+msgstr "局域网游戏"
+
+msgid "Play offline"
+msgstr "离线游戏"
+
+msgid "PLAY ONLINE"
+msgstr "在线游戏"
+
+msgid "Play online"
+msgstr "在线游戏"
+
+msgid "Players (%d/12)"
+msgstr "玩家（%d/12）"
+
+msgid "PORT REPOSITORY"
+msgstr "移植版仓库"
+
+msgid "Ported by @albertolicea00. Shared Android, iOS, and desktop project built with Godot Engine. District, Jungle and Mexico are original maps, converted with the models for native playback; the original procedural music and effects are rendered from the reference audio generator."
+msgstr "由 @albertolicea00 使用 Godot Engine 移植，支持 Android、iOS 和桌面平台。街区、丛林和墨西哥是原版地图，与模型一起转换供原生应用使用。原版程序化音乐和音效由参考音频生成器渲染。"
+
+msgid "PS CONTROLLER"
+msgstr "PS 手柄"
+
+msgid "Public lobbies"
+msgstr "公开大厅"
+
+msgid "QUICK PLAY"
+msgstr "快速游戏"
+
+msgid "QUIT GAME"
+msgstr "退出游戏"
+
+msgid "Readability"
+msgstr "易读性"
+
+msgid "Ready"
+msgstr "就绪"
+
+msgid "Reference dependencies"
+msgstr "参考依赖项"
+
+msgid "Reference source"
+msgstr "参考源代码"
+
+msgid "REJOIN"
+msgstr "重新加入"
+
+msgid "Rejoin the fight with a two-second shield"
+msgstr "带着两秒护盾重返战斗"
+
+msgid "Release notes · "
+msgstr "发行说明 · "
+
+msgid "release to equip"
+msgstr "松开装备"
+
+msgid "RELOAD"
+msgstr "换弹"
+
+msgid "Reload button"
+msgstr "换弹按钮"
+
+msgid "Removed after 150 seconds without input."
+msgstr "因 150 秒无操作已被移出。"
+
+msgid "RESET"
+msgstr "重置"
+
+msgid "RESPAWN"
+msgstr "重生"
+
+msgid "Respawn and fight everyone. First to %d kills, or the most kills after %d minutes. Port addition · not part of the original game."
+msgstr "重生并与所有人交战。率先达到 %d 次击杀或在 %d 分钟后击杀最多者获胜。此模式为移植版新增。"
+
+msgid "RESUME"
+msgstr "继续"
+
+msgid "Review the match settings and players while the host prepares the match."
+msgstr "房主准备对战时，你可以查看设置和玩家。"
+
+msgid "Revolver"
+msgstr "左轮手枪"
+
+msgid "Rifle"
+msgstr "步枪"
+
+msgid "Right stick"
+msgstr "右摇杆"
+
+msgid "Ruled notebook lines"
+msgstr "笔记本横线"
+
+msgid "Rumble on gunfire, katana hits, parries, grapple, hard landings, damage and blasts."
+msgstr "开火、武士刀命中、招架、使用钩索、硬着陆、受伤和爆炸时振动。"
+
+msgid "RUN"
+msgstr "奔跑"
+
+msgid "Run lock marker"
+msgstr "持续奔跑标记"
+
+msgid "SCORE"
+msgstr "分数"
+
+msgid "Score %d"
+msgstr "分数 %d"
+
+msgid "Screen shake"
+msgstr "屏幕震动"
+
+msgid "Second fire button on the left"
+msgstr "左侧第二个开火按钮"
+
+msgid "SELECT CUSTOM MAP"
+msgstr "选择自定义地图"
+
+msgid "Sensitivity while aiming"
+msgstr "瞄准灵敏度"
+
+msgid "Server connection timed out. Check the URL and server."
+msgstr "连接超时。请检查服务器及其地址。"
+
+msgid "SETTINGS"
+msgstr "设置"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Shading"
+msgstr "阴影"
+
+msgid "Shooting"
+msgstr "射击"
+
+msgid "Shorter match"
+msgstr "缩短对战"
+
+msgid "Shotgun"
+msgstr "霰弹枪"
+
+msgid "SLASH"
+msgstr "斩击"
+
+msgid "SLIDE"
+msgstr "滑铲"
+
+msgid "slide touchpad"
+msgstr "滑动触摸板"
+
+msgid "SMALLER"
+msgstr "缩小"
+
+msgid "SMG"
+msgstr "冲锋枪"
+
+msgid "SMOKE"
+msgstr "烟雾弹"
+
+msgid "Sniper"
+msgstr "狙击步枪"
+
+msgid "Soft slate"
+msgstr "柔和石板色"
+
+msgid "Sound"
+msgstr "声音"
+
+msgid "Sound effects"
+msgstr "音效"
+
+msgid "SOURCE ARCHIVE (.ZIP)"
+msgstr "源代码压缩包（.ZIP）"
+
+msgid "Spawn shield"
+msgstr "重生护盾"
+
+msgid "Sprint with a full forward push"
+msgstr "摇杆推到底时奔跑"
+
+msgid "START BOT MATCH"
+msgstr "开始机器人对战"
+
+msgid "START MATCH"
+msgstr "开始对战"
+
+msgid "START SOLO"
+msgstr "单人游戏"
+
+msgid "START SURVIVAL"
+msgstr "开始生存模式"
+
+msgid "Starting a game on this device"
+msgstr "正在此设备上启动游戏"
+
+msgid "Survival · Waves"
+msgstr "生存 · 波次"
+
+msgid "Survive growing waves of enemies and bosses. The sniper and bazooka deal more damage here, and the shotgun hits harder up close. These damage changes, difficulty tiers, and wave-size choices are port additions beyond the original game."
+msgstr "在不断壮大的敌人与首领波次中生存。狙击步枪和火箭筒伤害更高，霰弹枪近距离更强。伤害调整、难度等级和波次规模选择均为移植版新增。"
+
+msgid "Swarm · more enemies, less health"
+msgstr "虫群 · 敌人更多，血量更少"
+
+msgid "TEST VIBRATION"
+msgstr "测试振动"
+
+msgid "That lobby is full (10 players)."
+msgstr "大厅已满（10 人）。"
+
+msgid "That match has finished. Join another lobby."
+msgstr "对战已结束，请加入其他大厅。"
+
+msgid "The Doodler"
+msgstr "涂鸦者"
+
+msgid "The Eraser"
+msgstr "橡皮擦"
+
+msgid "The Inkblot"
+msgstr "墨渍"
+
+msgid "The LAN host closed the room."
+msgstr "局域网房主已关闭房间。"
+
+msgid "The original concept, design, maps, characters, weapons, mechanics, artwork, soundtrack and sound effects belong to the original game creators. This port does not claim official affiliation."
+msgstr "原版概念、设计、地图、人物、武器、机制、美术、配乐和音效归原版游戏创作者所有。本移植版为独立非官方版本。"
+
+msgid "This LAN room is full, unavailable, or finished."
+msgstr "此局域网房间已满、不可用或已结束。"
+
+msgid "Three.js and PeerJS are preserved with their notices in the historical source snapshot. They are not shipped in the native game. Build-only audio rendering uses node-web-audio-api by IRCAM, under BSD-3-Clause."
+msgstr "Three.js 和 PeerJS 及其声明保存在历史源代码快照中，不随原生游戏分发。仅在构建时使用 IRCAM 的 node-web-audio-api 渲染音频，遵循 BSD-3-Clause 许可证。"
+
+msgid "Tilt your motion controller (DualShock / DualSense) or phone to aim."
+msgstr "倾斜体感手柄（DualShock / DualSense）或手机进行瞄准。"
+
+msgid "Tilt your phone or motion controller (DualShock / DualSense) to aim, even with touch controls hidden."
+msgstr "倾斜手机或体感手柄（DualShock / DualSense）进行瞄准，隐藏触控按键时也可使用。"
+
+msgid "TOUCH"
+msgstr "触控"
+
+msgid "TOUCH & AIMING"
+msgstr "触控与瞄准"
+
+msgid "Touch & aiming"
+msgstr "触控与瞄准"
+
+msgid "Unable to connect to that server URL."
+msgstr "无法连接到此服务器地址。"
+
+msgid "Up to date · v"
+msgstr "已是最新版 · v"
+
+msgid "Update available · v"
+msgstr "有可用更新 · v"
+
+msgid "Updates"
+msgstr "更新"
+
+msgid "Use the same Wi-Fi network or hotspot. No Internet or separate server needed."
+msgstr "使用同一 Wi-Fi 或热点。无需联网或单独的服务器。"
+
+msgid "Vibration"
+msgstr "振动"
+
+msgid "VIEW SOURCE CODE"
+msgstr "查看源代码"
+
+msgid "Visual comfort, dark paper, motion reduction and readability"
+msgstr "视觉舒适度、深色纸张、减少晃动和易读性"
+
+msgid "Warm sepia"
+msgstr "暖棕色"
+
+msgid "Wave %d"
+msgstr "第 %d 波"
+
+msgid "Wave %d · %d points"
+msgstr "第 %d 波 · %d 分"
+
+msgid "While aiming"
+msgstr "瞄准时"
+
+msgid "wss://your-lobby-server"
+msgstr "wss://your-lobby-server"
+
+msgid "XBOX CONTROLLER"
+msgstr "XBOX 手柄"
+
+msgid "You got erased"
+msgstr "你被擦除了"
+
+msgid "You got erased · respawn in %d"
+msgstr "你被擦除了 · %d 秒后重生"
+
+msgid "You have the latest GitHub release (v%s%s)"
+msgstr "已安装 GitHub 上的最新版本（v%s%s）"
+
+msgid "You're crazy! With 30 bots, the game might barely run!"
+msgstr "加入 30 个机器人可能会让游戏非常卡顿！"
+
+msgid "Your name"
+msgstr "你的名字"
+
+msgid "{1–7 / Wheel}"
+msgstr "{1–7 / 滚轮}"
+
+msgid "{1–7 / Wheel} switch weapons"
+msgstr "{1–7 / Wheel} 切换武器"
+
+msgid "{C} slide on the ground · air dash in the air"
+msgstr "{C} 地面滑铲 · 空中冲刺"
+
+msgid "{D-pad Right}"
+msgstr "{方向键 →}"
+
+msgid "{D-pad Up / Down}"
+msgstr "{方向键 ↑／↓}"
+
+msgid "{D-pad Up / Down} previous / next weapon"
+msgstr "{D-pad Up / Down} 上一把或下一把武器"
+
+msgid "{DASH}"
+msgstr "{冲刺}"
+
+msgid "{Drag elsewhere}"
+msgstr "{拖动其他区域}"
+
+msgid "{F} quick katana slash   {R} reload"
+msgstr "{F} 武士刀快斩   {R} 换弹"
+
+msgid "{G} grenade · hold to throw further   {H} smoke"
+msgstr "{G} 手雷 · 长按扔得更远   {H} 烟雾弹"
+
+msgid "{L stick}"
+msgstr "{左摇杆}"
+
+msgid "{L stick} move   {R stick / Gyro} look   {L3} toggle sprint"
+msgstr "{L stick} 移动   {R stick / Gyro} 转动视角   {L3} 切换奔跑"
+
+msgid "{L1} grapple: tap to swing, hold to reel"
+msgstr "{L1} 钩索：轻按摆荡，长按收绳"
+
+msgid "{L2 + R2} charged katana execution in survival"
+msgstr "{L2 + R2} 生存模式中的武士刀蓄力处决"
+
+msgid "{Left thumb}"
+msgstr "{左拇指}"
+
+msgid "{Left thumb} move and sprint · drag up to the runner marker to keep running   {Drag elsewhere} look, even while firing"
+msgstr "{Left thumb} 移动和奔跑 · 拖到奔跑图标保持奔跑   {Drag elsewhere} 转动视角，开火时也有效"
+
+msgid "{LMB + RMB}"
+msgstr "{鼠标左键＋右键}"
+
+msgid "{LMB + RMB} charged katana execution in survival"
+msgstr "{LMB + RMB} 生存模式中的武士刀蓄力处决"
+
+msgid "{LMB}"
+msgstr "{鼠标左键}"
+
+msgid "{LMB} fire / slash   {RMB} aim / block"
+msgstr "{LMB} 开火或斩击   {RMB} 瞄准或格挡"
+
+msgid "{LS click}"
+msgstr "{按下 LS}"
+
+msgid "{Mouse}"
+msgstr "{鼠标}"
+
+msgid "{Options}"
+msgstr "{Options}"
+
+msgid "{Q} grapple: tap to swing, hold to reel"
+msgstr "{Q} 钩索：轻按摆荡，长按收绳"
+
+msgid "{R stick / Gyro}"
+msgstr "{右摇杆／陀螺仪}"
+
+msgid "{R1} quick katana slash, then back to your gun"
+msgstr "{R1} 武士刀快斩后切回枪械"
+
+msgid "{R2} fire / slash   {L2} aim / block"
+msgstr "{R2} 开火或斩击   {L2} 瞄准或格挡"
+
+msgid "{R3 / D-pad Left}"
+msgstr "{R3／方向键 ←}"
+
+msgid "{R3 / D-pad Left} grenade · hold to throw   {D-pad Right} smoke"
+msgstr "{R3 / D-pad Left} 手雷 · 长按投掷   {D-pad Right} 烟雾弹"
+
+msgid "{RMB}"
+msgstr "{鼠标右键}"
+
+msgid "{RS / Gyro}"
+msgstr "{RS／陀螺仪}"
+
+msgid "{RS click / D-pad Left}"
+msgstr "{按下 RS／方向键 ←}"
+
+msgid "{Shift}"
+msgstr "{Shift}"
+
+msgid "{SLIDE}"
+msgstr "{滑铲}"
+
+msgid "{SLIDE} becomes {DASH} in the air   {Weapon bar} tap a weapon to switch · tap it again or use reload to reload"
+msgstr "{SLIDE} 在空中变为 {DASH}   {Weapon bar} 点按切换武器 · 再次点按或按换弹键装填"
+
+msgid "{Space}"
+msgstr "{空格}"
+
+msgid "{Space} again in the air: double jump"
+msgstr "{Space} 在空中再按一次：二段跳"
+
+msgid "{Space} jump · press against a wall to wall jump"
+msgstr "{Space} 跳跃 · 靠墙时按下进行蹬墙跳"
+
+msgid "{Space} launch from the rope   {Q} again: release"
+msgstr "{Space} 从绳索跃出   {Q} 再按一次松开"
+
+msgid "{Tab} scoreboard (bot / network matches)   {Esc} pause"
+msgstr "{Tab} 计分板（机器人或联网对战）   {Esc} 暂停"
+
+msgid "{Touchpad click / Create}"
+msgstr "{按下触摸板／Create}"
+
+msgid "{Touchpad click / Create} scoreboard   {Options} pause"
+msgstr "{Touchpad click / Create} 计分板   {Options} 暂停"
+
+msgid "{Touchpad swipe}"
+msgstr "{在触摸板上滑动}"
+
+msgid "{Touchpad swipe} radial weapon wheel (1–7)"
+msgstr "{Touchpad swipe} 武器轮盘（1–7）"
+
+msgid "{WASD} move   {Mouse} look   {Shift} sprint"
+msgstr "{WASD} 移动   {Mouse} 转动视角   {Shift} 奔跑"
+
+msgid "{Weapon bar}"
+msgstr "{武器栏}"
+
+msgid "{×} jump / wall jump / double jump"
+msgstr "{×} 跳跃／蹬墙跳／二段跳"
+
+msgid "{×} launch from the rope   {L1} again: release"
+msgstr "{×} 从绳索跃出   {L1} 再按一次松开"
+
+msgid "{□} reload   {△} next weapon"
+msgstr "{□} 换弹   {△} 下一把武器"
+
+msgid "{○} slide on the ground · air dash in the air"
+msgstr "{○} 地面滑铲 · 空中冲刺"
+
+msgid "~ drag this line to move the bar ~"
+msgstr "～ 拖动此行移动工具栏 ～"
+
+msgid "• %d bots"
+msgstr "• %d 个机器人"
+
+msgid "• 1 bot"
+msgstr "• 1 个机器人"

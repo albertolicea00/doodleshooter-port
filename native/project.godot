@@ -34,4 +34,4 @@ sensors/enable_gyroscope=true
 sensors/enable_accelerometer=true
 
 [internationalization]
-locale/translations=PackedStringArray("res://i18n/es.po")
+locale/translations=PackedStringArray("res://i18n/es.po", "res://i18n/pt_BR.po", "res://i18n/fr.po", "res://i18n/de.po", "res://i18n/it.po", "res://i18n/ru.po", "res://i18n/zh_Hans.po", "res://i18n/ja.po", "res://i18n/ko.po")
